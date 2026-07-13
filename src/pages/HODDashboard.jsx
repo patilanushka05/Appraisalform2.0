@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { useState, useRef, useEffect } from "react";
 import MyAppraisalForm from "../components/appraisal";
 import { Avatar, CompactSummaryCard, ScoreBar, StatusBadge } from "../components/dashboard/dashboardPrimitives";
@@ -87,7 +87,7 @@ function ReviewPanel({ faculty, onBack, onSubmit, readOnly = false, reviewerLabe
  const reviewLocked = finalisedByVc || readOnly || (!pendingThisReviewer && (faculty.status === "Reviewed" || /(?:HOD|Center Head)\s*(Reviewed|Rejected)/i.test(faculty.status || "") || n(faculty.hodTotal) >0 || String(faculty.hodRemarks || "").trim() !== ""));
  const canReject = canReviewerRejectProfile(reviewerRole, faculty);
  const subjectEmail = faculty.email || faculty.faculty_email || faculty.facultyEmail;
- const academicYear = faculty.academicYear || faculty.academic_year || faculty.info?.ay || APP_INFO.DEFAULT_AY || "2025-2026";
+ const academicYear = faculty.academicYear || faculty.academic_year || faculty.info?.ay || APP_INFO.DEFAULT_AY || "2026-2027";
  const reviewerMaxScores = {
  partA: effectiveMaxScore(200, faculty.sectionApplicability || {}, [{ key: "projects", max: 10 }, { key: "society", max: 10 }]),
  partB: effectiveMaxScore(375, faculty.sectionApplicability || {}, [{ key: "research", max: 30 }]),
@@ -419,7 +419,7 @@ export default function HODDashboard({
  const navItems = [
  { id: "myAppraisal", icon: "", label: "My Appraisal", sub: "View your self-appraisal form" },
  { id: "approvals", icon: "", label: "Faculty's Appraisal", sub: `${pendingCount} awaiting review`, badge: pendingCount },
- { id: "guidelines", icon: "", label: "Guidelines", sub: "Faculty appraisal guidelines AY 2025-26" },
+ { id: "guidelines", icon: "", label: "Guidelines", sub: "Faculty appraisal guidelines AY 2026-27" },
  ];
  const handleSubmitReview = async (id, scores, remarks, sectionScores, reviewConfirmed = false, decision = "approved") =>{
  if (!reviewConfirmed) {
@@ -436,7 +436,7 @@ export default function HODDashboard({
  try {
  await submitWorkflowReview({
  subjectEmail: item.email,
- academicYear: item.academicYear || item.academic_year || item.info?.ay || APP_INFO.DEFAULT_AY || "2025-2026",
+ academicYear: item.academicYear || item.academic_year || item.info?.ay || APP_INFO.DEFAULT_AY || "2026-2027",
  reviewerRole,
  partAScore: scores.partA,
  partBScore: scores.partB,
@@ -586,7 +586,7 @@ return (
  try {
  const data = await fetchSavedAppraisal({
  facultyEmail: faculty.email,
- academicYear: faculty.academic_year || faculty.academicYear || APP_INFO.DEFAULT_AY || "2025-2026",
+ academicYear: faculty.academic_year || faculty.academicYear || APP_INFO.DEFAULT_AY || "2026-2027",
  });
  const form = data?.payload?.form || data?.form || {};
  const docs = data?.payload?.docs || data?.docs || {};

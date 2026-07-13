@@ -152,7 +152,7 @@ const isTruthyFlag = (value) => {
   return ["true", "1", "yes", "y"].includes(normalized);
 };
 const academicYear = (value) =>
-  clean(value) || APP_INFO.DEFAULT_AY || "2025-2026";
+  clean(value) || APP_INFO.DEFAULT_AY || "2026-2027";
 const initialsFor = (name = "", fallback = "U") =>
   clean(name || fallback)
     .split(/\s+/)

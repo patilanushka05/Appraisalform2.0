@@ -78,7 +78,7 @@ const profileSchoolValue = (role, rawSchool, profile = {}) => {
   return canonical;
 };
 
-export const buildProfilePayload = (formData, academicYear = "2025-2026") => {
+export const buildProfilePayload = (formData, academicYear = "2026-2027") => {
   const role = normalizeRole(formData.role);
   const nonTeachingRole = isNonTeachingRole(role);
   const school = profileSchoolValue(role, formData.school, formData);

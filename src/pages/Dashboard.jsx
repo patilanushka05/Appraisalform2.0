@@ -10,7 +10,7 @@ export default function Dashboard() {
 
   const navItems = [
     { id: "myAppraisal", icon: "", label: "My Appraisal", sub: "View your self-appraisal form" },
-    { id: "guidelines", icon: "", label: "Guidelines", sub: "Faculty appraisal guidelines AY 2025-26" },
+    { id: "guidelines", icon: "", label: "Guidelines", sub: "Faculty appraisal guidelines AY 2026-27" },
   ];
 
   const handleSectionChange = (section) => {

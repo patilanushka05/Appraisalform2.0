@@ -80,6 +80,8 @@ export default function DashboardSidebar({
           >
             <option value="partA">Part A</option>
             <option value="partB" disabled={!isSectionOpen("partB")}>Part B</option>
+            <option value="partC" disabled={!isSectionOpen("partC")}>Part C</option>
+            <option value="partD" disabled={!isSectionOpen("partD")}>Part D</option>
             <option value="summary" disabled={!isSectionOpen("summary")}>Summary</option>
           </select>
         </div>

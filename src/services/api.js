@@ -30,9 +30,15 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+const isAuthFormRequest = (url = "") =>
+  ["/auth/login", "/auth/forgot-password", "/auth/reset-password"].some((path) =>
+    String(url).includes(path),
+  );
+
 // Normalize every API error so err.message is always a user-safe string.
 // Backend detail fields are developer-facing; show user_message when present.
-// 401 clears the session and redirects to /login automatically.
+// 401 clears the session and redirects to /login automatically, except while
+// the user is already using an auth form.
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -40,13 +46,18 @@ apiClient.interceptors.response.use(
     const status = error?.response?.status;
 
     const userMessage =
-      data?.user_message ?? "Something went wrong. Please try again.";
+      data?.user_message ??
+      (status === 401
+        ? "Invalid email or password."
+        : status === 403
+          ? "Your account is not verified or not authorized."
+          : "Something went wrong. Please try again.");
 
     error.message = userMessage;
     error.userMessage = userMessage;
     error.statusCode = status;
 
-    if (status === 401) {
+    if (status === 401 && !isAuthFormRequest(error?.config?.url)) {
       sessionStorage.clear();
       window.location.href = "/login";
     }

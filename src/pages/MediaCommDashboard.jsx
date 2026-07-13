@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars, no-undef, react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
+/* eslint-disable no-unused-vars, no-undef, react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, LogoutConfirmModal, ScoreBar, StatusBadge } from "../components/dashboard/dashboardPrimitives";
@@ -84,7 +84,7 @@ export default function MediaCommDashboard({ fixedRole }) {
  const [declaration, setDeclaration] = useState(null);
  const [reviews, setReviews] = useState([]);
  const userEmail = sessionStorage.getItem("username") || "";
- const academicYear = form.info?.ay || "2025-2026";
+ const academicYear = form.info?.ay || "2026-2027";
  const workflowRejected = hasActiveRejection(declaration, reviews);
  const locked = Boolean(declaration) && !workflowRejected;
  const totals = calculateMediaTotals(form, "score");
@@ -254,7 +254,7 @@ export default function MediaCommDashboard({ fixedRole }) {
  try {
  await submitWorkflowReview({
  subjectEmail: item.email,
- academicYear: item.academicYear || item.academic_year || item.info?.ay || APP_INFO.DEFAULT_AY || "2025-2026",
+ academicYear: item.academicYear || item.academic_year || item.info?.ay || APP_INFO.DEFAULT_AY || "2026-2027",
  reviewerRole: role,
  partAScore: scores.partA,
  partBScore: scores.partB,
@@ -277,7 +277,7 @@ export default function MediaCommDashboard({ fixedRole }) {
  try {
  const data = await fetchSavedAppraisal({
  facultyEmail: item.email,
- academicYear: item.academic_year || item.academicYear || item.info?.ay || APP_INFO.DEFAULT_AY || "2025-2026",
+ academicYear: item.academic_year || item.academicYear || item.info?.ay || APP_INFO.DEFAULT_AY || "2026-2027",
  });
  const submittedForm = data?.payload?.form || data?.form || {};
  const submittedDocs = data?.payload?.docs || data?.docs || {};

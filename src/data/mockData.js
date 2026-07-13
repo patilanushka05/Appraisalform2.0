@@ -8,7 +8,7 @@ export const HOD_USER = {
   designation: "Professor & Head",
   department: SOEMR_DEPARTMENTS[0],
   school: schoolLabel("SoEMR"),
-  ay: "2025-2026",
+  ay: "2026-2027",
   avatar: "RK",
 };
 
@@ -18,7 +18,7 @@ export const DIRECTOR_USER = {
   designation: "Director",
   department: "",
   school: schoolLabel("SoEMR"),
-  ay: "2025-2026",
+  ay: "2026-2027",
   avatar: "DM",
 };
 
@@ -28,7 +28,7 @@ export const DEAN_USER = {
   designation: "Dean",
   department: "Engineering",
   school: schoolLabel("SoCSEA"),
-  ay: "2025-2026",
+  ay: "2026-2027",
   avatar: "SP",
 };
 
@@ -37,7 +37,7 @@ export const VC_USER = {
   employeeId: "EMP-2025-000",
   designation: "Vice Chancellor",
   school: "University",
-  ay: "2025-2026",
+  ay: "2026-2027",
   avatar: "AD",
 };
 
@@ -59,7 +59,7 @@ export const FACULTY_LIST = [
     id: 1, name: "Dr. Priya Sharma", employeeId: "EMP-2025-001",
     designation: "Assistant Professor", department: SOEMR_DEPARTMENTS[0], school: schoolLabel("SoEMR"),
     submittedOn: "2025-04-18", status: "Pending Review", avatar: "PS", avatarColor: "#6366f1",
-    info: { name: "Dr. Priya Sharma", qual: "Ph.D", desig: "Assistant Professor", ay: "2025-2026" },
+    info: { name: "Dr. Priya Sharma", qual: "Ph.D", desig: "Assistant Professor", ay: "2026-2027" },
     lectures: [{ sem: "Sem I", code: "CS101", planned: "40", conducted: "40", score: "20", hod: "" }],
     courseFile: { score: "15" }, docs: {}
   },
@@ -67,7 +67,7 @@ export const FACULTY_LIST = [
     id: 2, name: "Prof. Amit Verma", employeeId: "EMP-2025-002",
     designation: "Assistant Professor", department: "", school: schoolLabel("SoCM"),
     submittedOn: "2025-04-19", status: "Pending Review", avatar: "AV", avatarColor: "#10b981",
-    info: { name: "Prof. Amit Verma", qual: "MBA", desig: "Assistant Professor", ay: "2025-2026" },
+    info: { name: "Prof. Amit Verma", qual: "MBA", desig: "Assistant Professor", ay: "2026-2027" },
     lectures: [{ sem: "Sem I", code: "MGMT101", planned: "36", conducted: "35", score: "18", hod: "" }],
     courseFile: { score: "14" }, docs: {}
   },
@@ -75,7 +75,7 @@ export const FACULTY_LIST = [
     id: 3, name: "Dr. Sunil Gupta", employeeId: "EMP-2025-003",
     designation: "Associate Professor", department: SOEMR_DEPARTMENTS[1], school: schoolLabel("SoEMR"),
     submittedOn: "2025-04-20", status: "Pending Review", avatar: "SG", avatarColor: "#f59e0b",
-    info: { name: "Dr. Sunil Gupta", qual: "Ph.D", desig: "Associate Professor", ay: "2025-2026" },
+    info: { name: "Dr. Sunil Gupta", qual: "Ph.D", desig: "Associate Professor", ay: "2026-2027" },
     lectures: [], courseFile: {}, docs: {}
   }
 ];
@@ -85,7 +85,7 @@ export const HOD_LIST = [
     id: 10, name: "Prof. Rajesh Kulkarni", employeeId: "EMP-2025-010",
     designation: "Professor & Head", department: SOEMR_DEPARTMENTS[0], school: schoolLabel("SoEMR"),
     submittedOn: "2025-04-20", status: "Pending Review", avatar: "RK", avatarColor: "#f59e0b",
-    info: { name: "Prof. Rajesh Kulkarni", qual: "Ph.D", desig: "Professor", ay: "2025-2026" },
+    info: { name: "Prof. Rajesh Kulkarni", qual: "Ph.D", desig: "Professor", ay: "2026-2027" },
     lectures: [], courseFile: {}, docs: {}
   }
 ];
@@ -95,7 +95,7 @@ export const DIRECTOR_LIST = [
     id: 30, name: "Dr. Mehta", employeeId: "EMP-2025-030",
     designation: "Director", department: "", school: schoolLabel("SoEMR"),
     submittedOn: "2025-04-21", status: "Pending Review", avatar: "DM", avatarColor: "#3b82f6",
-    info: { name: "Dr. Mehta", qual: "Ph.D", desig: "Director", ay: "2025-2026" },
+    info: { name: "Dr. Mehta", qual: "Ph.D", desig: "Director", ay: "2026-2027" },
     lectures: [], courseFile: {}, docs: {}
   }
 ];
@@ -105,7 +105,7 @@ export const DEAN_LIST = [
     id: 20, name: "Prof. Suresh Patil", employeeId: "EMP-2025-020",
     designation: "Dean", department: "Engineering", school: schoolLabel("SoCSEA"),
     submittedOn: "2025-04-22", status: "Pending Review", avatar: "SP", avatarColor: "#8b5cf6",
-    info: { name: "Prof. Suresh Patil", qual: "Ph.D", desig: "Dean", ay: "2025-2026" },
+    info: { name: "Prof. Suresh Patil", qual: "Ph.D", desig: "Dean", ay: "2026-2027" },
     lectures: [], courseFile: {}, docs: {}
   }
 ];
@@ -118,7 +118,7 @@ export const FACULTY_LIST_VC = FACULTY_LIST;
 
 
 export const DIRECTOR_SELF_DATA = {
-  info: { name: "Dr. Mehta", qual: "Ph.D", desig: "Director", ay: "2025-2026" },
+  info: { name: "Dr. Mehta", qual: "Ph.D", desig: "Director", ay: "2026-2027" },
   lectures: [],
   courseFile: {},
   innovScore: "",
@@ -144,7 +144,7 @@ export const DIRECTOR_SELF_DATA = {
 };
 
 export const DEAN_SELF_DATA = {
-  info: { name: "Prof. Suresh Patil", qual: "Ph.D", desig: "Dean", ay: "2025-2026" },
+  info: { name: "Prof. Suresh Patil", qual: "Ph.D", desig: "Dean", ay: "2026-2027" },
   lectures: [],
   courseFile: {},
   innovScore: "",

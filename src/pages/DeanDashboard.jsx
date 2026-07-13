@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { createContext, useContext, useState, useRef, useEffect } from "react";
 import MyAppraisalForm from "../components/appraisal";
 import { api } from "../services/api";
@@ -774,7 +774,7 @@ function ApprovalReviewPanel({ approval, approvalType, onBack, onSubmit, readOnl
  const reviewLocked = finalisedByVc || readOnly || (!pendingThisReviewer && (approval?.status === "Reviewed" || /Dean\s*(Reviewed|Approved|Rejected)/i.test(approval?.status || "")));
  const canReject = canReviewerRejectProfile("dean", approval);
  const subjectEmail = approval?.email || approval?.faculty_email || approval?.facultyEmail;
- const academicYear = approval?.academicYear || approval?.academic_year || approval?.info?.ay || APP_INFO.DEFAULT_AY || "2025-2026";
+ const academicYear = approval?.academicYear || approval?.academic_year || approval?.info?.ay || APP_INFO.DEFAULT_AY || "2026-2027";
  const sectionScores = deanScorePayload(approval, deanData);
  const reviewerMaxScores = {
  partA: effectiveMaxScore(200, approval.sectionApplicability || {}, [{ key: "projects", max: 10 }, { key: "society", max: 10 }]),
@@ -1084,7 +1084,7 @@ export default function DeanDashboard() {
  { id: "hodApprovals", icon: "", label: "HOD's Appraisal", sub: `${hodPendingCount} awaiting review`, badge: hodPendingCount },
  { id: "directorApprovals", icon: "", label: "Director's Appraisal", sub: `${directorPendingCount} awaiting review`, badge: directorPendingCount },
  { id: "facultyApprovals", icon: "", label: "Faculty's Appraisal", sub: `${facultyPendingCount} awaiting review`, badge: facultyPendingCount },
- { id: "guidelines", icon: "", label: "Guidelines", sub: "Faculty appraisal guidelines AY 2025-26" },
+ { id: "guidelines", icon: "", label: "Guidelines", sub: "Faculty appraisal guidelines AY 2026-27" },
  ];
  const handleSubmitReview = async (id, scores, remarks, sectionScores, reviewConfirmed = false, decision = "approved") =>{
  if (!reviewConfirmed) {
@@ -1106,7 +1106,7 @@ export default function DeanDashboard() {
  try {
  await submitWorkflowReview({
  subjectEmail: item.email,
- academicYear: item.academicYear || item.academic_year || item.info?.ay || APP_INFO.DEFAULT_AY || "2025-2026",
+ academicYear: item.academicYear || item.academic_year || item.info?.ay || APP_INFO.DEFAULT_AY || "2026-2027",
  reviewerRole: "dean",
  partAScore: scores.partA,
  partBScore: scores.partB,
@@ -1322,7 +1322,7 @@ return (
  try {
  const data = await fetchSavedAppraisal({
  facultyEmail: faculty.email,
- academicYear: faculty.academic_year || faculty.academicYear || APP_INFO.DEFAULT_AY || "2025-2026",
+ academicYear: faculty.academic_year || faculty.academicYear || APP_INFO.DEFAULT_AY || "2026-2027",
  });
  const form = data?.payload?.form || data?.form || {};
  const docs = data?.payload?.docs || data?.docs || {};

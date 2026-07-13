@@ -10,7 +10,7 @@ export function SectionCard({ title, subtitle, accent = "#6366f1", children }) {
         <div style={{ fontWeight: 700, fontSize: 13, color: accent }}>{title}</div>
         {subtitle && <div style={{ color: "#64748b", fontSize: 11, marginTop: 2 }}>{subtitle}</div>}
       </div>
-      <div style={{ padding: "13px 15px" }}>{children}</div>
+      <div style={{ padding: "13px 15px", display: "flex", flexDirection: "column" }}>{children}</div>
     </div>
   );
 }

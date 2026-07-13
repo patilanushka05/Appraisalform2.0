@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { useState, useRef, useEffect } from "react";
 import { DirectorFacultyReviewForm } from "../components/appraisal";
 import { api } from "../services/api";
@@ -154,7 +154,7 @@ function ReviewPanel({ faculty, onBack, onSubmit, readOnly = false }) {
  const reviewLocked = finalisedByVc || readOnly || (!pendingThisReviewer && (faculty.status === "Reviewed" || /Director\s*(Reviewed|Rejected)/i.test(faculty.status || "") || n(faculty.directorTotal) >0 || String(faculty.directorRemarks || "").trim() !== ""));
  const canReject = canReviewerRejectProfile("director", faculty);
  const subjectEmail = faculty.email || faculty.faculty_email || faculty.facultyEmail;
- const academicYear = faculty.academicYear || faculty.academic_year || faculty.info?.ay || APP_INFO.DEFAULT_AY || "2025-2026";
+ const academicYear = faculty.academicYear || faculty.academic_year || faculty.info?.ay || APP_INFO.DEFAULT_AY || "2026-2027";
  const reviewerMaxScores = {
  partA: effectiveMaxScore(200, faculty.sectionApplicability || {}, [{ key: "projects", max: 10 }, { key: "society", max: 10 }]),
  partB: effectiveMaxScore(375, faculty.sectionApplicability || {}, [{ key: "research", max: 30 }]),
@@ -537,7 +537,7 @@ export default function DirectorDashboard() {
  { id: "myAppraisal", icon: "", label: "My Appraisal", sub: "View your self-appraisal form" },
  { id: "facultyApprovals", icon: "", label: "Faculty's Appraisal", sub: `${facultyPendingCount} awaiting review`, badge: facultyPendingCount },
  ...(hasHOD ? [{ id: "hodApprovals", icon: "", label: "HOD's Appraisal", sub: `${hodPendingCount} awaiting review`, badge: hodPendingCount }] : []),
- { id: "guidelines", icon: "", label: "Guidelines", sub: "Faculty appraisal guidelines AY 2025-26" },
+ { id: "guidelines", icon: "", label: "Guidelines", sub: "Faculty appraisal guidelines AY 2026-27" },
  ];
  const handleSubmitReview = async (type, id, scores, remarks, sectionScores, reviewConfirmed = false, decision = "approved") =>{
  if (!reviewConfirmed) {
@@ -555,7 +555,7 @@ export default function DirectorDashboard() {
  try {
  await submitWorkflowReview({
  subjectEmail: item.email,
- academicYear: item.academicYear || item.academic_year || item.info?.ay || APP_INFO.DEFAULT_AY || "2025-2026",
+ academicYear: item.academicYear || item.academic_year || item.info?.ay || APP_INFO.DEFAULT_AY || "2026-2027",
  reviewerRole: "director",
  partAScore: scores.partA,
  partBScore: scores.partB,
@@ -739,7 +739,7 @@ return (
  try {
  const data = await fetchSavedAppraisal({
  facultyEmail: item.email,
- academicYear: item.academic_year || item.academicYear || APP_INFO.DEFAULT_AY || "2025-2026",
+ academicYear: item.academic_year || item.academicYear || APP_INFO.DEFAULT_AY || "2026-2027",
  });
  const form = data?.payload?.form || data?.form || {};
  const docs = data?.payload?.docs || data?.docs || {};

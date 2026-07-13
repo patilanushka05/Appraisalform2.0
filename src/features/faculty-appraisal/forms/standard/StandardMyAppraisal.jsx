@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../../../services/api";
@@ -68,12 +68,89 @@ import {
   workflowValidationError,
 } from "../../../../utils/hierarchy";
 
+const LEGACY_INNOVATIVE_METHODS = new Set([
+  "Blended learning",
+  "Virtual Lab",
+  "Conceptual videos (with class photo)",
+  "Use of Learning Management System (LMS)",
+  "Project-Based Learning",
+  "Open Course Ware (OCW) assignment",
+  "Quiz",
+  "Group Discussion (with photo & report)",
+  "Flip classroom (with proof of material shared)",
+  "Any other innovative method",
+]);
+
+const blankInnovativeRow = () => ({ method: "", details: "", score: "" });
+
+const sanitizeInnovativeRows = (rows) => {
+  if (!Array.isArray(rows)) return [blankInnovativeRow()];
+  const cleaned = rows.filter((row = {}) => {
+    const method = String(row.method ?? "").trim();
+    const hasEnteredData = ["details", "score", "hod", "director", "dean", "vc"].some((key) => String(row[key] ?? "").trim());
+    if (LEGACY_INNOVATIVE_METHODS.has(method) && !hasEnteredData) return false;
+    return method || hasEnteredData;
+  });
+  return cleaned.length ? cleaned : [blankInnovativeRow()];
+};
+
+const PART_A_MAX = 150;
+const PART_B_MAX = 350;
+const PART_C_MAX = 150;
+const PART_D_MAX = 50;
+const A1_COURSE_DELIVERY_MAX = 40;
+const A2_COURSE_FILE_MAX = 20;
+const A3_INNOVATIVE_MAX = 20;
+const A3_INNOVATIVE_ROW_MAX = 4;
+const A4_FEEDBACK_MAX = 10;
+const A5_OBE_MAX = 20;
+const A6_PROJECT_GUIDANCE_MAX = 20;
+const A7_MENTORING_MAX = 10;
+const A8_QUALIFICATION_MAX = 10;
+const C1_UNIVERSITY_ADMIN_MAX = 50;
+const C2_SCHOOL_ADMIN_MAX = 30;
+const C3_EVENT_MAX = 20;
+const C4_OUTREACH_MAX = 20;
+const C5_INDUSTRY_MAX = 8;
+const C6_ALUMNI_MAX = 10;
+const C7_PLACEMENT_MAX = 20;
+const B1_JOURNAL_MAX = 100;
+const B2_BOOK_MAX = 30;
+const B3_ICT_MAX = 15;
+const B4_PROJECT_MAX = 40;
+const B5_RESEARCH_GUIDANCE_MAX = 20;
+const B6_CONSULTANCY_MAX = 20;
+const B7_CONFERENCE_MAX = 20;
+const B8_ATTENDED_MAX = 20;
+const B9_AWARDS_MAX = 20;
+const B10_STARTUP_MAX = 20;
+
+const defaultObeRows = () => [
+  { component: "CO-PO mapping sheet", evidence: "", score: "", max: 5 },
+  { component: "Attainment calculation", evidence: "", score: "", max: 10 },
+  { component: "Corrective action plan", evidence: "", score: "", max: 5 },
+];
+
+const defaultMentoringRows = () => [
+  { activity: "Mentoring meetings conducted (min. 2/semester)", evidence: "", score: "", max: 4 },
+  { activity: "Mentoring register maintained", evidence: "", score: "", max: 3 },
+  { activity: "Documented academic/career counselling outcomes", evidence: "", score: "", max: 3 },
+];
+
+const partDParameters = [
+  { parameter: "Self-motivation & Proactiveness", description: "List of activities/initiatives other than regular load/duties", max: 10 },
+  { parameter: "Punctuality", description: "Late marks (office report), punctuality in lecture/practical, timely daily-report checking, absentee without intimation", max: 10 },
+  { parameter: "Target-based Work", description: "Tasks allotted; timely completion observed by HOD", max: 10 },
+  { parameter: "Effectiveness", description: "Work done without errors and least follow-up, observed by HOD", max: 10 },
+  { parameter: "Obedience", description: "Observed by HOD and Director", max: 10 },
+];
+
 export default function StandardMyAppraisal({
   sectionTab,
   onSectionTabChange,
   showSectionSelector = false,
   defaultDesignation = sessionStorage.getItem("designation") || "",
-  defaultAcademicYear = "2025-2026",
+  defaultAcademicYear = "2026-2027",
   titleNameFallback = "Faculty",
   subtitleSeparator = ".",
 } = {}) {
@@ -111,6 +188,9 @@ export default function StandardMyAppraisal({
   const [innovDetails, setInnovDetails] = useState("");
   const [innovRows, setInnovRows] = useState([{ method: "", details: "", score: "" }]);
   const setInnov = (i, k, v) => setInnovRows((p) => p.map((r, j) => j === i ? { ...r, [k]: v } : r));
+  useEffect(() => {
+    setInnovRows((rows) => sanitizeInnovativeRows(rows));
+  }, []);
   const [projects, setProjects] = useState([
     { label: "", score: "", hod: "", director: "" },
   ]);
@@ -130,25 +210,46 @@ export default function StandardMyAppraisal({
   ]);
   const setFb = (i, k, v) => setFeedback((p) => p.map((r, j) => j === i ? { ...r, [k]: v } : r));
 
+  const [obeRows, setObeRows] = useState(defaultObeRows);
+  const setObe = (i, k, v) => setObeRows((p) => p.map((r, j) => j === i ? { ...r, [k]: k === "score" ? String(clampScore(v, r.max || A5_OBE_MAX) || "") : v } : r));
+
+  const [mentoringRows, setMentoringRows] = useState(defaultMentoringRows);
+  const setMentoring = (i, k, v) => setMentoringRows((p) => p.map((r, j) => j === i ? { ...r, [k]: k === "score" ? String(clampScore(v, r.max || A7_MENTORING_MAX) || "") : v } : r));
+
   const [deptActs, setDeptActs] = useState([
-    { activity: "", nature: "", score: "", hod: "", director: "" },
+    { activity: "", nature: "", period: "", score: "", hod: "", director: "" },
   ]);
   const setDept = (i, k, v) => setDeptActs((p) => p.map((r, j) => j === i ? { ...r, [k]: v } : r));
 
   const [uniActs, setUniActs] = useState([
-    { activity: "", nature: "", score: "", hod: "", director: "" },
+    { activity: "", nature: "", period: "", score: "", hod: "", director: "" },
   ]);
   const setUni = (i, k, v) => setUniActs((p) => p.map((r, j) => j === i ? { ...r, [k]: v } : r));
 
+  const [eventRows, setEventRows] = useState([
+    { event: "", role: "", date: "", level: "", score: "" },
+  ]);
+  const setEvent = (i, k, v) => setEventRows((p) => p.map((r, j) => j === i ? { ...r, [k]: v } : r));
+
   const [society, setSociety] = useState([
-    { label: "", details: "", score: "", hod: "", director: "" },
+    { label: "", details: "", date: "", score: "", hod: "", director: "" },
   ]);
   const setSoc = (i, k, v) => setSociety((p) => p.map((r, j) => j === i ? { ...r, [k]: v } : r));
 
   const [industry, setIndustry] = useState([
-    { name: "", details: "", score: "", hod: "", director: "" },
+    { activity: "", partner: "", date: "", name: "", details: "", score: "", hod: "", director: "" },
   ]);
   const setInd = (i, k, v) => setIndustry((p) => p.map((r, j) => j === i ? { ...r, [k]: v } : r));
+
+  const [alumniRows, setAlumniRows] = useState([
+    { activity: "", details: "", date: "", score: "" },
+  ]);
+  const setAlumni = (i, k, v) => setAlumniRows((p) => p.map((r, j) => j === i ? { ...r, [k]: v } : r));
+
+  const [placementRows, setPlacementRows] = useState([
+    { activityType: "", name: "", date: "", score: "" },
+  ]);
+  const setPlacement = (i, k, v) => setPlacementRows((p) => p.map((r, j) => j === i ? { ...r, [k]: v } : r));
 
   const [acr, setAcr] = useState(createAcrRows);
   const setAcrRow = (i, k, v) => setAcr((p) => p.map((r, j) => j === i ? { ...r, [k]: v } : r));
@@ -227,7 +328,7 @@ export default function StandardMyAppraisal({
   const [docs, setDocs] = useState({});
   const [sectionApplicability, setSectionApplicability] = useState({ projects: "applicable", research: "applicable", society: "applicable" });
   const [appraisalLocked, setAppraisalLocked] = useState(false);
-  const [sectionSaveStatus, setSectionSaveStatus] = useState({ partA: false, partB: false });
+  const [sectionSaveStatus, setSectionSaveStatus] = useState({ partA: false, partB: false, partC: false, partD: false });
   const [summaryOtherInfo, setSummaryOtherInfo] = useState("");
   const [savingSection, setSavingSection] = useState(null);
   const [workflowDeclaration, setWorkflowDeclaration] = useState(null);
@@ -254,9 +355,9 @@ export default function StandardMyAppraisal({
             facultyEmail: userEmail,
             academicYear: info.ay,
             setters: {
-              setInfo, setLectures, setCourseFile, setInnovRows, setInnovDetails, setInnovScore,
-              setProjects, setQuals, setFeedback, setDeptActs, setUniActs,
-              setSociety, setIndustry, setAcr, setJournals, setBooks, setIct,
+              setInfo, setLectures, setCourseFile, setInnovRows: (rows) => setInnovRows(sanitizeInnovativeRows(rows)), setInnovDetails, setInnovScore,
+              setProjects, setObeRows, setMentoringRows, setQuals, setFeedback, setDeptActs, setUniActs,
+              setEventRows, setSociety, setIndustry, setAlumniRows, setPlacementRows, setAcr, setJournals, setBooks, setIct,
               setResearch, setProjects2, setExternalProjects, setPatents, setAwards,
               setConfs, setProposals, setProducts, setFdps, setTraining, setDocs,
               setSummaryOtherInfo, setSectionApplicability, setSectionSaveStatus,
@@ -273,42 +374,49 @@ export default function StandardMyAppraisal({
   }, [info.ay]);
 
   // -- Computed scores for HOD appraisal --
-  const totalLecScore = averageSectionScore(lectures, 50);
-  const courseFileScore = courseFileAverageScore(courseFile, 20);
-  const innovTotal = clampScore(innovRows.reduce((s, r) => s + clampScore(r.score, SCORE_LIMITS.innovativeRow), 0), 10);
+  const totalLecScore = sumSectionScore(lectures, A1_COURSE_DELIVERY_MAX, "score", 10);
+  const courseFileScore = courseFileAverageScore(courseFile, A2_COURSE_FILE_MAX);
+  const innovTotal = clampScore(innovRows.reduce((s, r) => s + clampScore(r.score, A3_INNOVATIVE_ROW_MAX), 0), A3_INNOVATIVE_MAX);
   const innovScoreComputed = String(innovTotal);
-  const projectTotal = sectionApplicability.projects === "notApplicable" ? 0 : sumSectionScore(projects, 10, "score", projectGuidanceRowMax);
-  const qualTotal = sumSectionScore(quals, 10, "score", SCORE_LIMITS.qualificationRow);
-  const teachingRaw = totalLecScore + courseFileScore + innovTotal + projectTotal + qualTotal;
-  const stuFeedbackScore = feedbackSectionScore(feedback, 10);
-  const deptScore = sumSectionScore(deptActs, 20);
-  const uniScore = sumSectionScore(uniActs, 30);
-  const societyScore = sectionApplicability.society === "notApplicable" ? 0 : clampScore(society.reduce((total, row) => total + societyRowScore(row), 0), 10);
-  const industryScore = sumSectionScore(industry, 5);
+  const projectTotal = sectionApplicability.projects === "notApplicable" ? 0 : sumSectionScore(projects, A6_PROJECT_GUIDANCE_MAX, "score", A6_PROJECT_GUIDANCE_MAX);
+  const obeScore = sumSectionScore(obeRows, A5_OBE_MAX);
+  const mentoringScore = sumSectionScore(mentoringRows, A7_MENTORING_MAX);
+  const qualTotal = sumSectionScore(quals, A8_QUALIFICATION_MAX, "score", SCORE_LIMITS.qualificationRow);
+  const teachingRaw = totalLecScore + courseFileScore + innovTotal + projectTotal + obeScore + mentoringScore + qualTotal;
+  const stuFeedbackScore = feedbackSectionScore(feedback, A4_FEEDBACK_MAX);
+  const deptScore = sumSectionScore(deptActs, C2_SCHOOL_ADMIN_MAX);
+  const uniScore = sumSectionScore(uniActs, C1_UNIVERSITY_ADMIN_MAX);
+  const eventScore = sumSectionScore(eventRows, C3_EVENT_MAX);
+  const societyScore = sectionApplicability.society === "notApplicable" ? 0 : sumSectionScore(society, C4_OUTREACH_MAX);
+  const industryScore = sumSectionScore(industry, C5_INDUSTRY_MAX);
+  const alumniScore = sumSectionScore(alumniRows, C6_ALUMNI_MAX);
+  const placementScore = sumSectionScore(placementRows, C7_PLACEMENT_MAX);
   const acrScore = 0;
-  const teachingMax = sectionApplicability.projects === "notApplicable" ? 90 : 100;
-  const effectivePartAMax = selfEffectivePartAMax(200, sectionApplicability, [{ key: "projects", max: 10 }, { key: "society", max: 10 }]);
-  const partATotal = clampScore(teachingRaw + stuFeedbackScore + deptScore + uniScore + societyScore + industryScore + acrScore, effectivePartAMax);
+  const teachingMax = sectionApplicability.projects === "notApplicable" ? PART_A_MAX - A6_PROJECT_GUIDANCE_MAX : PART_A_MAX;
+  const effectivePartAMax = sectionApplicability.projects === "notApplicable" ? PART_A_MAX - A6_PROJECT_GUIDANCE_MAX : PART_A_MAX;
+  const partATotal = clampScore(teachingRaw + stuFeedbackScore, effectivePartAMax);
 
-  const journalScore = sumSectionScore(journals, 120);
-  const bookScore = sumSectionScore(books, 50);
-  const ictScore = sumSectionScore(ict, 20);
-  const researchScore = sectionApplicability.research === "notApplicable" ? 0 : clampScore(research.reduce((total, row) => total + researchGuidanceScore(row), 0), 30);
-  const projectBScore = sumSectionScore(projects2, SCORE_LIMITS.researchInternalProjects);
-  const externalProjectScore = sumSectionScore(externalProjects, SCORE_LIMITS.researchExternalProjects);
+  const journalScore = sumSectionScore(journals, B1_JOURNAL_MAX);
+  const bookScore = sumSectionScore(books, B2_BOOK_MAX);
+  const ictScore = sumSectionScore(ict, B3_ICT_MAX);
+  const researchScore = sectionApplicability.research === "notApplicable" ? 0 : clampScore(research.reduce((total, row) => total + researchGuidanceScore(row), 0), B5_RESEARCH_GUIDANCE_MAX);
+  const projectBScore = sumSectionScore(projects2, B4_PROJECT_MAX);
+  const externalProjectScore = 0;
   const patentScore = sumSectionScore(patents, 40);
-  const awardScore = sumSectionScore(awards, 10);
-  const confScore = sumSectionScore(confs, 30);
-  const proposalScore = sumSectionScore(proposals, 10);
-  const productScore = sumSectionScore(products, 10);
-  const fdpScore = fdps.reduce((s, r) => s + clampScore(parseFloat(r.score) || 0, SCORE_LIMITS.fdpRow), 0);
-  const trainScore = training.reduce((s, r) => s + clampScore(parseFloat(r.score) || 0, SCORE_LIMITS.fdpRow), 0);
-  const b8Score = clampScore(fdpScore + trainScore, 10);
-  const researchGuidanceProjectMax = sectionApplicability.research === "notApplicable" ? 45 : 75;
-  const effectivePartBMax = effectiveMaxScore(375, sectionApplicability, [{ key: "research", max: 30 }]);
-  const effectiveGrandMax = effectivePartAMax + effectivePartBMax;
-  const partBTotal = clampScore(journalScore + bookScore + ictScore + researchScore + projectBScore + externalProjectScore + patentScore + awardScore + confScore + proposalScore + productScore + b8Score, effectivePartBMax);
-  const grandTotal = clampScore(partATotal + partBTotal, effectiveGrandMax);
+  const awardScore = sumSectionScore(awards, B9_AWARDS_MAX);
+  const confScore = sumSectionScore(confs, B7_CONFERENCE_MAX);
+  const proposalScore = sumSectionScore(proposals, B6_CONSULTANCY_MAX);
+  const productScore = sumSectionScore(products, B10_STARTUP_MAX);
+  const fdpScore = fdps.reduce((s, r) => s + clampScore(parseFloat(r.score) || 0, B8_ATTENDED_MAX), 0);
+  const trainScore = training.reduce((s, r) => s + clampScore(parseFloat(r.score) || 0, B8_ATTENDED_MAX), 0);
+  const b8Score = clampScore(fdpScore + trainScore, B8_ATTENDED_MAX);
+  const researchGuidanceProjectMax = sectionApplicability.research === "notApplicable" ? B4_PROJECT_MAX : B4_PROJECT_MAX + B5_RESEARCH_GUIDANCE_MAX;
+  const effectivePartBMax = sectionApplicability.research === "notApplicable" ? PART_B_MAX - B5_RESEARCH_GUIDANCE_MAX : PART_B_MAX;
+  const partCTotal = clampScore(uniScore + deptScore + eventScore + societyScore + industryScore + alumniScore + placementScore, PART_C_MAX);
+  const partDTotal = 0;
+  const effectiveGrandMax = effectivePartAMax + effectivePartBMax + PART_C_MAX + PART_D_MAX;
+  const partBTotal = clampScore(journalScore + bookScore + ictScore + researchScore + projectBScore + patentScore + awardScore + confScore + proposalScore + productScore + b8Score, effectivePartBMax);
+  const grandTotal = clampScore(partATotal + partBTotal + partCTotal + partDTotal, effectiveGrandMax);
 
   const partAMarksPercentage = effectivePartAMax > 0 ? ((partATotal / effectivePartAMax) * 100).toFixed(2) : "0.00";
   const partBMarksPercentage = effectivePartBMax > 0 ? ((partBTotal / effectivePartBMax) * 100).toFixed(2) : "0.00";
@@ -324,34 +432,37 @@ export default function StandardMyAppraisal({
   };
   const g = gradeFunc();
   const [submitting, setSubmitting] = useState(false);
-  const [accuracyConfirmed, setAccuracyConfirmed] = useState(false);
-  const [attachmentsConfirmed, setAttachmentsConfirmed] = useState(false);
+  const [declarationConfirmed, setDeclarationConfirmed] = useState(false);
 
   const validateSelfAppraisalRows = () => {
     const sections = [
       { label: "A(i). Lectures", rows: lectures, fields: ["sem", "code", "planned", "conducted", "score"] },
       { label: "A(ii). Course File", rows: courseFile, fields: ["course", "title", "details"] },
       { label: "A(iii). Innovative Teaching Methods", rows: innovRows, fields: ["method", "details", "score"] },
-      { label: "A(iv). Projects", rows: projects, fields: ["label", "score"], rowMax: projectGuidanceRowMax, maxScore: 10, skip: sectionApplicability.projects === "notApplicable" },
-      { label: "A(v). Qualification Enhancement", rows: quals, fields: ["label", "score"] },
+      { label: "A5. Learning Outcomes Attainment & OBE Practice", rows: obeRows, fields: ["component", "evidence", "score"] },
+      { label: "A6. Student Project Guidance", rows: projects, fields: ["label", "score"], rowMax: A6_PROJECT_GUIDANCE_MAX, maxScore: A6_PROJECT_GUIDANCE_MAX, skip: sectionApplicability.projects === "notApplicable" },
+      { label: "A7. Student Mentoring & Counselling", rows: mentoringRows, fields: ["activity", "evidence", "score"] },
+      { label: "A8. Professional Development & Qualification Enhancement", rows: quals, fields: ["label", "score"] },
       { label: "A(vi). Student Feedback", rows: feedback, fields: ["code", "fb1", "fb2"] },
-      { label: "A(vii). Department Activities", rows: deptActs, fields: ["activity", "nature", "score"] },
-      { label: "A(viii). University Activities", rows: uniActs, fields: ["activity", "nature", "score"] },
-      { label: "A(ix). Contribution to Society", rows: society, fields: ["details"] },
-      { label: "A(x). Industry Connect", rows: industry, fields: ["name", "details", "score"] },
+      { label: "C1. Administration at University Level", rows: uniActs, fields: ["activity", "nature", "period", "score"] },
+      { label: "C2. Administration at School Level", rows: deptActs, fields: ["activity", "nature", "period", "score"] },
+      { label: "C3. Event Organisation & Institutional Visibility", rows: eventRows, fields: ["event", "role", "date", "level", "score"] },
+      { label: "C4. Outreach, Extension & Social Responsibility", rows: society, fields: ["label", "details", "date", "score"], skip: sectionApplicability.society === "notApplicable" },
+      { label: "C5. Industry Interaction & Linkages", rows: industry, fields: ["activity", "partner", "date", "score"] },
+      { label: "C6. Alumni Engagement & Networking", rows: alumniRows, fields: ["activity", "details", "date", "score"] },
+      { label: "C7. Student Placement Mentoring & Career Development", rows: placementRows, fields: ["activityType", "name", "date", "score"] },
       { label: "B1. Journals", rows: journals, fields: ["title", "journal", "issn", "index", "score"] },
       { label: "B2. Books / Chapters", rows: books, fields: ["title", "book", "issn", "pub", "coauth", "first", "score"] },
-      { label: "B3. ICT Pedagogy", rows: ict, fields: ["title", "desc", "type", "quad", "score"] },
-      { label: "B4(a). Research Guidance", rows: research, fields: ["degree", "name", "thesis"], skip: sectionApplicability.research === "notApplicable" },
-      { label: "B4(b). Internal Projects", rows: projects2, fields: ["title", "agency", "date", "amount", "role", "status", "score"] },
-      { label: "B4(c). External Projects", rows: externalProjects, fields: ["title", "agency", "date", "amount", "role", "status", "score"] },
-      { label: "B5(a). Patents (IPR)", rows: patents, fields: ["title", "type", "date", "status", "fileNo", "score"] },
-      { label: "B5(b). Awards", rows: awards, fields: ["title", "date", "agency", "level", "score"] },
-      { label: "B6. Conferences", rows: confs, fields: ["title", "type", "org", "level", "score"] },
-      { label: "B7(a). Proposals", rows: proposals, fields: ["title", "duration", "agency", "amount", "score"] },
-      { label: "B7(b). Products", rows: products, fields: ["details", "usage", "score"] },
-      { label: "B8(a). FDP / Workshops", rows: fdps, fields: ["program", "duration", "org", "score"], rowMax: SCORE_LIMITS.fdpRow, maxScore: 10 },
-      { label: "B8(b). Industrial Training", rows: training, fields: ["company", "duration", "nature", "score"], rowMax: SCORE_LIMITS.fdpRow, maxScore: 10 },
+      { label: "B3. Patents, Copyrights & IP and Product Development", rows: patents, fields: ["title", "type", "date", "status", "fileNo", "score"] },
+      { label: "B4. Funded Research Projects", rows: projects2, fields: ["title", "agency", "date", "amount", "role", "status", "score"] },
+      { label: "B5. Research Guidance", rows: research, fields: ["degree", "name", "thesis"], skip: sectionApplicability.research === "notApplicable" },
+      { label: "B6. Consultancy, Testing & Training", rows: proposals, fields: ["title", "duration", "agency", "amount", "score"] },
+      { label: "B7. Conference / FDP Contributions - Organised", rows: confs, fields: ["title", "type", "org", "level", "score"] },
+      { label: "B8. Conference / FDP / Industry Training Attended", rows: fdps, fields: ["program", "duration", "org", "score"], rowMax: B8_ATTENDED_MAX, maxScore: B8_ATTENDED_MAX },
+      { label: "B8. Industrial Training", rows: training, fields: ["company", "duration", "nature", "score"], rowMax: B8_ATTENDED_MAX, maxScore: B8_ATTENDED_MAX },
+      { label: "B9. Research Awards, Fellowships & Citations", rows: awards, fields: ["title", "date", "agency", "level", "score"] },
+      { label: "B10. Innovation, Start-ups & Technology Transfer", rows: products, fields: ["details", "usage", "score"] },
+      { label: "B11. ICT Content, MOOCs & E-Learning", rows: ict, fields: ["title", "desc", "type", "quad", "score"] },
     ];
     const errors = validateCompleteRows(sections, docs);
     [...projects2, ...externalProjects].forEach((row, index) => {
@@ -366,31 +477,38 @@ export default function StandardMyAppraisal({
       { label: "A(i). Lectures", rows: lectures, fields: ["sem", "code", "planned", "conducted", "score"] },
       { label: "A(ii). Course File", rows: courseFile, fields: ["course", "title", "details"] },
       { label: "A(iii). Innovative Teaching Methods", rows: innovRows, fields: ["method", "details", "score"] },
-      { label: "A(iv). Projects", rows: projects, fields: ["label", "score"], rowMax: projectGuidanceRowMax, maxScore: 10, skip: sectionApplicability.projects === "notApplicable" },
-      { label: "A(v). Qualification Enhancement", rows: quals, fields: ["label", "score"] },
+      { label: "A5. Learning Outcomes Attainment & OBE Practice", rows: obeRows, fields: ["component", "evidence", "score"] },
+      { label: "A6. Student Project Guidance", rows: projects, fields: ["label", "score"], rowMax: A6_PROJECT_GUIDANCE_MAX, maxScore: A6_PROJECT_GUIDANCE_MAX, skip: sectionApplicability.projects === "notApplicable" },
+      { label: "A7. Student Mentoring & Counselling", rows: mentoringRows, fields: ["activity", "evidence", "score"] },
+      { label: "A8. Professional Development & Qualification Enhancement", rows: quals, fields: ["label", "score"] },
       { label: "A(vi). Student Feedback", rows: feedback, fields: ["code", "fb1", "fb2"] },
-      { label: "A(vii). Department Activities", rows: deptActs, fields: ["activity", "nature", "score"] },
-      { label: "A(viii). University Activities", rows: uniActs, fields: ["activity", "nature", "score"] },
-      { label: "A(ix). Contribution to Society", rows: society, fields: ["details"] },
-      { label: "A(x). Industry Connect", rows: industry, fields: ["name", "details", "score"] },
+    ];
+    const partCSections = [
+      { label: "C1. Administration at University Level", rows: uniActs, fields: ["activity", "nature", "period", "score"] },
+      { label: "C2. Administration at School Level", rows: deptActs, fields: ["activity", "nature", "period", "score"] },
+      { label: "C3. Event Organisation & Institutional Visibility", rows: eventRows, fields: ["event", "role", "date", "level", "score"] },
+      { label: "C4. Outreach, Extension & Social Responsibility", rows: society, fields: ["label", "details", "date", "score"], skip: sectionApplicability.society === "notApplicable" },
+      { label: "C5. Industry Interaction & Linkages", rows: industry, fields: ["activity", "partner", "date", "score"] },
+      { label: "C6. Alumni Engagement & Networking", rows: alumniRows, fields: ["activity", "details", "date", "score"] },
+      { label: "C7. Student Placement Mentoring & Career Development", rows: placementRows, fields: ["activityType", "name", "date", "score"] },
     ];
     const partBSections = [
       { label: "B1. Journals", rows: journals, fields: ["title", "journal", "issn", "index", "score"] },
       { label: "B2. Books / Chapters", rows: books, fields: ["title", "book", "issn", "pub", "coauth", "first", "score"] },
-      { label: "B3. ICT Pedagogy", rows: ict, fields: ["title", "desc", "type", "quad", "score"] },
-      { label: "B4(a). Research Guidance", rows: research, fields: ["degree", "name", "thesis"], skip: sectionApplicability.research === "notApplicable" },
-      { label: "B4(b). Internal Projects", rows: projects2, fields: ["title", "agency", "date", "amount", "role", "status", "score"] },
-      { label: "B4(c). External Projects", rows: externalProjects, fields: ["title", "agency", "date", "amount", "role", "status", "score"] },
-      { label: "B5(a). Patents (IPR)", rows: patents, fields: ["title", "type", "date", "status", "fileNo", "score"] },
-      { label: "B5(b). Awards", rows: awards, fields: ["title", "date", "agency", "level", "score"] },
-      { label: "B6. Conferences", rows: confs, fields: ["title", "type", "org", "level", "score"] },
-      { label: "B7(a). Proposals", rows: proposals, fields: ["title", "duration", "agency", "amount", "score"] },
-      { label: "B7(b). Products", rows: products, fields: ["details", "usage", "score"] },
-      { label: "B8(a). FDP / Workshops", rows: fdps, fields: ["program", "duration", "org", "score"], rowMax: SCORE_LIMITS.fdpRow, maxScore: 10 },
-      { label: "B8(b). Industrial Training", rows: training, fields: ["company", "duration", "nature", "score"], rowMax: SCORE_LIMITS.fdpRow, maxScore: 10 },
+      { label: "B3. Patents, Copyrights & IP and Product Development", rows: patents, fields: ["title", "type", "date", "status", "fileNo", "score"] },
+      { label: "B4. Funded Research Projects", rows: projects2, fields: ["title", "agency", "date", "amount", "role", "status", "score"] },
+      { label: "B5. Research Guidance", rows: research, fields: ["degree", "name", "thesis"], skip: sectionApplicability.research === "notApplicable" },
+      { label: "B6. Consultancy, Testing & Training", rows: proposals, fields: ["title", "duration", "agency", "amount", "score"] },
+      { label: "B7. Conference / FDP Contributions - Organised", rows: confs, fields: ["title", "type", "org", "level", "score"] },
+      { label: "B8. Conference / FDP / Industry Training Attended", rows: fdps, fields: ["program", "duration", "org", "score"], rowMax: B8_ATTENDED_MAX, maxScore: B8_ATTENDED_MAX },
+      { label: "B8. Industrial Training", rows: training, fields: ["company", "duration", "nature", "score"], rowMax: B8_ATTENDED_MAX, maxScore: B8_ATTENDED_MAX },
+      { label: "B9. Research Awards, Fellowships & Citations", rows: awards, fields: ["title", "date", "agency", "level", "score"] },
+      { label: "B10. Innovation, Start-ups & Technology Transfer", rows: products, fields: ["details", "usage", "score"] },
+      { label: "B11. ICT Content, MOOCs & E-Learning", rows: ict, fields: ["title", "desc", "type", "quad", "score"] },
     ];
-    const errors = validateCompleteRows(section === "partA" ? partASections : partBSections, docs);
-    if (section !== "partA") {
+    const sectionMap = { partA: partASections, partB: partBSections, partC: partCSections, partD: [] };
+    const errors = validateCompleteRows(sectionMap[section] || partASections, docs);
+    if (section === "partB") {
       [...projects2, ...externalProjects].forEach((row, index) => {
         if (row.date && !isValidDDMMYYYY(row.date)) errors.push(`B4 project row ${index + 1}: date must be DD/MM/YYYY.`);
       });
@@ -411,7 +529,7 @@ export default function StandardMyAppraisal({
     });
   };
 
-  const buildSelfDraftForm = (saveStatus = sectionSaveStatus) => normalizeAutoScores({ info, lectures, courseFile, innovDetails: innovRows.map((row) => row.method).filter(Boolean).join(", "), innovScore: innovScoreComputed, innovRows, projects, quals, feedback, deptActs, uniActs, society, industry, acr, journals, books, ict, research, projects2, externalProjects, patents, awards, confs, proposals, products, fdps, training, summaryOtherInfo, sectionApplicability, sectionSaveStatus: saveStatus });
+  const buildSelfDraftForm = (saveStatus = sectionSaveStatus) => normalizeAutoScores({ info, lectures, courseFile, innovDetails: innovRows.map((row) => row.method).filter(Boolean).join(", "), innovScore: innovScoreComputed, innovRows, projects, obeRows, mentoringRows, quals, feedback, deptActs, uniActs, eventRows, society, industry, alumniRows, placementRows, acr, journals, books, ict, research, projects2, externalProjects, patents, awards, confs, proposals, products, fdps, training, summaryOtherInfo, sectionApplicability, sectionSaveStatus: saveStatus });
 
   const markSnapshotLocked = () => {
     setAppraisalLocked(true);
@@ -432,7 +550,7 @@ export default function StandardMyAppraisal({
         facultyEmail: userEmail,
         academicYear: info.ay,
         form: buildSelfDraftForm(nextStatus),
-        totals: { partATotal, partBTotal, grandTotal, effectivePartAMax, effectivePartBMax, effectiveGrandMax },
+        totals: { partATotal, partBTotal, partCTotal, partDTotal, grandTotal, effectivePartAMax, effectivePartBMax, effectiveGrandMax },
         docs,
         submitterProfile: profileFromsessionStorage(),
         sectionSaveStatus: nextStatus,
@@ -453,8 +571,8 @@ export default function StandardMyAppraisal({
       alert("This appraisal has already been submitted and is locked for review.");
       return;
     }
-    if (!accuracyConfirmed || !attachmentsConfirmed) {
-      alert("Please tick both declaration checkboxes before submitting.");
+    if (!declarationConfirmed) {
+      alert("Please tick the declaration checkbox before submitting.");
       return;
     }
     if (!validateSelfAppraisalRows()) return;
@@ -496,7 +614,7 @@ export default function StandardMyAppraisal({
         facultyEmail: userEmail,
         academicYear: info.ay,
         form: buildSelfDraftForm(),
-        totals: { partATotal, partBTotal, grandTotal, effectivePartAMax, effectivePartBMax, effectiveGrandMax },
+        totals: { partATotal, partBTotal, partCTotal, partDTotal, grandTotal, effectivePartAMax, effectivePartBMax, effectiveGrandMax },
         docs,
         submitterProfile,
         activeProfile: submitterProfile,
@@ -573,141 +691,176 @@ export default function StandardMyAppraisal({
 
     <h3 style="background:#d9d9d9;padding:4px;text-align:center;font-size:13px">PART A - Teaching Process &amp; Academic Activities</h3>
 
-    <h3>(i) Lectures / Tutorials / Practicals &nbsp;(Max 50)</h3>
+    <h3>A1. Course Delivery &amp; Classroom Engagement &nbsp;(Max 40)</h3>
     <table>
       <tr><th>SN</th><th>Semester</th><th>Course Code / Name</th><th>Classes as per Course Structure</th><th>Classes Actually Conducted</th><th>API Score</th></tr>
       ${lectures.map((l, i) => `<tr><td class="c">${i + 1}</td><td>${l.sem || '&nbsp;'}</td><td>${l.code || '&nbsp;'}</td><td class="c">${l.planned || '&nbsp;'}</td><td class="c">${l.conducted || '&nbsp;'}</td><td class="c">${l.score || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="5" class="c b">Average Score (Max 50)</td><td class="c">${totalLecScore.toFixed(1)}</td></tr>
+      <tr class="tr"><td colspan="5" class="c b">Total Score (Max 40)</td><td class="c">${totalLecScore.toFixed(1)}</td></tr>
     </table>
 
-    <h3>(ii) Course File &nbsp;(Max 20)</h3>
+    <h3>A2. Course File &amp; Curriculum Documentation &nbsp;(Max 20)</h3>
     <table>
       <tr><th>SN</th><th>Course / Paper</th><th>Program & Semester</th><th>Details</th><th>API Score</th></tr>
       ${courseFile.map((c, i) => `<tr><td class="c">${i + 1}</td><td>${c.course || '&nbsp;'}</td><td>${c.title || '&nbsp;'}</td><td>${c.details || '&nbsp;'}</td><td class="c">${c.score || '&nbsp;'}</td></tr>`).join('')}
       <tr class="tr"><td colspan="4" class="c b">Average Score (Max 20)</td><td class="c">${courseFileScore.toFixed(1)}</td></tr>
     </table>
 
-    <h3>(iii) Innovative Teaching-Learning Methodologies &nbsp;(Max 10)</h3>
+    <h3>A3. Innovative Teaching-Learning Methods &nbsp;(Max 20)</h3>
     <table>
       <tr><th>SN</th><th>Methods Used</th><th>Details</th><th>API Score</th></tr>
       ${innovRows.map((r, i) => `<tr><td class="c">${i + 1}</td><td>${r.method || '&nbsp;'}</td><td>${r.details || '&nbsp;'}</td><td class="c">${r.score || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="3" class="c b">Total Score (Max 10)</td><td class="c">${innovTotal.toFixed(1)}</td></tr>
+      <tr class="tr"><td colspan="3" class="c b">Total Score (Max 20)</td><td class="c">${innovTotal.toFixed(1)}</td></tr>
     </table>
 
     ${sectionApplicability.projects !== "notApplicable" ? `
-    <h3>(iv) Projects &nbsp;(Max 10)</h3>
+    <h3>A6. Student Project Guidance &nbsp;(Max 20)</h3>
     <table>
       <tr><th>SN</th><th>Project Type</th><th>API Score</th></tr>
       ${projects.map((p, i) => `<tr><td class="c">${i + 1}</td><td>${p.label || '&nbsp;'}</td><td class="c">${clampScore(p.score, projectGuidanceRowMax(p)) || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="2" class="c b">Total Score (Max 10)</td><td class="c">${projectTotal.toFixed(1)}</td></tr>
+      <tr class="tr"><td colspan="2" class="c b">Total Score (Max 20)</td><td class="c">${projectTotal.toFixed(1)}</td></tr>
     </table>` : ""}
 
-    <h3>(v) Qualification Enhancement &nbsp;(Max 10)</h3>
+    <h3>A8. Professional Development &amp; Qualification Enhancement &nbsp;(Max 10)</h3>
     <table>
       <tr><th>SN</th><th>Qualification / Category</th><th>API Score</th></tr>
       ${quals.map((q, i) => `<tr><td class="c">${i + 1}</td><td>${q.label || '&nbsp;'}</td><td class="c">${q.score || '&nbsp;'}</td></tr>`).join('')}
       <tr class="tr"><td colspan="2" class="c b">Total Score (Max 10)</td><td class="c">${qualTotal.toFixed(1)}</td></tr>
     </table>
 
-    <h3>B. Students' Feedback &nbsp;(Max 10)</h3>
+    <h3>A4. Student Feedback Score &nbsp;(Max 10)</h3>
     <table>
       <tr><th>SN</th><th>Course Code / Name</th><th>First Feedback(%)</th><th>Second Feedback(%)</th><th>Average</th><th>API Score</th></tr>
       ${feedback.map((f, i) => `<tr><td class="c">${i + 1}</td><td>${f.code || '&nbsp;'}</td><td class="c">${f.fb1 || '&nbsp;'}</td><td class="c">${f.fb2 || '&nbsp;'}</td><td class="c">${(f.fb1 || f.fb2) ? ((n(f.fb1) + n(f.fb2)) / ((f.fb1 ? 1 : 0) + (f.fb2 ? 1 : 0) || 1)).toFixed(2) : '&nbsp;'}</td><td class="c">${(f.fb1 || f.fb2) ? (((n(f.fb1) + n(f.fb2)) / ((f.fb1 ? 1 : 0) + (f.fb2 ? 1 : 0) || 1)) / 10).toFixed(2) : '&nbsp;'}</td></tr>`).join('')}
       <tr class="tr"><td colspan="5" class="c b">Total (Max 10)</td><td class="c">${stuFeedbackScore.toFixed(1)}</td></tr>
     </table>
 
-    <h3>C. Departmental / School Activities &nbsp;(Max 20)</h3>
+    <h3>A5. Learning Outcomes Attainment &amp; OBE Practice &nbsp;(Max 20)</h3>
     <table>
-      <tr><th>SN</th><th>Activity</th><th>Nature of Activity</th><th>API Score</th></tr>
-      ${deptActs.map((d, i) => `<tr><td class="c">${i + 1}</td><td>${d.activity || '&nbsp;'}</td><td>${d.nature || '&nbsp;'}</td><td class="c">${d.score || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="3" class="c b">Total (Max 20)</td><td class="c">${deptScore.toFixed(1)}</td></tr>
+      <tr><th>SN</th><th>Component</th><th>Evidence Attached (Yes/No)</th><th>API Score</th></tr>
+      ${obeRows.map((r, i) => `<tr><td class="c">${i + 1}</td><td>${r.component || '&nbsp;'}</td><td>${r.evidence || '&nbsp;'}</td><td class="c">${r.score || '&nbsp;'}</td></tr>`).join('')}
+      <tr class="tr"><td colspan="3" class="c b">Total (Max 20)</td><td class="c">${obeScore.toFixed(1)}</td></tr>
     </table>
 
-    <h3>D. University Level Activities &nbsp;(Max 30)</h3>
+    <h3>A7. Student Mentoring &amp; Counselling &nbsp;(Max 10)</h3>
     <table>
-      <tr><th>SN</th><th>Activity</th><th>Nature of Activity</th><th>API Score</th></tr>
-      ${uniActs.map((u, i) => `<tr><td class="c">${i + 1}</td><td>${u.activity || '&nbsp;'}</td><td>${u.nature || '&nbsp;'}</td><td class="c">${u.score || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="3" class="c b">Total (Max 30)</td><td class="c">${uniScore.toFixed(1)}</td></tr>
+      <tr><th>SN</th><th>Activity</th><th>Evidence Attached (Yes/No)</th><th>API Score</th></tr>
+      ${mentoringRows.map((r, i) => `<tr><td class="c">${i + 1}</td><td>${r.activity || '&nbsp;'}</td><td>${r.evidence || '&nbsp;'}</td><td class="c">${r.score || '&nbsp;'}</td></tr>`).join('')}
+      <tr class="tr"><td colspan="3" class="c b">Total (Max 10)</td><td class="c">${mentoringScore.toFixed(1)}</td></tr>
     </table>
 
-    <h3>E. Contribution to Society &nbsp;(Max 10)</h3>
+    <div class="pb"></div>
+    <h3 style="background:#d9d9d9;padding:4px;text-align:center;font-size:13px">PART C - Administrative Role &amp; University Development Contribution</h3>
+
+    <h3>C2. Administration at School Level &nbsp;(Max 30)</h3>
+    <table>
+      <tr><th>SN</th><th>Activity / Responsibility</th><th>Duration Category</th><th>Period</th><th>API Score</th></tr>
+      ${deptActs.map((d, i) => `<tr><td class="c">${i + 1}</td><td>${d.activity || '&nbsp;'}</td><td>${d.nature || '&nbsp;'}</td><td>${d.period || '&nbsp;'}</td><td class="c">${d.score || '&nbsp;'}</td></tr>`).join('')}
+      <tr class="tr"><td colspan="4" class="c b">Total (Max 30)</td><td class="c">${deptScore.toFixed(1)}</td></tr>
+    </table>
+
+    <h3>C1. Administration at University Level &nbsp;(Max 50)</h3>
+    <table>
+      <tr><th>SN</th><th>Activity / Responsibility</th><th>Duration Category</th><th>Period</th><th>API Score</th></tr>
+      ${uniActs.map((u, i) => `<tr><td class="c">${i + 1}</td><td>${u.activity || '&nbsp;'}</td><td>${u.nature || '&nbsp;'}</td><td>${u.period || '&nbsp;'}</td><td class="c">${u.score || '&nbsp;'}</td></tr>`).join('')}
+      <tr class="tr"><td colspan="4" class="c b">Total (Max 50)</td><td class="c">${uniScore.toFixed(1)}</td></tr>
+    </table>
+
+    <h3>C3. Event Organisation &amp; Institutional Visibility &nbsp;(Max 20)</h3>
+    <table>
+      <tr><th>SN</th><th>Event / Contribution</th><th>Role</th><th>Date</th><th>Level</th><th>API Score</th></tr>
+      ${eventRows.map((r, i) => `<tr><td class="c">${i + 1}</td><td>${r.event || '&nbsp;'}</td><td>${r.role || '&nbsp;'}</td><td class="c">${r.date || '&nbsp;'}</td><td>${r.level || '&nbsp;'}</td><td class="c">${r.score || '&nbsp;'}</td></tr>`).join('')}
+      <tr class="tr"><td colspan="5" class="c b">Total (Max 20)</td><td class="c">${eventScore.toFixed(1)}</td></tr>
+    </table>
+
+    <h3>C4. Outreach, Extension &amp; Social Responsibility &nbsp;(Max 20)</h3>
     ${sectionApplicability.society === "notApplicable" ? "<p><em>Not Applicable</em></p>" : `<table>
-      <tr><th>SN</th><th>Activity</th><th>Details</th><th>API Score</th></tr>
-      ${society.map((s, i) => `<tr><td class="c">${i + 1}</td><td>${s.label || '&nbsp;'}</td><td>${s.details || '&nbsp;'}</td><td class="c">${societyRowScore(s)}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="3" class="c b">Total (Max 10)</td><td class="c">${societyScore.toFixed(1)}</td></tr>
+      <tr><th>SN</th><th>Activity</th><th>Details</th><th>Date</th><th>API Score</th></tr>
+      ${society.map((s, i) => `<tr><td class="c">${i + 1}</td><td>${s.label || '&nbsp;'}</td><td>${s.details || '&nbsp;'}</td><td class="c">${s.date || '&nbsp;'}</td><td class="c">${s.score || '&nbsp;'}</td></tr>`).join('')}
+      <tr class="tr"><td colspan="4" class="c b">Total (Max 20)</td><td class="c">${societyScore.toFixed(1)}</td></tr>
     </table>`}
 
-    <h3>F. Industry Connect Activity &nbsp;(Max 5)</h3>
+    <h3>C5. Industry Interaction &amp; Linkages &nbsp;(Max 8)</h3>
     <table>
-      <tr><th>SN</th><th>Name of Industry</th><th>Details of Activity</th><th>API Score</th></tr>
-      ${industry.map((ind, i) => `<tr><td class="c">${i + 1}</td><td>${ind.name || '&nbsp;'}</td><td>${ind.details || '&nbsp;'}</td><td class="c">${ind.score || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="3" class="c b">Total (Max 5)</td><td class="c">${industryScore.toFixed(1)}</td></tr>
+      <tr><th>SN</th><th>Activity</th><th>Industry Partner</th><th>Date</th><th>API Score</th></tr>
+      ${industry.map((ind, i) => `<tr><td class="c">${i + 1}</td><td>${ind.activity || ind.name || '&nbsp;'}</td><td>${ind.partner || ind.details || '&nbsp;'}</td><td class="c">${ind.date || '&nbsp;'}</td><td class="c">${ind.score || '&nbsp;'}</td></tr>`).join('')}
+      <tr class="tr"><td colspan="4" class="c b">Total (Max 8)</td><td class="c">${industryScore.toFixed(1)}</td></tr>
     </table>
 
-    <h3>G. Annual Confidential Report &nbsp;(Not counted in self score)</h3>
+    <h3>C6. Alumni Engagement &amp; Networking &nbsp;(Max 10)</h3>
     <table>
-      <tr><th>SN</th><th>Parameter</th><th>API Score</th></tr>
-      ${acr.map((a, i) => `<tr><td class="c">${i + 1}</td><td>${a.label || '&nbsp;'}</td><td class="c">${String(a.score ?? "").trim() ? clampScore(a.score, SCORE_LIMITS.acrRow) : '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="2" class="c b">Total (Not counted in self score)</td><td class="c">${acrScore.toFixed(1)}</td></tr>
+      <tr><th>SN</th><th>Activity</th><th>Details</th><th>Date</th><th>API Score</th></tr>
+      ${alumniRows.map((r, i) => `<tr><td class="c">${i + 1}</td><td>${r.activity || '&nbsp;'}</td><td>${r.details || '&nbsp;'}</td><td class="c">${r.date || '&nbsp;'}</td><td class="c">${r.score || '&nbsp;'}</td></tr>`).join('')}
+      <tr class="tr"><td colspan="4" class="c b">Total (Max 10)</td><td class="c">${alumniScore.toFixed(1)}</td></tr>
+    </table>
+
+    <h3>C7. Student Placement Mentoring &amp; Career Development &nbsp;(Max 20)</h3>
+    <table>
+      <tr><th>SN</th><th>Activity Type</th><th>Student / Company Name</th><th>Date</th><th>API Score</th></tr>
+      ${placementRows.map((r, i) => `<tr><td class="c">${i + 1}</td><td>${r.activityType || '&nbsp;'}</td><td>${r.name || '&nbsp;'}</td><td class="c">${r.date || '&nbsp;'}</td><td class="c">${r.score || '&nbsp;'}</td></tr>`).join('')}
+      <tr class="tr"><td colspan="4" class="c b">Total (Max 20)</td><td class="c">${placementScore.toFixed(1)}</td></tr>
+    </table>
+
+    <div class="pb"></div>
+    <h3 style="background:#d9d9d9;padding:4px;text-align:center;font-size:13px">PART D - Annual Confidential Report</h3>
+    <h3>Part D. Annual Confidential Report &nbsp;(Max 50, Evaluator only)</h3>
+    <table>
+      <tr><th>SN</th><th>Parameter</th><th>Description / Indicators</th><th>Max Marks</th></tr>
+      ${partDParameters.map((row, i) => `<tr><td class="c">${i + 1}</td><td>${row.parameter}</td><td>${row.description}</td><td class="c">${row.max}</td></tr>`).join('')}
+      <tr class="tr"><td colspan="3" class="c b">Total (Evaluator only)</td><td class="c">${PART_D_MAX}</td></tr>
     </table>
 
     <table class="st">
       <tr><th>Part A Summary</th><th>Max</th><th>Faculty Score</th></tr>
-      <tr><td>Teaching Process (i+ii+iii+iv+v)</td><td class="c">${teachingMax}</td><td class="c">${teachingRaw.toFixed(1)}</td></tr>
-      <tr><td>Students' Feedback</td><td class="c">10</td><td class="c">${stuFeedbackScore.toFixed(1)}</td></tr>
-      <tr><td>Departmental Activities</td><td class="c">20</td><td class="c">${deptScore.toFixed(1)}</td></tr>
-      <tr><td>University Activity</td><td class="c">30</td><td class="c">${uniScore.toFixed(1)}</td></tr>
-      <tr><td>Contribution to Society</td><td class="c">${sectionApplicability.society === "notApplicable" ? "N/A" : "10"}</td><td class="c">${societyScore.toFixed(1)}</td></tr>
-      <tr><td>Industry Connect</td><td class="c">5</td><td class="c">${industryScore.toFixed(1)}</td></tr>
-      <tr><td>Annual Confidential Report</td><td class="c">N/A</td><td class="c">${acrScore.toFixed(1)}</td></tr>
+      <tr><td>Teaching &amp; Learning</td><td class="c">${teachingMax}</td><td class="c">${partATotal.toFixed(1)}</td></tr>
+      <tr><td colspan="3" class="b">Part C and D are shown separately in the final summary.</td></tr>
       <tr class="tr"><td class="b">PART A TOTAL</td><td class="c b">${effectivePartAMax}</td><td class="c b">${partATotal.toFixed(1)}</td></tr>
       <tr class="tr"><td class="b">PART A MARKS OBTAINED (%)</td><td colspan="2" class="c b">${partAMarksPercentage}%</td></tr>
     </table>
 
     <div class="pb"></div>
-    <h3 style="background:#d9d9d9;padding:4px;text-align:center;font-size:13px">PART B - Research &amp; Academic Contributions</h3>
+    <h3 style="background:#d9d9d9;padding:4px;text-align:center;font-size:13px">PART B - Research &amp; Innovation</h3>
 
-    <h3>1) Published Papers in Journals &nbsp;(Max 120)</h3>
+    <h3>B1. Journal Publications &nbsp;(Max 100)</h3>
     <table>
       <tr><th>SN</th><th>Title with Page Nos.</th><th>Journal Details</th><th>ISSN/ISBN No.</th><th>Journal Indexing</th><th>API Score</th></tr>
       ${journals.map((j, i) => `<tr><td class="c">${i + 1}</td><td>${j.title || '&nbsp;'}</td><td>${j.journal || '&nbsp;'}</td><td class="c">${j.issn || '&nbsp;'}</td><td class="c">${j.index || '&nbsp;'}</td><td class="c">${j.score || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="5" class="c b">Total (Max 120)</td><td class="c">${journalScore.toFixed(1)}</td></tr>
+      <tr class="tr"><td colspan="5" class="c b">Total (Max 100)</td><td class="c">${journalScore.toFixed(1)}</td></tr>
     </table>
 
-    <h3>2) Articles / Chapters in Books &nbsp;(Max 50)</h3>
+    <h3>B2. Books, Book Chapters &amp; Edited Volumes &nbsp;(Max 30)</h3>
     <table>
       <tr><th>SN</th><th>Title with Page Nos.</th><th>Book Title, Editor &amp; Publisher</th><th>ISSN/ISBN</th><th>Type of Publisher</th><th>Co-authors</th><th>First Author</th><th>API Score</th></tr>
       ${books.map((b, i) => `<tr><td class="c">${i + 1}</td><td>${b.title || '&nbsp;'}</td><td>${b.book || '&nbsp;'}</td><td class="c">${b.issn || '&nbsp;'}</td><td>${b.pub || '&nbsp;'}</td><td>${b.coauth || '&nbsp;'}</td><td class="c">${b.first || '&nbsp;'}</td><td class="c">${b.score || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="7" class="c b">Total (Max 50)</td><td class="c">${bookScore.toFixed(1)}</td></tr>
+      <tr class="tr"><td colspan="7" class="c b">Total (Max 30)</td><td class="c">${bookScore.toFixed(1)}</td></tr>
     </table>
 
-    <h3>3) ICT Mediated Teaching Learning Pedagogy &nbsp;(Max 20)</h3>
+    <h3>B11. ICT Content, MOOCs &amp; E-Learning &nbsp;(Max 15)</h3>
     <table>
       <tr><th>SN</th><th>Title</th><th>Short Description</th><th>Type / Link</th><th>Quadrants</th><th>API Score</th></tr>
       ${ict.map((r, i) => `<tr><td class="c">${i + 1}</td><td>${r.title || '&nbsp;'}</td><td>${r.desc || '&nbsp;'}</td><td>${r.type || '&nbsp;'}</td><td class="c">${r.quad || '&nbsp;'}</td><td class="c">${r.score || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="5" class="c b">Total (Max 20)</td><td class="c">${ictScore.toFixed(1)}</td></tr>
+      <tr class="tr"><td colspan="5" class="c b">Total (Max 15)</td><td class="c">${ictScore.toFixed(1)}</td></tr>
     </table>
 
     ${sectionApplicability.research !== "notApplicable" ? `
-    <h3>4a) Research Guidance - PhD / PG &nbsp;(Max 30)</h3>
+    <h3>B5. Research Guidance &nbsp;(Max 20)</h3>
     <table>
       <tr><th>SN</th><th>Degree</th><th>Name of Student</th><th>Thesis / Status</th><th>API Score</th></tr>
       ${research.map((r, i) => `<tr><td class="c">${i + 1}</td><td class="c">${r.degree || '&nbsp;'}</td><td>${r.name || '&nbsp;'}</td><td>${r.thesis || '&nbsp;'}</td><td class="c">${r.degree || r.name || r.thesis || r.score ? researchGuidanceScore(r).toFixed(1) : ""}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="4" class="c b">Total (Max 30)</td><td class="c">${researchScore.toFixed(1)}</td></tr>
+      <tr class="tr"><td colspan="4" class="c b">Total (Max 20)</td><td class="c">${researchScore.toFixed(1)}</td></tr>
     </table>` : ""}
 
-    <h3>4b) Internal Research Projects &nbsp;(Max 15)</h3>
+    <h3>B4. Funded Research Projects &nbsp;(Max 40)</h3>
     <table>
       <tr><th>SN</th><th>Title</th><th>Funding Agency</th><th>Date of Sanction</th><th>Grant Amount</th><th>Role</th><th>Status</th><th>API Score</th></tr>
       ${projects2.map((p, i) => `<tr><td class="c">${i + 1}</td><td>${p.title || '&nbsp;'}</td><td>${p.agency || '&nbsp;'}</td><td class="c">${p.date || '&nbsp;'}</td><td class="c">${p.amount || '&nbsp;'}</td><td>${p.role || '&nbsp;'}</td><td>${p.status || '&nbsp;'}</td><td class="c">${p.score || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="7" class="c b">Total (Max 15)</td><td class="c">${projectBScore.toFixed(1)}</td></tr>
+      <tr class="tr"><td colspan="7" class="c b">Total (Max 40)</td><td class="c">${projectBScore.toFixed(1)}</td></tr>
     </table>
 
-    <h3>4c) External Research Projects &nbsp;(Max 30)</h3>
+    <h3>Legacy External Research Projects &nbsp;(Not counted in AY 2026-2027 total)</h3>
     <table>
       <tr><th>SN</th><th>Title</th><th>Funding Agency</th><th>Date of Sanction</th><th>Grant Amount</th><th>Role</th><th>Status</th><th>API Score</th></tr>
       ${externalProjects.map((p, i) => `<tr><td class="c">${i + 1}</td><td>${p.title || '&nbsp;'}</td><td>${p.agency || '&nbsp;'}</td><td class="c">${p.date || '&nbsp;'}</td><td class="c">${p.amount || '&nbsp;'}</td><td>${p.role || '&nbsp;'}</td><td>${p.status || '&nbsp;'}</td><td class="c">${p.score || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="7" class="c b">Total (Max 30)</td><td class="c">${externalProjectScore.toFixed(1)}</td></tr>
+      <tr class="tr"><td colspan="7" class="c b">Total (Max 0)</td><td class="c">${externalProjectScore.toFixed(1)}</td></tr>
     </table>
 
     <h3>5a) Patents (IPR) &nbsp;(Max 40)</h3>
@@ -717,46 +870,46 @@ export default function StandardMyAppraisal({
       <tr class="tr"><td colspan="6" class="c b">Total (Max 40)</td><td class="c">${patentScore.toFixed(1)}</td></tr>
     </table>
 
-    <h3>5b) Research Awards / Fellowships &nbsp;(Max 10)</h3>
+    <h3>B9. Research Awards, Fellowships &amp; Citations &nbsp;(Max 20)</h3>
     <table>
       <tr><th>SN</th><th>Title of Award</th><th>Date</th><th>Awarding Agency</th><th>Level</th><th>API Score</th></tr>
       ${awards.map((a, i) => `<tr><td class="c">${i + 1}</td><td>${a.title || '&nbsp;'}</td><td class="c">${a.date || '&nbsp;'}</td><td>${a.agency || '&nbsp;'}</td><td>${a.level || '&nbsp;'}</td><td class="c">${a.score || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="5" class="c b">Total (Max 10)</td><td class="c">${awardScore.toFixed(1)}</td></tr>
+      <tr class="tr"><td colspan="5" class="c b">Total (Max 20)</td><td class="c">${awardScore.toFixed(1)}</td></tr>
     </table>
 
-    <h3>6) Conferences / Seminars / Workshops &nbsp;(Max 30)</h3>
+    <h3>B7. Conference / FDP Contributions - Organised &nbsp;(Max 20)</h3>
     <table>
       <tr><th>SN</th><th>Title / Session</th><th>Type</th><th>Organization</th><th>Level</th><th>API Score</th></tr>
       ${confs.map((c, i) => `<tr><td class="c">${i + 1}</td><td>${c.title || '&nbsp;'}</td><td>${c.type || '&nbsp;'}</td><td>${c.org || '&nbsp;'}</td><td>${c.level || '&nbsp;'}</td><td class="c">${c.score || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="5" class="c b">Total (Max 30)</td><td class="c">${confScore.toFixed(1)}</td></tr>
+      <tr class="tr"><td colspan="5" class="c b">Total (Max 20)</td><td class="c">${confScore.toFixed(1)}</td></tr>
     </table>
 
-    <h3>7a) Submitted Research Proposals &nbsp;(Max 10)</h3>
+    <h3>B6. Consultancy, Testing &amp; Training &nbsp;(Max 20)</h3>
     <table>
       <tr><th>SN</th><th>Title of Proposal</th><th>Duration</th><th>Funding Agency</th><th>Grant Amount Requested</th><th>API Score</th></tr>
       ${proposals.map((p, i) => `<tr><td class="c">${i + 1}</td><td>${p.title || '&nbsp;'}</td><td class="c">${p.duration || '&nbsp;'}</td><td>${p.agency || '&nbsp;'}</td><td class="c">${p.amount || '&nbsp;'}</td><td class="c">${p.score || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="5" class="c b">Total (Max 10)</td><td class="c">${proposalScore.toFixed(1)}</td></tr>
+      <tr class="tr"><td colspan="5" class="c b">Total (Max 20)</td><td class="c">${proposalScore.toFixed(1)}</td></tr>
     </table>
 
-    <h3>7b) Product Developed and Used by Students / Commercialized &nbsp;(Max 10)</h3>
+    <h3>B10. Innovation, Start-ups &amp; Technology Transfer &nbsp;(Max 20)</h3>
     <table>
       <tr><th>SN</th><th>Details of Product</th><th>Used by Students / Commercialized</th><th>API Score</th></tr>
       ${products.map((p, i) => `<tr><td class="c">${i + 1}</td><td>${p.details || '&nbsp;'}</td><td>${p.usage || '&nbsp;'}</td><td class="c">${p.score || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="3" class="c b">Total (Max 10)</td><td class="c">${productScore.toFixed(1)}</td></tr>
+      <tr class="tr"><td colspan="3" class="c b">Total (Max 20)</td><td class="c">${productScore.toFixed(1)}</td></tr>
     </table>
 
-    <h3>8a) Attended FDP / Workshops &nbsp;(Max 10)</h3>
+    <h3>B8. Conference / FDP / Industry Training Attended &nbsp;(Max 20)</h3>
     <table>
       <tr><th>SN</th><th>Program</th><th>Duration</th><th>Organized By</th><th>API Score</th></tr>
       ${fdps.map((f, i) => `<tr><td class="c">${i + 1}</td><td>${f.program || '&nbsp;'}</td><td class="c">${f.duration || '&nbsp;'}</td><td>${f.org || '&nbsp;'}</td><td class="c">${clampScore(f.score, SCORE_LIMITS.fdpRow) || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="4" class="c b">Total (Max 10)</td><td class="c">${fdpScore.toFixed(1)}</td></tr>
+      <tr class="tr"><td colspan="4" class="c b">FDP / Workshops Total</td><td class="c">${fdpScore.toFixed(1)}</td></tr>
     </table>
 
-    <h3>8b) Industrial Training &nbsp;(Max 10)</h3>
+    <h3>Industrial Training</h3>
     <table>
       <tr><th>SN</th><th>Company / Industry</th><th>Duration</th><th>Nature of Training</th><th>API Score</th></tr>
       ${training.map((t, i) => `<tr><td class="c">${i + 1}</td><td>${t.company || '&nbsp;'}</td><td class="c">${t.duration || '&nbsp;'}</td><td>${t.nature || '&nbsp;'}</td><td class="c">${clampScore(t.score, SCORE_LIMITS.fdpRow) || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="4" class="c b">Total (Max 10)</td><td class="c">${trainScore.toFixed(1)}</td></tr>
+      <tr class="tr"><td colspan="4" class="c b">Combined B8 Total (Max 20)</td><td class="c">${b8Score.toFixed(1)}</td></tr>
     </table>
 
     <div class="pb"></div>
@@ -764,27 +917,28 @@ export default function StandardMyAppraisal({
     <table class="st">
       <tr><th>Sr.No.</th><th>Criteria</th><th>Max Score</th><th>Faculty Score</th></tr>
       <tr><td colspan="4" class="b" style="background:#d9d9d9;text-align:center">Part A - Teaching Process</td></tr>
-      <tr><td class="c">A</td><td>Teaching Process (i+ii+iii+iv+v)</td><td class="c">${teachingMax}</td><td class="c">${teachingRaw.toFixed(1)}</td></tr>
-      <tr><td class="c">B</td><td>Students' Feedback</td><td class="c">10</td><td class="c">${stuFeedbackScore.toFixed(1)}</td></tr>
-      <tr><td class="c">C</td><td>Departmental Activities</td><td class="c">20</td><td class="c">${deptScore.toFixed(1)}</td></tr>
-      <tr><td class="c">D</td><td>University Activity</td><td class="c">30</td><td class="c">${uniScore.toFixed(1)}</td></tr>
-      <tr><td class="c">E</td><td>Contribution to Society</td><td class="c">${sectionApplicability.society === "notApplicable" ? "N/A" : "10"}</td><td class="c">${societyScore.toFixed(1)}</td></tr>
-      <tr><td class="c">F</td><td>Industry Connect</td><td class="c">5</td><td class="c">${industryScore.toFixed(1)}</td></tr>
-      <tr><td class="c">G</td><td>Annual Confidential Report</td><td class="c">N/A</td><td class="c">${acrScore.toFixed(1)}</td></tr>
+      <tr><td class="c">A</td><td>Teaching &amp; Learning</td><td class="c">${effectivePartAMax}</td><td class="c">${partATotal.toFixed(1)}</td></tr>
       <tr class="tr"><td colspan="2" class="c b">Part A Total</td><td class="c b">${effectivePartAMax}</td><td class="c b">${partATotal.toFixed(1)}</td></tr>
       <tr class="tr"><td colspan="2" class="c b">Part A Marks Obtained (%)</td><td colspan="2" class="c b">${partAMarksPercentage}%</td></tr>
       <tr><td colspan="4" class="b" style="background:#d9d9d9;text-align:center">Part B - Research and Academic Contribution</td></tr>
-      <tr><td class="c">1</td><td>Research papers / journal publication</td><td class="c">120</td><td class="c">${journalScore.toFixed(1)}</td></tr>
-      <tr><td class="c">2</td><td>Books authored / edited / book chapter</td><td class="c">50</td><td class="c">${bookScore.toFixed(1)}</td></tr>
-      <tr><td class="c">3</td><td>ICT Teaching Learning Pedagogy</td><td class="c">20</td><td class="c">${ictScore.toFixed(1)}</td></tr>
-      <tr><td class="c">4</td><td>Research guidance / projects / consultancy</td><td class="c">${researchGuidanceProjectMax}</td><td class="c">${(researchScore + projectBScore + externalProjectScore).toFixed(1)}</td></tr>
-      <tr><td class="c">5</td><td>Patents, Awards, Fellowship</td><td class="c">50</td><td class="c">${(patentScore + awardScore).toFixed(1)}</td></tr>
-      <tr><td class="c">6</td><td>Conferences / paper presentations</td><td class="c">30</td><td class="c">${confScore.toFixed(1)}</td></tr>
-      <tr><td class="c">7</td><td>Research proposals / product development</td><td class="c">20</td><td class="c">${(proposalScore + productScore).toFixed(1)}</td></tr>
-      <tr><td class="c">8</td><td>Self Development (FDP / Industrial Training)</td><td class="c">10</td><td class="c">${b8Score.toFixed(1)}</td></tr>
+      <tr><td class="c">1</td><td>Journal Publications</td><td class="c">100</td><td class="c">${journalScore.toFixed(1)}</td></tr>
+      <tr><td class="c">2</td><td>Books, Book Chapters &amp; Edited Volumes</td><td class="c">30</td><td class="c">${bookScore.toFixed(1)}</td></tr>
+      <tr><td class="c">3</td><td>Patents, Copyrights &amp; IP and Product Development</td><td class="c">40</td><td class="c">${patentScore.toFixed(1)}</td></tr>
+      <tr><td class="c">4</td><td>Funded Research Projects</td><td class="c">40</td><td class="c">${projectBScore.toFixed(1)}</td></tr>
+      <tr><td class="c">5</td><td>Research Guidance</td><td class="c">${sectionApplicability.research === "notApplicable" ? 0 : 20}</td><td class="c">${researchScore.toFixed(1)}</td></tr>
+      <tr><td class="c">6</td><td>Consultancy, Testing &amp; Training</td><td class="c">20</td><td class="c">${proposalScore.toFixed(1)}</td></tr>
+      <tr><td class="c">7</td><td>Conference / FDP Contributions - Organised</td><td class="c">20</td><td class="c">${confScore.toFixed(1)}</td></tr>
+      <tr><td class="c">8</td><td>Conference / FDP / Industry Training Attended</td><td class="c">20</td><td class="c">${b8Score.toFixed(1)}</td></tr>
+      <tr><td class="c">9</td><td>Research Awards, Fellowships &amp; Citations</td><td class="c">20</td><td class="c">${awardScore.toFixed(1)}</td></tr>
+      <tr><td class="c">10</td><td>Innovation, Start-ups &amp; Technology Transfer</td><td class="c">20</td><td class="c">${productScore.toFixed(1)}</td></tr>
+      <tr><td class="c">11</td><td>ICT Content, MOOCs &amp; E-Learning</td><td class="c">15</td><td class="c">${ictScore.toFixed(1)}</td></tr>
       <tr class="tr"><td colspan="2" class="c b">Part B Total</td><td class="c b">${effectivePartBMax}</td><td class="c b">${partBTotal.toFixed(1)}</td></tr>
       <tr class="tr"><td colspan="2" class="c b">Part B Marks Obtained (%)</td><td colspan="2" class="c b">${partBMarksPercentage}%</td></tr>
-      <tr style="background:#bfbfbf;font-weight:bold;font-size:13px"><td colspan="2" class="c">Grand Total (Part A + Part B)</td><td class="c">${effectiveGrandMax}</td><td class="c">${grandTotal.toFixed(1)}</td></tr>
+      <tr><td colspan="4" class="b" style="background:#d9d9d9;text-align:center">Part C - Administrative Role &amp; University Development Contribution</td></tr>
+      <tr><td class="c">C</td><td>Administrative Contribution</td><td class="c">${PART_C_MAX}</td><td class="c">${partCTotal.toFixed(1)}</td></tr>
+      <tr><td colspan="4" class="b" style="background:#d9d9d9;text-align:center">Part D - Annual Confidential Report</td></tr>
+      <tr><td class="c">D</td><td>Annual Confidential Report (Evaluator only)</td><td class="c">${PART_D_MAX}</td><td class="c">N/A</td></tr>
+      <tr style="background:#bfbfbf;font-weight:bold;font-size:13px"><td colspan="2" class="c">Grand Total (Part A + Part B + Part C + Part D)</td><td class="c">${effectiveGrandMax}</td><td class="c">${grandTotal.toFixed(1)}</td></tr>
       <tr style="background:#bfbfbf;font-weight:bold;font-size:13px"><td colspan="2" class="c">Marks Obtained (%)</td><td colspan="2" class="c">${totalMarksPercentage}%</td></tr>
     </table>
 
@@ -852,6 +1006,8 @@ export default function StandardMyAppraisal({
         >
           <option value="partA">Part A</option>
           <option value="partB" disabled={!isMyAppraisalSectionOpen("partB")}>Part B</option>
+          <option value="partC" disabled={!isMyAppraisalSectionOpen("partC")}>Part C</option>
+          <option value="partD" disabled={!isMyAppraisalSectionOpen("partD")}>Part D</option>
           <option value="summary" disabled={!isMyAppraisalSectionOpen("summary")}>Summary</option>
         </select>
       </div>
@@ -888,14 +1044,14 @@ export default function StandardMyAppraisal({
 
                 {/* Part A Tab */}
                 {hodAppraisalTab === "partA" && (
-                  <SC title={`Part A - Teaching & Academic Activities (Max ${effectivePartAMax})`} accent="#6366f1">
+                  <SC title={`Part A - Teaching & Learning (Max ${effectivePartAMax})`} accent="#6366f1">
                     <div style={{ marginBottom: 14, padding: "8px 12px", background: "#f0f4ff", borderRadius: 6, fontSize: 12, color: "#312e81", fontWeight: 600 }}>
                       Total Part A Score: {partATotal.toFixed(1)}/{effectivePartAMax}
                     </div>
                     <div style={{ fontSize: 11, color: "#64748b", marginBottom: 12 }}>Fill in your teaching and academic activities for the appraisal period. Enter scores for each item.</div>
                     {/* A1. Teaching Process */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>(i) Lectures, Tutorials, Practicals, Projects - Max 50 marks</div>
+                    <div style={{ marginBottom: 16, order: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>A1. Course Delivery & Classroom Engagement - Max 40 marks</div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -919,11 +1075,11 @@ export default function StandardMyAppraisal({
                               <td style={TDC}><TI val={r.conducted} onChange={(v) => setLec(i, "conducted", v)} center numeric /></td>
                               <td style={TD}><DocCell id={`lec-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`lec-${i}`} docs={docs} /></td>
-                              <td style={TDS}><TI val={r.score} onChange={(v) => setLec(i, "score", v)} center numeric max={50} /></td>
+                              <td style={TDS}><TI val={r.score} onChange={(v) => setLec(i, "score", v)} center numeric max={10} /></td>
                             </tr>
                           ))}
                           <tr style={{ background: "#eff6ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Average Score (Max 50)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Score (Max 40)</td>
                             <td style={{ ...TDS, fontWeight: "bold", color: "#1e3a5f" }}>{totalLecScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
@@ -932,8 +1088,8 @@ export default function StandardMyAppraisal({
                     </div>
 
                     {/* A2. Course File */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>(ii) Course File - Max 20 marks</div>
+                    <div style={{ marginBottom: 16, order: 2 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>A2. Course File & Curriculum Documentation - Max 20 marks</div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -971,8 +1127,8 @@ export default function StandardMyAppraisal({
                     </div>
 
                     {/* A3. Innovative Teaching */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>(iii) Innovative Teaching-Learning Methodologies - Max 10 marks</div>
+                    <div style={{ marginBottom: 16, order: 3 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>A3. Innovative Teaching-Learning Methods - Max 20 marks</div>
                       <table style={T}>
                         <thead><tr>
                           <th style={{ ...TH, width: 30 }}>SN</th>
@@ -990,11 +1146,11 @@ export default function StandardMyAppraisal({
                               <td style={TD}><TI val={r.details} onChange={(v) => setInnov(i, "details", v)} /></td>
                               <td style={TD}><DocCell id={`innov-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`innov-${i}`} docs={docs} /></td>
-                              <td style={TDS}><TI val={r.score} onChange={(v) => setInnov(i, "score", v === "" ? "" : String(clampScore(v, SCORE_LIMITS.innovativeRow)))} numeric max={SCORE_LIMITS.innovativeRow} center /></td>
+                              <td style={TDS}><TI val={r.score} onChange={(v) => setInnov(i, "score", v === "" ? "" : String(clampScore(v, A3_INNOVATIVE_ROW_MAX)))} numeric max={A3_INNOVATIVE_ROW_MAX} center /></td>
                             </tr>
                           ))}
                           <tr style={{ background: "#eff6ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={5}>Total Score (Max 10)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={5}>Total Score (Max 20)</td>
                             <td style={{ ...TDS, fontWeight: "bold", color: "#1e3a5f" }}>{innovTotal.toFixed(1)}</td>
                           </tr>
                         </tbody>
@@ -1002,9 +1158,9 @@ export default function StandardMyAppraisal({
                       <RowBtns onAdd={() => setInnovRows((p) => [...p, { method: "", details: "", score: "" }])} onDel={() => setInnovRows((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={innovRows.length > 1} />
                     </div>
 
-                    {/* A4. Projects */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>(iv) Projects - Max 10 marks</div>
+                    {/* A6. Student Project Guidance */}
+                    <div style={{ marginBottom: 16, order: 6 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>A6. Student Project Guidance - Max 20 marks</div>
                       <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 10, fontSize: 12, fontWeight: 700, color: "#334155" }}>
                         {["applicable", "notApplicable"].map((value) => (
                           <label key={value} style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
@@ -1040,11 +1196,11 @@ export default function StandardMyAppraisal({
                                 <td style={TD}><TI val={r.label} readOnly={sectionApplicability.projects === "notApplicable"} onChange={(v) => setProj(i, "label", v)} /></td>
                                 <td style={TD}><DocCell id={`proj-${i}`} docs={docs} setDocs={setDocs} readOnly={sectionApplicability.projects === "notApplicable"} /></td>
                                 <td style={TD}><ViewCell id={`proj-${i}`} docs={docs} /></td>
-                                <td style={TDS}><TI val={r.score} readOnly={sectionApplicability.projects === "notApplicable"} onChange={(v) => setProj(i, "score", v)} center numeric max={projectGuidanceRowMax(r)} /></td>
+                                <td style={TDS}><TI val={r.score} readOnly={sectionApplicability.projects === "notApplicable"} onChange={(v) => setProj(i, "score", v)} center numeric max={A6_PROJECT_GUIDANCE_MAX} /></td>
                               </tr>
                             ))}
                             <tr style={{ background: "#eff6ff" }}>
-                              <td style={{ ...TDC, fontWeight: "bold" }} colSpan={4}>Total Score (Max {sectionApplicability.projects === "notApplicable" ? 0 : 10})</td>
+                              <td style={{ ...TDC, fontWeight: "bold" }} colSpan={4}>Total Score (Max {sectionApplicability.projects === "notApplicable" ? 0 : 20})</td>
                               <td style={{ ...TDS, fontWeight: "bold" }}>{projectTotal.toFixed(1)}</td>
                             </tr>
                           </tbody>
@@ -1053,9 +1209,9 @@ export default function StandardMyAppraisal({
                       </>)}
                     </div>
 
-                    {/* A5. Qualifications */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>(v) Qualification Enhancement - Max 10 marks</div>
+                    {/* A8. Qualifications */}
+                    <div style={{ marginBottom: 16, order: 8 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>A8. Professional Development & Qualification Enhancement - Max 10 marks</div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -1085,9 +1241,9 @@ export default function StandardMyAppraisal({
                       <RowBtns onAdd={() => setQuals((p) => [...p, { label: "", score: "" }])} onDel={() => setQuals((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={quals.length > 1} />
                     </div>
 
-                    {/* A6. Student Feedback */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>(vi) Student Feedback - Max 10 marks</div>
+                    {/* A4. Student Feedback */}
+                    <div style={{ marginBottom: 16, order: 4 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>A4. Student Feedback Score - Max 10 marks</div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -1119,77 +1275,186 @@ export default function StandardMyAppraisal({
                       <RowBtns onAdd={() => setFeedback((p) => [...p, { code: "", fb1: "", fb2: "", score: "" }])} onDel={() => setFeedback((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={feedback.length > 1} />
                     </div>
 
-                    {/* A7. Department Activities */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>(vii) Department Activities - Max 20 marks</div>
+                    {/* A5. OBE Practice */}
+                    <div style={{ marginBottom: 16, order: 5 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>A5. Learning Outcomes Attainment & OBE Practice - Max 20 marks</div>
                       <table style={T}>
                         <thead>
                           <tr>
                             <th style={{ ...TH, width: 30 }}>SN</th>
-                            <th style={TH}>Activity</th>
-                            <th style={TH}>Nature</th>
+                            <th style={TH}>Component</th>
+                            <th style={TH}>Evidence Attached (Yes/No)</th>
                             <th style={TH}>Attachment</th>
                             <th style={TH}>View Docs</th>
                             <th style={TH}>Score</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {deptActs.map((r, i) => (
+                          {obeRows.map((r, i) => (
                             <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
                               <td style={TDC}>{i + 1}</td>
-                              <td style={TD}><TI val={r.activity} onChange={(v) => setDept(i, "activity", v)} /></td>
-                              <td style={TD}><TI val={r.nature} onChange={(v) => setDept(i, "nature", v)} /></td>
-                              <td style={TD}><DocCell id={`dept-${i}`} docs={docs} setDocs={setDocs} /></td>
-                              <td style={TD}><ViewCell id={`dept-${i}`} docs={docs} /></td>
-                              <td style={TDS}><TI val={r.score} onChange={(v) => setDept(i, "score", v)} center numeric /></td>
+                              <td style={TD}><TI val={r.component} onChange={(v) => setObe(i, "component", v)} /></td>
+                              <td style={TD}><TI val={r.evidence} onChange={(v) => setObe(i, "evidence", v)} placeholder="Yes / No" /></td>
+                              <td style={TD}><DocCell id={`obe-${i}`} docs={docs} setDocs={setDocs} /></td>
+                              <td style={TD}><ViewCell id={`obe-${i}`} docs={docs} /></td>
+                              <td style={TDS}><TI val={r.score} onChange={(v) => setObe(i, "score", v)} center numeric max={r.max || A5_OBE_MAX} /></td>
                             </tr>
                           ))}
                           <tr style={{ background: "#eff6ff" }}>
                             <td style={{ ...TDC, fontWeight: "bold" }} colSpan={5}>Total Score (Max 20)</td>
-                            <td style={{ ...TDS, fontWeight: "bold" }}>{deptScore.toFixed(1)}</td>
+                            <td style={{ ...TDS, fontWeight: "bold" }}>{obeScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
                       </table>
-                      <RowBtns onAdd={() => setDeptActs((p) => [...p, { activity: "", nature: "", score: "" }])} onDel={() => setDeptActs((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={deptActs.length > 1} />
+                      <RowBtns onAdd={() => setObeRows((p) => [...p, { component: "", evidence: "", score: "", max: A5_OBE_MAX }])} onDel={() => setObeRows((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={obeRows.length > 1} />
                     </div>
 
-                    {/* A8. University Activities */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>(viii) University Activities - Max 30 marks</div>
+                    {/* A7. Mentoring */}
+                    <div style={{ marginBottom: 16, order: 7 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>A7. Student Mentoring & Counselling - Max 10 marks</div>
                       <table style={T}>
                         <thead>
                           <tr>
                             <th style={{ ...TH, width: 30 }}>SN</th>
                             <th style={TH}>Activity</th>
-                            <th style={TH}>Nature</th>
+                            <th style={TH}>Evidence Attached (Yes/No)</th>
                             <th style={TH}>Attachment</th>
                             <th style={TH}>View Docs</th>
                             <th style={TH}>Score</th>
                           </tr>
                         </thead>
+                        <tbody>
+                          {mentoringRows.map((r, i) => (
+                            <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
+                              <td style={TDC}>{i + 1}</td>
+                              <td style={TD}><TI val={r.activity} onChange={(v) => setMentoring(i, "activity", v)} /></td>
+                              <td style={TD}><TI val={r.evidence} onChange={(v) => setMentoring(i, "evidence", v)} placeholder="Yes / No" /></td>
+                              <td style={TD}><DocCell id={`mentor-${i}`} docs={docs} setDocs={setDocs} /></td>
+                              <td style={TD}><ViewCell id={`mentor-${i}`} docs={docs} /></td>
+                              <td style={TDS}><TI val={r.score} onChange={(v) => setMentoring(i, "score", v)} center numeric max={r.max || A7_MENTORING_MAX} /></td>
+                            </tr>
+                          ))}
+                          <tr style={{ background: "#eff6ff" }}>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={5}>Total Score (Max 10)</td>
+                            <td style={{ ...TDS, fontWeight: "bold" }}>{mentoringScore.toFixed(1)}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <RowBtns onAdd={() => setMentoringRows((p) => [...p, { activity: "", evidence: "", score: "", max: A7_MENTORING_MAX }])} onDel={() => setMentoringRows((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={mentoringRows.length > 1} />
+                    </div>
+                  </SC>
+                )}
+
+                {/* Part C Tab */}
+                {hodAppraisalTab === "partC" && (
+                  <SC title={`Part C - Administrative Role & University Development Contribution (Max ${PART_C_MAX})`} accent="#0f766e">
+                    <div style={{ marginBottom: 14, padding: "8px 12px", background: "#ccfbf1", borderRadius: 6, fontSize: 12, color: "#115e59", fontWeight: 600 }}>
+                      Total Part C Score: {partCTotal.toFixed(1)}/{PART_C_MAX}
+                    </div>
+
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>C1. Administration at University Level - Max 50 marks</div>
+                      <table style={T}>
+                        <thead><tr>
+                          <th style={{ ...TH, width: 30 }}>Sr. No.</th>
+                          <th style={TH}>Activity / Responsibility</th>
+                          <th style={TH}>Duration Category</th>
+                          <th style={TH}>Period</th>
+                          <th style={TH}>Attachment</th>
+                          <th style={TH}>View Docs</th>
+                          <th style={TH}>Faculty Score</th>
+                        </tr></thead>
                         <tbody>
                           {uniActs.map((r, i) => (
                             <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
                               <td style={TDC}>{i + 1}</td>
                               <td style={TD}><TI val={r.activity} onChange={(v) => setUni(i, "activity", v)} /></td>
                               <td style={TD}><TI val={r.nature} onChange={(v) => setUni(i, "nature", v)} /></td>
+                              <td style={TD}><TI val={r.period} onChange={(v) => setUni(i, "period", v)} /></td>
                               <td style={TD}><DocCell id={`uni-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`uni-${i}`} docs={docs} /></td>
-                              <td style={TDS}><TI val={r.score} onChange={(v) => setUni(i, "score", v)} center numeric /></td>
+                              <td style={TDS}><TI val={r.score} onChange={(v) => setUni(i, "score", v)} center numeric max={C1_UNIVERSITY_ADMIN_MAX} /></td>
                             </tr>
                           ))}
-                          <tr style={{ background: "#eff6ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={5}>Total Score (Max 30)</td>
+                          <tr style={{ background: "#ccfbf1" }}>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total (Max 50)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{uniScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
                       </table>
-                      <RowBtns onAdd={() => setUniActs((p) => [...p, { activity: "", nature: "", score: "" }])} onDel={() => setUniActs((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={uniActs.length > 1} />
+                      <RowBtns onAdd={() => setUniActs((p) => [...p, { activity: "", nature: "", period: "", score: "" }])} onDel={() => setUniActs((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={uniActs.length > 1} />
                     </div>
 
-                    {/* A9. Contribution to Society */}
                     <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>(ix) Contribution to Society - Max 10 marks (Max 5 per row)</div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>C2. Administration at School Level - Max 30 marks</div>
+                      <table style={T}>
+                        <thead><tr>
+                          <th style={{ ...TH, width: 30 }}>Sr. No.</th>
+                          <th style={TH}>Activity / Responsibility</th>
+                          <th style={TH}>Duration Category</th>
+                          <th style={TH}>Period</th>
+                          <th style={TH}>Attachment</th>
+                          <th style={TH}>View Docs</th>
+                          <th style={TH}>Faculty Score</th>
+                        </tr></thead>
+                        <tbody>
+                          {deptActs.map((r, i) => (
+                            <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
+                              <td style={TDC}>{i + 1}</td>
+                              <td style={TD}><TI val={r.activity} onChange={(v) => setDept(i, "activity", v)} /></td>
+                              <td style={TD}><TI val={r.nature} onChange={(v) => setDept(i, "nature", v)} /></td>
+                              <td style={TD}><TI val={r.period} onChange={(v) => setDept(i, "period", v)} /></td>
+                              <td style={TD}><DocCell id={`dept-${i}`} docs={docs} setDocs={setDocs} /></td>
+                              <td style={TD}><ViewCell id={`dept-${i}`} docs={docs} /></td>
+                              <td style={TDS}><TI val={r.score} onChange={(v) => setDept(i, "score", v)} center numeric max={C2_SCHOOL_ADMIN_MAX} /></td>
+                            </tr>
+                          ))}
+                          <tr style={{ background: "#ccfbf1" }}>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total (Max 30)</td>
+                            <td style={{ ...TDS, fontWeight: "bold" }}>{deptScore.toFixed(1)}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <RowBtns onAdd={() => setDeptActs((p) => [...p, { activity: "", nature: "", period: "", score: "" }])} onDel={() => setDeptActs((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={deptActs.length > 1} />
+                    </div>
+
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>C3. Event Organisation & Institutional Visibility - Max 20 marks</div>
+                      <table style={T}>
+                        <thead><tr>
+                          <th style={{ ...TH, width: 30 }}>Sr. No.</th>
+                          <th style={TH}>Event / Contribution</th>
+                          <th style={TH}>Role</th>
+                          <th style={TH}>Date</th>
+                          <th style={TH}>Level</th>
+                          <th style={TH}>Attachment</th>
+                          <th style={TH}>View Docs</th>
+                          <th style={TH}>Faculty Score</th>
+                        </tr></thead>
+                        <tbody>
+                          {eventRows.map((r, i) => (
+                            <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
+                              <td style={TDC}>{i + 1}</td>
+                              <td style={TD}><TI val={r.event} onChange={(v) => setEvent(i, "event", v)} /></td>
+                              <td style={TD}><TI val={r.role} onChange={(v) => setEvent(i, "role", v)} /></td>
+                              <td style={TD}><TI val={r.date} onChange={(v) => setEvent(i, "date", maskDateDDMMYYYY(v))} placeholder="DD/MM/YYYY" /></td>
+                              <td style={TD}><TI val={r.level} onChange={(v) => setEvent(i, "level", v)} /></td>
+                              <td style={TD}><DocCell id={`event-${i}`} docs={docs} setDocs={setDocs} /></td>
+                              <td style={TD}><ViewCell id={`event-${i}`} docs={docs} /></td>
+                              <td style={TDS}><TI val={r.score} onChange={(v) => setEvent(i, "score", v)} center numeric max={C3_EVENT_MAX} /></td>
+                            </tr>
+                          ))}
+                          <tr style={{ background: "#ccfbf1" }}>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total (Max 20)</td>
+                            <td style={{ ...TDS, fontWeight: "bold" }}>{eventScore.toFixed(1)}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <RowBtns onAdd={() => setEventRows((p) => [...p, { event: "", role: "", date: "", level: "", score: "" }])} onDel={() => setEventRows((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={eventRows.length > 1} />
+                    </div>
+
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>C4. Outreach, Extension & Social Responsibility - Max 20 marks</div>
                       <div style={{ display: "flex", gap: 14, marginBottom: 10, fontSize: 12, fontWeight: 800, color: "#334155" }}>
                         {["applicable", "notApplicable"].map((v) => (
                           <label key={v} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -1198,118 +1463,185 @@ export default function StandardMyAppraisal({
                           </label>
                         ))}
                       </div>
-                      {sectionApplicability.society !== "notApplicable" && <><table style={T}>
-                        <thead>
-                          <tr>
-                            <th style={{ ...TH, width: 30 }}>SN</th>
+                      {sectionApplicability.society !== "notApplicable" && <>
+                        <table style={T}>
+                          <thead><tr>
+                            <th style={{ ...TH, width: 30 }}>Sr. No.</th>
                             <th style={TH}>Activity</th>
                             <th style={TH}>Details</th>
+                            <th style={TH}>Date</th>
                             <th style={TH}>Attachment</th>
                             <th style={TH}>View Docs</th>
-                            <th style={TH}>Score (Max 5)</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {society.map((r, i) => {
-                            const socLocked = societyRowLocked(r);
-                            return (
-                              <tr key={i} style={socLocked ? { background: "#f1f5f9", opacity: 0.65 } : i % 2 === 1 ? { background: "#f8fafc" } : {}}>
-                                <td style={TDC}>{i + 1}</td>
-                                <td style={TD}><TI val={r.label} onChange={(v) => setSoc(i, "label", v)} readOnly={socLocked} /></td>
-                                <td style={TD}><TI val={r.details} onChange={(v) => setSoc(i, "details", v)} readOnly={socLocked} /></td>
-                                <td style={TD}><DocCell id={`soc-${i}`} docs={docs} setDocs={setDocs} readOnly={socLocked} /></td>
-                                <td style={TD}><ViewCell id={`soc-${i}`} docs={docs} /></td>
-                                <td style={TDS}><TI val={r.score} onChange={(v) => setSoc(i, "score", v === "" ? "" : String(clampScore(v, SCORE_LIMITS.societyRow)))} numeric max={SCORE_LIMITS.societyRow} center readOnly={socLocked} /></td>
-                              </tr>
-                            );
-                          })}
-                          <tr style={{ background: "#eff6ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={5}>Total Score (Max 10)</td>
-                            <td style={{ ...TDS, fontWeight: "bold" }}>{societyScore.toFixed(1)}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                        <RowBtns onAdd={() => setSociety((p) => [...p, { label: "", details: "", score: "" }])} onDel={() => setSociety((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={society.length > 1} />
+                            <th style={TH}>Faculty Score</th>
+                          </tr></thead>
+                          <tbody>
+                            {society.map((r, i) => {
+                              const socLocked = societyRowLocked(r);
+                              return (
+                                <tr key={i} style={socLocked ? { background: "#f1f5f9", opacity: 0.65 } : i % 2 === 1 ? { background: "#f8fafc" } : {}}>
+                                  <td style={TDC}>{i + 1}</td>
+                                  <td style={TD}><TI val={r.label} onChange={(v) => setSoc(i, "label", v)} readOnly={socLocked} /></td>
+                                  <td style={TD}><TI val={r.details} onChange={(v) => setSoc(i, "details", v)} readOnly={socLocked} /></td>
+                                  <td style={TD}><TI val={r.date} onChange={(v) => setSoc(i, "date", maskDateDDMMYYYY(v))} placeholder="DD/MM/YYYY" readOnly={socLocked} /></td>
+                                  <td style={TD}><DocCell id={`soc-${i}`} docs={docs} setDocs={setDocs} readOnly={socLocked} /></td>
+                                  <td style={TD}><ViewCell id={`soc-${i}`} docs={docs} /></td>
+                                  <td style={TDS}><TI val={r.score} onChange={(v) => setSoc(i, "score", v === "" ? "" : String(clampScore(v, C4_OUTREACH_MAX)))} numeric max={C4_OUTREACH_MAX} center readOnly={socLocked} /></td>
+                                </tr>
+                              );
+                            })}
+                            <tr style={{ background: "#ccfbf1" }}>
+                              <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total (Max 20)</td>
+                              <td style={{ ...TDS, fontWeight: "bold" }}>{societyScore.toFixed(1)}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <RowBtns onAdd={() => setSociety((p) => [...p, { label: "", details: "", date: "", score: "" }])} onDel={() => setSociety((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={society.length > 1} />
                       </>}
                     </div>
 
-                    {/* A10. Industry Connect */}
                     <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>(x) Industry Connect - Max 5 marks</div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>C5. Industry Interaction & Linkages - Max 8 marks</div>
                       <table style={T}>
-                        <thead>
-                          <tr>
-                            <th style={{ ...TH, width: 30 }}>SN</th>
-                            <th style={TH}>Company/Organization</th>
-                            <th style={TH}>Details</th>
-                            <th style={TH}>Attachment</th>
-                            <th style={TH}>View Docs</th>
-                            <th style={TH}>Score</th>
-                          </tr>
-                        </thead>
+                        <thead><tr>
+                          <th style={{ ...TH, width: 30 }}>Sr. No.</th>
+                          <th style={TH}>Activity (MOU / CoE / Drive / Programme)</th>
+                          <th style={TH}>Industry Partner</th>
+                          <th style={TH}>Date</th>
+                          <th style={TH}>Attachment</th>
+                          <th style={TH}>View Docs</th>
+                          <th style={TH}>Faculty Score</th>
+                        </tr></thead>
                         <tbody>
                           {industry.map((r, i) => (
-                            <tr key={i}>
+                            <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
                               <td style={TDC}>{i + 1}</td>
-                              <td style={TD}><TI val={r.name} onChange={(v) => setInd(i, "name", v)} textOnly /></td>
-                              <td style={TD}><TI val={r.details} onChange={(v) => setInd(i, "details", v)} /></td>
+                              <td style={TD}><TI val={r.activity || r.name || ""} onChange={(v) => setInd(i, "activity", v)} /></td>
+                              <td style={TD}><TI val={r.partner || r.details || ""} onChange={(v) => setInd(i, "partner", v)} /></td>
+                              <td style={TD}><TI val={r.date} onChange={(v) => setInd(i, "date", maskDateDDMMYYYY(v))} placeholder="DD/MM/YYYY" /></td>
                               <td style={TD}><DocCell id={`ind-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`ind-${i}`} docs={docs} /></td>
-                              <td style={TDS}><TI val={r.score} onChange={(v) => setInd(i, "score", v)} center numeric /></td>
+                              <td style={TDS}><TI val={r.score} onChange={(v) => setInd(i, "score", v)} center numeric max={C5_INDUSTRY_MAX} /></td>
                             </tr>
                           ))}
-                          <tr style={{ background: "#eff6ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={5}>Total Score (Max 5)</td>
+                          <tr style={{ background: "#ccfbf1" }}>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total (Max 8)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{industryScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
                       </table>
-                      <RowBtns onAdd={() => setIndustry((p) => [...p, { name: "", details: "", score: "" }])} onDel={() => setIndustry((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={industry.length > 1} />
+                      <RowBtns onAdd={() => setIndustry((p) => [...p, { activity: "", partner: "", date: "", score: "" }])} onDel={() => setIndustry((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={industry.length > 1} />
                     </div>
 
-                    {/* A11. ACR */}
                     <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>(xi) Annual Confidential Report (ACR) - Max 25 marks</div>
-                      <div style={{ fontSize: 11, color: "#b45309", background: "#fef3c7", border: "1px solid #fcd34d", borderRadius: 5, padding: "6px 10px", marginBottom: 8 }}>This section is filled by your superior. It is visible here for reference and is not counted in your self score.</div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>C6. Alumni Engagement & Networking - Max 10 marks</div>
                       <table style={T}>
-                        <thead>
-                          <tr>
-                            <th style={{ ...TH, width: 30 }}>SN</th>
-                            <th style={TH}>Parameter</th>
-                            <th style={TH}>Assessment Points</th>
-                            <th style={TH}>Self Score</th>
-                          </tr>
-                        </thead>
+                        <thead><tr>
+                          <th style={{ ...TH, width: 30 }}>Sr. No.</th>
+                          <th style={TH}>Activity</th>
+                          <th style={TH}>Details</th>
+                          <th style={TH}>Date</th>
+                          <th style={TH}>Attachment</th>
+                          <th style={TH}>View Docs</th>
+                          <th style={TH}>Faculty Score</th>
+                        </tr></thead>
                         <tbody>
-                          {createAcrRows(acr).map((row, index) => (
-                            <tr key={row.label}>
-                              <td style={TDC}>{index + 1}</td>
-                              <td style={TD}>{row.label}</td>
-                              <td style={TD}>
-                                <ul style={{ margin: "0 0 0 16px", padding: 0, color: "#64748b", fontSize: 11, lineHeight: 1.5 }}>
-                                  {(ACR_DETAIL_POINTS[row.label] || []).map((point) => <li key={point}>{point}</li>)}
-                                </ul>
-                              </td>
-                              <td style={TDC}>-</td>
+                          {alumniRows.map((r, i) => (
+                            <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
+                              <td style={TDC}>{i + 1}</td>
+                              <td style={TD}><TI val={r.activity} onChange={(v) => setAlumni(i, "activity", v)} /></td>
+                              <td style={TD}><TI val={r.details} onChange={(v) => setAlumni(i, "details", v)} /></td>
+                              <td style={TD}><TI val={r.date} onChange={(v) => setAlumni(i, "date", maskDateDDMMYYYY(v))} placeholder="DD/MM/YYYY" /></td>
+                              <td style={TD}><DocCell id={`alumni-${i}`} docs={docs} setDocs={setDocs} /></td>
+                              <td style={TD}><ViewCell id={`alumni-${i}`} docs={docs} /></td>
+                              <td style={TDS}><TI val={r.score} onChange={(v) => setAlumni(i, "score", v)} center numeric max={C6_ALUMNI_MAX} /></td>
                             </tr>
                           ))}
+                          <tr style={{ background: "#ccfbf1" }}>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total (Max 10)</td>
+                            <td style={{ ...TDS, fontWeight: "bold" }}>{alumniScore.toFixed(1)}</td>
+                          </tr>
                         </tbody>
                       </table>
+                      <RowBtns onAdd={() => setAlumniRows((p) => [...p, { activity: "", details: "", date: "", score: "" }])} onDel={() => setAlumniRows((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={alumniRows.length > 1} />
                     </div>
+
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>C7. Student Placement Mentoring & Career Development - Max 20 marks</div>
+                      <table style={T}>
+                        <thead><tr>
+                          <th style={{ ...TH, width: 30 }}>Sr. No.</th>
+                          <th style={TH}>Activity Type</th>
+                          <th style={TH}>Student / Company Name</th>
+                          <th style={TH}>Date</th>
+                          <th style={TH}>Attachment</th>
+                          <th style={TH}>View Docs</th>
+                          <th style={TH}>Faculty Score</th>
+                        </tr></thead>
+                        <tbody>
+                          {placementRows.map((r, i) => (
+                            <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
+                              <td style={TDC}>{i + 1}</td>
+                              <td style={TD}><TI val={r.activityType} onChange={(v) => setPlacement(i, "activityType", v)} /></td>
+                              <td style={TD}><TI val={r.name} onChange={(v) => setPlacement(i, "name", v)} /></td>
+                              <td style={TD}><TI val={r.date} onChange={(v) => setPlacement(i, "date", maskDateDDMMYYYY(v))} placeholder="DD/MM/YYYY" /></td>
+                              <td style={TD}><DocCell id={`placement-${i}`} docs={docs} setDocs={setDocs} /></td>
+                              <td style={TD}><ViewCell id={`placement-${i}`} docs={docs} /></td>
+                              <td style={TDS}><TI val={r.score} onChange={(v) => setPlacement(i, "score", v)} center numeric max={C7_PLACEMENT_MAX} /></td>
+                            </tr>
+                          ))}
+                          <tr style={{ background: "#ccfbf1" }}>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total (Max 20)</td>
+                            <td style={{ ...TDS, fontWeight: "bold" }}>{placementScore.toFixed(1)}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <RowBtns onAdd={() => setPlacementRows((p) => [...p, { activityType: "", name: "", date: "", score: "" }])} onDel={() => setPlacementRows((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={placementRows.length > 1} />
+                    </div>
+                  </SC>
+                )}
+
+                {/* Part D Tab */}
+                {hodAppraisalTab === "partD" && (
+                  <SC title={`Part D - Annual Confidential Report (Max ${PART_D_MAX})`} accent="#b45309">
+                    <div style={{ marginBottom: 14, padding: "8px 12px", background: "#fef3c7", borderRadius: 6, fontSize: 12, color: "#92400e", fontWeight: 600 }}>
+                      Evaluated by HOD/Director only. This part has no faculty self-score input.
+                    </div>
+                    <table style={T}>
+                      <thead><tr>
+                        <th style={{ ...TH, width: 30 }}>Sr. No.</th>
+                        <th style={TH}>Parameter</th>
+                        <th style={TH}>Description / Indicators</th>
+                        <th style={TH}>Max Marks</th>
+                      </tr></thead>
+                      <tbody>
+                        {partDParameters.map((row, index) => (
+                          <tr key={row.parameter} style={index % 2 === 1 ? { background: "#f8fafc" } : {}}>
+                            <td style={TDC}>{index + 1}</td>
+                            <td style={{ ...TD, fontWeight: 700 }}>{row.parameter}</td>
+                            <td style={TD}>{row.description}</td>
+                            <td style={TDC}>{row.max}</td>
+                          </tr>
+                        ))}
+                        <tr style={{ background: "#fef3c7" }}>
+                          <td style={{ ...TDC, fontWeight: "bold" }} colSpan={3}>Total (Max 50)</td>
+                          <td style={{ ...TDS, fontWeight: "bold" }}>{PART_D_MAX}</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </SC>
                 )}
 
                 {/* Part B Tab */}
                 {hodAppraisalTab === "partB" && (
-                  <SC title="Part B - Research & Academic Contributions (Max 375)" accent="#7c3aed">
+                  <SC title={`Part B - Research & Innovation (Max ${effectivePartBMax})`} accent="#7c3aed">
                     <div style={{ marginBottom: 14, padding: "8px 12px", background: "#ede9fe", borderRadius: 6, fontSize: 12, color: "#6d28d9", fontWeight: 600 }}>
                       Total Part B Score: {partBTotal.toFixed(1)}/{effectivePartBMax}
                     </div>
                     <div style={{ fontSize: 11, color: "#64748b", marginBottom: 12 }}>Enter your research publications, patents, conferences, and other academic contributions.</div>
 
-                    {/* B1. Research Papers / Journals */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B1. Research Papers / Journals - Max 120 marks</div>
+                    {/* B1. Journal Publications */}
+                    <div style={{ marginBottom: 16, order: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B1. Journal Publications - Max 100 marks</div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -1337,7 +1669,7 @@ export default function StandardMyAppraisal({
                             </tr>
                           ))}
                           <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Score (Max 120)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Score (Max 100)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{journalScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
@@ -1346,8 +1678,8 @@ export default function StandardMyAppraisal({
                     </div>
 
                     {/* B2. Books / Chapters */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B2. Books / Chapters - Max 50 marks</div>
+                    <div style={{ marginBottom: 16, order: 2 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B2. Books, Book Chapters & Edited Volumes - Max 30 marks</div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -1379,7 +1711,7 @@ export default function StandardMyAppraisal({
                             </tr>
                           ))}
                           <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={9}>Total Score (Max 50)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={9}>Total Score (Max 30)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{bookScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
@@ -1387,9 +1719,9 @@ export default function StandardMyAppraisal({
                       <RowBtns onAdd={() => setBooks((p) => [...p, { title: "", book: "", issn: "", pub: "", coauth: "", first: "", score: "" }])} onDel={() => setBooks((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={books.length > 1} />
                     </div>
 
-                    {/* B3. ICT Pedagogy */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B3. ICT Pedagogy - Max 20 marks</div>
+                    {/* B11. ICT Content, MOOCs & E-Learning */}
+                    <div style={{ marginBottom: 16, order: 11 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B11. ICT Content, MOOCs & E-Learning - Max 15 marks</div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -1417,7 +1749,7 @@ export default function StandardMyAppraisal({
                             </tr>
                           ))}
                           <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Score (Max 20)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Score (Max 15)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{ictScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
@@ -1425,9 +1757,10 @@ export default function StandardMyAppraisal({
                       <RowBtns onAdd={() => setIct((p) => [...p, { title: "", desc: "", type: "", quad: "", score: "" }])} onDel={() => setIct((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={ict.length > 1} />
                     </div>
 
-                    {/* B4(a). Research Guidance */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B4(a). Research Guidance - Max 30 marks (PhD: 20, PG: 10)</div>                  <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 10, fontSize: 12, fontWeight: 700, color: "#334155" }}>
+                    {/* B5. Research Guidance */}
+                    <div style={{ marginBottom: 16, order: 5 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B5. Research Guidance - Max 20 marks</div>
+                      <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 10, fontSize: 12, fontWeight: 700, color: "#334155" }}>
                         {["applicable", "notApplicable"].map((value) => (
                           <label key={value} style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
                             <input type="checkbox" checked={sectionApplicability.research === value} onChange={() => { setSectionApplicability((current) => ({ ...current, research: value })); if (value === "notApplicable") setResearch((rows) => rows.map((row) => ({ ...row, degree: "", name: "", thesis: "", score: "" }))); }} />
@@ -1472,7 +1805,7 @@ export default function StandardMyAppraisal({
                               </tr>
                             ))}
                             <tr style={{ background: "#f3e8ff" }}>
-                              <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total Score (Max {sectionApplicability.research === "notApplicable" ? 0 : 30})</td>
+                              <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total Score (Max {sectionApplicability.research === "notApplicable" ? 0 : 20})</td>
                               <td style={{ ...TDS, fontWeight: "bold" }}>{researchScore.toFixed(1)}</td>
                             </tr>
                           </tbody>
@@ -1481,9 +1814,9 @@ export default function StandardMyAppraisal({
                       </>)}
                     </div>
 
-                    {/* B4(b). Research / Consultancy Internal Projects */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B4(b). Ongoing & Completed Research / Consultancy Internal Projects - Max 15 marks</div>
+                    {/* B4. Funded Research Projects */}
+                    <div style={{ marginBottom: 16, order: 4 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B4. Funded Research Projects - Max 40 marks</div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -1511,11 +1844,11 @@ export default function StandardMyAppraisal({
                               <td style={TD}><TI val={r.status} onChange={(v) => setPrj2(i, "status", v)} textOnly /></td>
                               <td style={TD}><DocCell id={`project2-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`project2-${i}`} docs={docs} /></td>
-                              <td style={TDS}><TI val={r.score} onChange={(v) => setPrj2(i, "score", v)} center numeric max={SCORE_LIMITS.researchInternalProjects} /></td>
+                              <td style={TDS}><TI val={r.score} onChange={(v) => setPrj2(i, "score", v)} center numeric max={B4_PROJECT_MAX} /></td>
                             </tr>
                           ))}
                           <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={9}>Total Score (Max 15)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={9}>Total Score (Max 40)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{projectBScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
@@ -1523,9 +1856,9 @@ export default function StandardMyAppraisal({
                       <RowBtns onAdd={() => setProjects2((p) => [...p, { title: "", agency: "", date: "", amount: "", role: "", status: "", score: "" }])} onDel={() => setProjects2((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={projects2.length > 1} />
                     </div>
 
-                    {/* B4(c). Research / Consultancy External Projects */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B4(c). Ongoing & Completed Research / Consultancy External Projects - Max 30 marks</div>
+                    {/* Legacy external projects retained only for old saved data */}
+                    <div style={{ marginBottom: 16, display: "none" }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>Legacy External Research Projects - Not counted in AY 2026-2027 total</div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -1553,11 +1886,11 @@ export default function StandardMyAppraisal({
                               <td style={TD}><TI val={r.status} onChange={(v) => setExtPrj(i, "status", v)} textOnly /></td>
                               <td style={TD}><DocCell id={`externalProject-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`externalProject-${i}`} docs={docs} /></td>
-                              <td style={TDS}><TI val={r.score} onChange={(v) => setExtPrj(i, "score", v)} center numeric max={SCORE_LIMITS.researchExternalProjects} /></td>
+                              <td style={TDS}><TI val={r.score} onChange={(v) => setExtPrj(i, "score", v)} center numeric max={0} /></td>
                             </tr>
                           ))}
                           <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={9}>Total Score (Max 30)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={9}>Total Score (Max 0)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{externalProjectScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
@@ -1565,9 +1898,9 @@ export default function StandardMyAppraisal({
                       <RowBtns onAdd={() => setExternalProjects((p) => [...p, { title: "", agency: "", date: "", amount: "", role: "", status: "", score: "" }])} onDel={() => setExternalProjects((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={externalProjects.length > 1} />
                     </div>
 
-                    {/* B5(a). Patents (IPR) */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B5(a). Patents (IPR) - Max 40 marks</div>
+                    {/* B3. Patents, Copyrights & IP and Product Development */}
+                    <div style={{ marginBottom: 16, order: 3 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B3. Patents, Copyrights & IP and Product Development - Max 40 marks</div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -1605,9 +1938,9 @@ export default function StandardMyAppraisal({
                       <RowBtns onAdd={() => setPatents((p) => [...p, { title: "", type: "", date: "", status: "", fileNo: "", score: "" }])} onDel={() => setPatents((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={patents.length > 1} />
                     </div>
 
-                    {/* B5(b). Awards */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B5(b). Awards - Max 10 marks</div>
+                    {/* B9. Awards */}
+                    <div style={{ marginBottom: 16, order: 9 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B9. Research Awards, Fellowships & Citations - Max 20 marks</div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -1635,7 +1968,7 @@ export default function StandardMyAppraisal({
                             </tr>
                           ))}
                           <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Awards Score (Max 10)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Awards Score (Max 20)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{awardScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
@@ -1643,9 +1976,9 @@ export default function StandardMyAppraisal({
                       <RowBtns onAdd={() => setAwards((p) => [...p, { title: "", type: "", date: "", agency: "", level: "", score: "" }])} onDel={() => setAwards((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={awards.length > 1} />
                     </div>
 
-                    {/* B6. Invited Lectures / Resource Person / Paper Presentations */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B6. Invited Lectures / Resource Person / Paper Presentations - Max 30 marks</div>
+                    {/* B7. Conference / FDP Contributions - Organised */}
+                    <div style={{ marginBottom: 16, order: 7 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B7. Conference / FDP Contributions - Organised - Max 20 marks</div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -1673,7 +2006,7 @@ export default function StandardMyAppraisal({
                             </tr>
                           ))}
                           <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Score (Max 30)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Score (Max 20)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{confScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
@@ -1681,9 +2014,9 @@ export default function StandardMyAppraisal({
                       <RowBtns onAdd={() => setConfs((p) => [...p, { title: "", type: "", org: "", level: "", score: "" }])} onDel={() => setConfs((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={confs.length > 1} />
                     </div>
 
-                    {/* B7(a). Submitted Research Proposals */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B7(a). Submitted Research Proposals - Max 10 marks</div>
+                    {/* B6. Consultancy, Testing & Training */}
+                    <div style={{ marginBottom: 16, order: 6 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B6. Consultancy, Testing & Training - Max 20 marks</div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -1711,7 +2044,7 @@ export default function StandardMyAppraisal({
                             </tr>
                           ))}
                           <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Score (Max 10)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Score (Max 20)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{proposalScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
@@ -1719,9 +2052,9 @@ export default function StandardMyAppraisal({
                       <RowBtns onAdd={() => setProposals((p) => [...p, { title: "", duration: "", agency: "", amount: "", score: "" }])} onDel={() => setProposals((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={proposals.length > 1} />
                     </div>
 
-                    {/* B7(b). Product Developed */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B7(b). Product Developed and Used by Students in Lab / Commercialized - Max 10 marks</div>
+                    {/* B10. Innovation, Start-ups & Technology Transfer */}
+                    <div style={{ marginBottom: 16, order: 10 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B10. Innovation, Start-ups & Technology Transfer - Max 20 marks</div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -1745,7 +2078,7 @@ export default function StandardMyAppraisal({
                             </tr>
                           ))}
                           <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={5}>Total Score (Max 10)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={5}>Total Score (Max 20)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{productScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
@@ -1753,9 +2086,9 @@ export default function StandardMyAppraisal({
                       <RowBtns onAdd={() => setProducts((p) => [...p, { details: "", usage: "", score: "" }])} onDel={() => setProducts((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={products.length > 1} />
                     </div>
 
-                    {/* B8(a). FDP / Workshops Attended */}
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B8(a). FDP / Workshops Attended - Max 10 marks</div>
+                    {/* B8. FDP / Workshops Attended */}
+                    <div style={{ marginBottom: 16, order: 8 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B8. Conference / FDP / Industry Training Attended - Max 20 marks</div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -1785,8 +2118,8 @@ export default function StandardMyAppraisal({
                       <RowBtns onAdd={() => setFdps((p) => [...p, { program: "", duration: "", org: "", score: "" }])} onDel={() => setFdps((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={fdps.length > 1} />
                     </div>
 
-                    {/* B8(b). Industrial Training */}
-                    <div style={{ marginBottom: 16 }}>
+                    {/* B8. Industrial Training */}
+                    <div style={{ marginBottom: 16, order: 8 }}>
                       <div style={{ fontWeight: 700, fontSize: 13, color: "#0f172a", marginBottom: 8 }}>B8(b). Industrial Training</div>
                       <table style={T}>
                         <thead>
@@ -1818,7 +2151,7 @@ export default function StandardMyAppraisal({
                       <table style={{ ...T, marginTop: 8 }}>
                         <tbody>
                           <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total B8 Score (Max 10)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total B8 Score (Max 20)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{b8Score.toFixed(1)}</td>
                           </tr>
                         </tbody>
@@ -1827,9 +2160,9 @@ export default function StandardMyAppraisal({
                   </SC>
                 )}
 
-                {(hodAppraisalTab === "partA" || hodAppraisalTab === "partB") && !appraisalLocked && (
+                {["partA", "partB", "partC", "partD"].includes(hodAppraisalTab) && !appraisalLocked && (
                   <SectionSaveFooter
-                    label={hodAppraisalTab === "partA" ? "Part A" : "Part B"}
+                    label={{ partA: "Part A", partB: "Part B", partC: "Part C", partD: "Part D" }[hodAppraisalTab]}
                     saved={Boolean(sectionSaveStatus[hodAppraisalTab])}
                     saving={savingSection === hodAppraisalTab}
                     locked={appraisalLocked}
@@ -1843,8 +2176,10 @@ export default function StandardMyAppraisal({
                     <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 14 }}>
                       <tbody>
                         {[
-                          ["Part A - Teaching & Activities", partATotal, effectivePartAMax, "#6366f1"],
-                          ["Part B - Research & Contributions", partBTotal, effectivePartBMax, "#7c3aed"],
+                          ["Part A - Teaching & Learning", partATotal, effectivePartAMax, "#6366f1"],
+                          ["Part B - Research & Innovation", partBTotal, effectivePartBMax, "#7c3aed"],
+                          ["Part C - Administrative Contribution", partCTotal, PART_C_MAX, "#0f766e"],
+                          ["Part D - Annual Confidential Report", partDTotal, PART_D_MAX, "#b45309"],
                           ["Grand Total", grandTotal, effectiveGrandMax, g.color],
                         ].map(([label, score, max, color]) => (
                           <tr key={label}>
@@ -1863,29 +2198,15 @@ export default function StandardMyAppraisal({
                       readOnly={appraisalLocked}
                     />
 
-                    <label style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: 8, marginBottom: 10, color: "#334155", fontSize: 12, lineHeight: 1.5, cursor: appraisalLocked ? "not-allowed" : "pointer" }}>
+                    <label style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", background: "#ddf9d1", border: "1px solid #344d34", borderRadius: 8, marginBottom: 14, color: "#334155", fontSize: 12, lineHeight: 1.5, cursor: appraisalLocked ? "not-allowed" : "pointer" }}>
                       <input
                         type="checkbox"
-                        checked={accuracyConfirmed}
-                        onChange={(e) => setAccuracyConfirmed(e.target.checked)}
+                        checked={declarationConfirmed}
+                        onChange={(e) => setDeclarationConfirmed(e.target.checked)}
                         disabled={submitting || appraisalLocked}
                         style={{ marginTop: 3 }}
                       />
-                      <span>I have verified all the details and confirm that the information provided is correct. I am responsible for the accuracy of this data.</span>
-                    </label>
-
-                    <label style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 8, marginBottom: 14, color: "#334155", fontSize: 12, lineHeight: 1.5, cursor: appraisalLocked ? "not-allowed" : "pointer" }}>
-                      <input
-                        type="checkbox"
-                        checked={attachmentsConfirmed}
-                        onChange={(e) => setAttachmentsConfirmed(e.target.checked)}
-                        disabled={submitting || appraisalLocked}
-                        style={{ marginTop: 3 }}
-                      />
-                      <span>
-                        I confirm that <strong>all required supporting documents and attachments have been uploaded</strong> against the respective entries.
-                        I understand that any <strong>missing or false attachment is my sole responsibility</strong> and may result in the rejection or revision of my appraisal.
-                      </span>
+                      <span>I hereby declare that the information furnished above is true and correct to the best of my knowledge and belief, and is supported by documentary evidence enclosed with this form. I understand that any false claim, if detected at any stage, may render this appraisal liable to cancellation and may attract disciplinary action as per university policy.</span>
                     </label>
 
                     <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
@@ -1897,8 +2218,8 @@ export default function StandardMyAppraisal({
                       </button>
                       <button
                         onClick={handleSubmitAppraisal}
-                        disabled={submitting || appraisalLocked || !accuracyConfirmed || !attachmentsConfirmed}
-                        style={{ padding: "10px 28px", background: (appraisalLocked || !accuracyConfirmed || !attachmentsConfirmed) ? "#64748b" : "#059669", color: "#fff", border: "none", borderRadius: 7, cursor: (appraisalLocked || !accuracyConfirmed || !attachmentsConfirmed) ? "not-allowed" : "pointer", fontWeight: 700, fontSize: 13, fontFamily: "inherit", opacity: submitting ? 0.7 : 1 }}
+                        disabled={submitting || appraisalLocked || !declarationConfirmed}
+                        style={{ padding: "10px 28px", background: (appraisalLocked || !declarationConfirmed) ? "#64748b" : "#059669", color: "#fff", border: "none", borderRadius: 7, cursor: (appraisalLocked || !declarationConfirmed) ? "not-allowed" : "pointer", fontWeight: 700, fontSize: 13, fontFamily: "inherit", opacity: submitting ? 0.7 : 1 }}
                       >
                         {appraisalLocked ? "Submitted & Locked" : submitting ? "Submitting..." : "Submit Appraisal"}
                       </button>

@@ -330,7 +330,7 @@ const normalizeQueueItem = (item = {}) => {
   const submitted = hasSubmittedAppraisal(item);
   const status = getWorkflowStatus(item) || (submitted ? pendingStatusFor(getReviewChain(subjectProfile)[0]) : "");
   const email = subjectProfile.email;
-  const academicYear = firstValue(item.academicYear, item.academic_year, item.info?.ay, APP_INFO.DEFAULT_AY, "2025-2026");
+  const academicYear = firstValue(item.academicYear, item.academic_year, item.info?.ay, APP_INFO.DEFAULT_AY, "2026-2027");
   const school = subjectProfile.school;
   const selfSummary = standardSubmittedScoreSummary(item);
   const reviewSummary = standardReviewSummary(item, item.payload, item.form);
@@ -405,7 +405,7 @@ export const fetchReviewQueueForRole = async ({
 
   try {
     const params = {
-      academic_year: academicYear || APP_INFO.DEFAULT_AY || "2025-2026",
+      academic_year: academicYear || APP_INFO.DEFAULT_AY || "2026-2027",
       reviewer_role: role,
       pending_status: pendingStatusFor(role),
     };

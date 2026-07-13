@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars, react-hooks/set-state-in-effect */
+/* eslint-disable no-unused-vars, react-hooks/set-state-in-effect */
  import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, LogoutConfirmModal } from "../components/dashboard/dashboardPrimitives";
@@ -783,7 +783,7 @@ function VCReviewPanel({ person, personMode, onBack, onSubmit, readOnly = false 
  const reviewLocked = (readOnly && !finalisedByVc) || finalisedReadOnly;
  const canReject = canReviewerRejectProfile("vc", person);
  const subjectEmail = person.email || person.faculty_email || person.facultyEmail;
- const academicYear = person.academicYear || person.academic_year || person.info?.ay || APP_INFO.DEFAULT_AY || "2025-2026";
+ const academicYear = person.academicYear || person.academic_year || person.info?.ay || APP_INFO.DEFAULT_AY || "2026-2027";
 
  const calculatedScores = calcVCScore(person, vcData);
  const partA = reviewLocked && n(person.vcPartA) >0 ? n(person.vcPartA) : calculatedScores.partA;
@@ -1589,7 +1589,7 @@ export default function VCDashboard() {
  try {
  await submitWorkflowReview({
  subjectEmail: item.email,
- academicYear: item.academicYear || item.academic_year || item.info?.ay || APP_INFO.DEFAULT_AY || "2025-2026",
+ academicYear: item.academicYear || item.academic_year || item.info?.ay || APP_INFO.DEFAULT_AY || "2026-2027",
  reviewerRole: "vc",
  partAScore: scores.partA,
  partBScore: scores.partB,
@@ -1627,7 +1627,7 @@ export default function VCDashboard() {
  const switchSchool = (schoolId) =>{ setActiveSchoolId(schoolId); setReviewing(null); };
 
  const openTeachingReview = async (person, personMode) =>{
- const academicYear = person.academicYear || person.academic_year || person.info?.ay || APP_INFO.DEFAULT_AY || "2025-2026";
+ const academicYear = person.academicYear || person.academic_year || person.info?.ay || APP_INFO.DEFAULT_AY || "2026-2027";
  setReviewLoading(person.id || person.email);
  try {
  const data = await fetchSavedAppraisal({

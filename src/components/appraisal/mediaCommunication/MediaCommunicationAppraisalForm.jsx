@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars, no-undef, react-refresh/only-export-components */
+/* eslint-disable no-unused-vars, no-undef, react-refresh/only-export-components */
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, LogoutConfirmModal, ScoreBar, StatusBadge } from "../../dashboard/dashboardPrimitives";
@@ -113,7 +113,7 @@ export const emptyMediaForm = () =>({
  qual: sessionStorage.getItem("qualification") || "",
  desig: sessionStorage.getItem("designation") || "",
  experience: sessionStorage.getItem("experience") || "",
- ay: sessionStorage.getItem("academicYear") || "2025-2026",
+ ay: sessionStorage.getItem("academicYear") || "2026-2027",
  school: sessionStorage.getItem("school") || "SoMCS - School of Media & Communication Studies",
  },
  lectures: [{ sem: "", code: "", planned: "", conducted: "", score: "" }],
@@ -998,7 +998,7 @@ export function MediaCommAuthorityReviewPanel({ person, reviewerRole, onBack, on
  const panelReadOnly = reviewerRole === "vc" ? finalisedVcReadOnly : (readOnly || finalisedByVc);
  const canReject = canReviewerRejectProfile(reviewerRole, person);
  const subjectEmail = person?.email || person?.faculty_email || person?.facultyEmail;
- const academicYear = person?.academicYear || person?.academic_year || person?.info?.ay || APP_INFO.DEFAULT_AY || "2025-2026";
+ const academicYear = person?.academicYear || person?.academic_year || person?.info?.ay || APP_INFO.DEFAULT_AY || "2026-2027";
 
  const reviewerForm = useMemo(() =>{
  const merged = { ...form };

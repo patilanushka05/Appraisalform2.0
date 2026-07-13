@@ -13,29 +13,29 @@ export const SOCIETY_LABELS = [
 ];
 
 export const ACR_LABELS = [
-  "Self-motivation and Proactiveness",
+  "Self-motivation & Proactiveness",
   "Punctuality",
-  "Target based work",
+  "Target-based Work",
   "Effectiveness",
   "Obedience"
 ];
 
 export const ACR_DETAIL_POINTS = {
-  "Self-motivation and Proactiveness": [
-    "List the activities or initiatives other than regular load/duties.",
+  "Self-motivation & Proactiveness": [
+    "List of activities/initiatives other than regular load/duties.",
   ],
   Punctuality: [
-    "Number of late marks - Office report.",
-    "Punctuality in lecture/practical - To be observed by HOD.",
-    "Timely completion and weekly checking of daily report - To be observed by HOD.",
-    "Number of absentee without intimation and/or load adjustment - To be observed by HOD.",
+    "Late marks (office report).",
+    "Punctuality in lecture/practical.",
+    "Timely daily-report checking.",
+    "Absentee without intimation.",
   ],
-  "Target based work": [
-    "List the tasks allotted to you.",
-    "Timely completion of allotted work - To be observed by HOD.",
+  "Target-based Work": [
+    "Tasks allotted.",
+    "Timely completion observed by HOD.",
   ],
   Effectiveness: [
-    "Work done without errors & least follow-up - To be observed by HOD.",
+    "Work done without errors & least follow-up, observed by HOD.",
   ],
   Obedience: [
     "To be observed by HOD and Director.",
@@ -92,7 +92,7 @@ export const RESEARCH_MULTIPLIERS = {
 export const APP_INFO = {
   UNIVERSITY_NAME: "University Name",
   UNIVERSITY_LOCATION: "City, Country",
-  DEFAULT_AY: "2025-2026",
+  DEFAULT_AY: "2026-2027",
   PORTAL_NAME: "Faculty Appraisal Portal",
   SHORT_NAME: "UNI"
 };
