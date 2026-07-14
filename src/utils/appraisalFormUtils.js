@@ -427,7 +427,7 @@ const isAverageScoredSectionLabel = (labelText = "") =>
 export const validateCompleteRows = (sections = [], defaultDocs) =>{
  const errors = [];
 
- sections.forEach(({ label, rows = [], fields = [], skip = false, rowMax, maxScore, scoreField = "score", docs = defaultDocs, docPrefix, docKey, requireAttachment }) =>{
+ sections.forEach(({ label, rows = [], fields = [], skip = false, rowMax, maxScore, scoreField = "score", docs = defaultDocs, docPrefix, docKey, requireAttachment, isRowActive, fieldsForRow }) =>{
  if (skip) return;
  const labelText = normalizedText(label);
  const isB8Section = /^b8(?:\(|\.)/.test(labelText);
@@ -436,9 +436,11 @@ export const validateCompleteRows = (sections = [], defaultDocs) =>{
  const shouldRequireAttachment = requireAttachment ?? Boolean(resolvedDocPrefix || docKey);
 
  rows.forEach((row, index) =>{
- if (!rowHasAnyValue(row, fields)) return;
+ const rowFields = typeof fieldsForRow === "function" ? fieldsForRow(row, index) : fields;
+ const rowIsActive = typeof isRowActive === "function" ? isRowActive(row, index) : rowHasAnyValue(row, rowFields);
+ if (!rowIsActive) return;
 
- const missing = rowMissingFields(row, fields);
+ const missing = rowMissingFields(row, rowFields);
  if (missing.length) {
  errors.push(`${label}, row ${index + 1}: fill all fields or clear the row.`);
  }

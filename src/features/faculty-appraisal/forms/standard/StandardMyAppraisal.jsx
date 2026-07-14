@@ -17,7 +17,6 @@ import {
   SCORE_LIMITS,
   averageSectionScore,
   clampScore,
-  courseFileAverageScore,
   effectiveMaxScore,
   feedbackAverage,
   feedbackRowScore,
@@ -68,27 +67,32 @@ import {
   workflowValidationError,
 } from "../../../../utils/hierarchy";
 
-const LEGACY_INNOVATIVE_METHODS = new Set([
-  "Blended learning",
-  "Virtual Lab",
-  "Conceptual videos (with class photo)",
-  "Use of Learning Management System (LMS)",
-  "Project-Based Learning",
-  "Open Course Ware (OCW) assignment",
-  "Quiz",
-  "Group Discussion (with photo & report)",
-  "Flip classroom (with proof of material shared)",
-  "Any other innovative method",
-]);
+const INNOVATIVE_METHOD_OPTIONS = [
+  { value: "Blended learning", label: "Blended learning" },
+  { value: "Virtual Lab", label: "Virtual Lab" },
+  { value: "Conceptual videos (with class photo)", label: "Conceptual videos (with class photo)" },
+  { value: "Use of Learning Management System (LMS)", label: "Use of Learning Management System (LMS)" },
+  { value: "Project-Based Learning", label: "Project-Based Learning" },
+  { value: "Open Course Ware (OCW) assignment", label: "Open Course Ware (OCW) assignment" },
+  { value: "Quiz", label: "Quiz" },
+  { value: "Group Discussion (with photo & report)", label: "Group Discussion (with photo & report)" },
+  { value: "Flip classroom (with proof of material shared)", label: "Flip classroom (with proof of material shared)" },
+  { value: "Any other innovative method", label: "Any other innovative method" },
+];
+
+const LEGACY_INNOVATIVE_METHODS = new Set(INNOVATIVE_METHOD_OPTIONS.map((method) => method.value));
 
 const blankInnovativeRow = () => ({ method: "", details: "", score: "" });
 
 const sanitizeInnovativeRows = (rows) => {
   if (!Array.isArray(rows)) return [blankInnovativeRow()];
-  const cleaned = rows.filter((row = {}) => {
+  const legacyPresetRows = rows.slice(0, INNOVATIVE_METHOD_OPTIONS.length);
+  const hasLegacyPreset = legacyPresetRows.length === INNOVATIVE_METHOD_OPTIONS.length
+    && legacyPresetRows.every((row = {}, index) => String(row.method ?? "").trim() === INNOVATIVE_METHOD_OPTIONS[index].value);
+  const cleaned = rows.filter((row = {}, index) => {
     const method = String(row.method ?? "").trim();
     const hasEnteredData = ["details", "score", "hod", "director", "dean", "vc"].some((key) => String(row[key] ?? "").trim());
-    if (LEGACY_INNOVATIVE_METHODS.has(method) && !hasEnteredData) return false;
+    if (hasLegacyPreset && index < INNOVATIVE_METHOD_OPTIONS.length && LEGACY_INNOVATIVE_METHODS.has(method) && !hasEnteredData) return false;
     return method || hasEnteredData;
   });
   return cleaned.length ? cleaned : [blankInnovativeRow()];
@@ -136,6 +140,9 @@ const defaultMentoringRows = () => [
   { activity: "Mentoring register maintained", evidence: "", score: "", max: 3 },
   { activity: "Documented academic/career counselling outcomes", evidence: "", score: "", max: 3 },
 ];
+
+const evidenceClaimedOrScored = (row = {}) =>
+  Boolean(String(row.score ?? "").trim()) || String(row.evidence ?? "").trim().toLowerCase() === "yes";
 
 const partDParameters = [
   { parameter: "Self-motivation & Proactiveness", description: "List of activities/initiatives other than regular load/duties", max: 10 },
@@ -188,9 +195,6 @@ export default function StandardMyAppraisal({
   const [innovDetails, setInnovDetails] = useState("");
   const [innovRows, setInnovRows] = useState([{ method: "", details: "", score: "" }]);
   const setInnov = (i, k, v) => setInnovRows((p) => p.map((r, j) => j === i ? { ...r, [k]: v } : r));
-  useEffect(() => {
-    setInnovRows((rows) => sanitizeInnovativeRows(rows));
-  }, []);
   const [projects, setProjects] = useState([
     { label: "", score: "", hod: "", director: "" },
   ]);
@@ -375,8 +379,10 @@ export default function StandardMyAppraisal({
 
   // -- Computed scores for HOD appraisal --
   const totalLecScore = sumSectionScore(lectures, A1_COURSE_DELIVERY_MAX, "score", 10);
-  const courseFileScore = courseFileAverageScore(courseFile, A2_COURSE_FILE_MAX);
+  const courseFileScore = sumSectionScore(courseFile, A2_COURSE_FILE_MAX, "score", SCORE_LIMITS.courseFileRow);
   const innovTotal = clampScore(innovRows.reduce((s, r) => s + clampScore(r.score, A3_INNOVATIVE_ROW_MAX), 0), A3_INNOVATIVE_MAX);
+  const selectedInnovativeMethods = new Set(innovRows.map((row) => String(row.method ?? "").trim()).filter(Boolean));
+  const innovativeMethodOptionsForRow = (currentMethod) => INNOVATIVE_METHOD_OPTIONS.filter((option) => option.value === currentMethod || !selectedInnovativeMethods.has(option.value));
   const innovScoreComputed = String(innovTotal);
   const projectTotal = sectionApplicability.projects === "notApplicable" ? 0 : sumSectionScore(projects, A6_PROJECT_GUIDANCE_MAX, "score", A6_PROJECT_GUIDANCE_MAX);
   const obeScore = sumSectionScore(obeRows, A5_OBE_MAX);
@@ -439,9 +445,9 @@ export default function StandardMyAppraisal({
       { label: "A(i). Lectures", rows: lectures, fields: ["sem", "code", "planned", "conducted", "score"] },
       { label: "A(ii). Course File", rows: courseFile, fields: ["course", "title", "details"] },
       { label: "A(iii). Innovative Teaching Methods", rows: innovRows, fields: ["method", "details", "score"] },
-      { label: "A5. Learning Outcomes Attainment & OBE Practice", rows: obeRows, fields: ["component", "evidence", "score"] },
+      { label: "A5. Learning Outcomes Attainment & OBE Practice", rows: obeRows, fields: ["component", "score"], isRowActive: evidenceClaimedOrScored },
       { label: "A6. Student Project Guidance", rows: projects, fields: ["label", "score"], rowMax: A6_PROJECT_GUIDANCE_MAX, maxScore: A6_PROJECT_GUIDANCE_MAX, skip: sectionApplicability.projects === "notApplicable" },
-      { label: "A7. Student Mentoring & Counselling", rows: mentoringRows, fields: ["activity", "evidence", "score"] },
+      { label: "A7. Student Mentoring & Counselling", rows: mentoringRows, fields: ["activity", "score"], isRowActive: evidenceClaimedOrScored },
       { label: "A8. Professional Development & Qualification Enhancement", rows: quals, fields: ["label", "score"] },
       { label: "A(vi). Student Feedback", rows: feedback, fields: ["code", "fb1", "fb2"] },
       { label: "C1. Administration at University Level", rows: uniActs, fields: ["activity", "nature", "period", "score"] },
@@ -477,9 +483,9 @@ export default function StandardMyAppraisal({
       { label: "A(i). Lectures", rows: lectures, fields: ["sem", "code", "planned", "conducted", "score"] },
       { label: "A(ii). Course File", rows: courseFile, fields: ["course", "title", "details"] },
       { label: "A(iii). Innovative Teaching Methods", rows: innovRows, fields: ["method", "details", "score"] },
-      { label: "A5. Learning Outcomes Attainment & OBE Practice", rows: obeRows, fields: ["component", "evidence", "score"] },
+      { label: "A5. Learning Outcomes Attainment & OBE Practice", rows: obeRows, fields: ["component", "score"], isRowActive: evidenceClaimedOrScored },
       { label: "A6. Student Project Guidance", rows: projects, fields: ["label", "score"], rowMax: A6_PROJECT_GUIDANCE_MAX, maxScore: A6_PROJECT_GUIDANCE_MAX, skip: sectionApplicability.projects === "notApplicable" },
-      { label: "A7. Student Mentoring & Counselling", rows: mentoringRows, fields: ["activity", "evidence", "score"] },
+      { label: "A7. Student Mentoring & Counselling", rows: mentoringRows, fields: ["activity", "score"], isRowActive: evidenceClaimedOrScored },
       { label: "A8. Professional Development & Qualification Enhancement", rows: quals, fields: ["label", "score"] },
       { label: "A(vi). Student Feedback", rows: feedback, fields: ["code", "fb1", "fb2"] },
     ];
@@ -702,7 +708,7 @@ export default function StandardMyAppraisal({
     <table>
       <tr><th>SN</th><th>Course / Paper</th><th>Program & Semester</th><th>Details</th><th>API Score</th></tr>
       ${courseFile.map((c, i) => `<tr><td class="c">${i + 1}</td><td>${c.course || '&nbsp;'}</td><td>${c.title || '&nbsp;'}</td><td>${c.details || '&nbsp;'}</td><td class="c">${c.score || '&nbsp;'}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="4" class="c b">Average Score (Max 20)</td><td class="c">${courseFileScore.toFixed(1)}</td></tr>
+      <tr class="tr"><td colspan="4" class="c b">Total Score (Max 20)</td><td class="c">${courseFileScore.toFixed(1)}</td></tr>
     </table>
 
     <h3>A3. Innovative Teaching-Learning Methods &nbsp;(Max 20)</h3>
@@ -1118,7 +1124,7 @@ export default function StandardMyAppraisal({
                             </tr>
                           ))}
                           <tr style={{ background: "#eff6ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={4}>Average Score (Max 20)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={4}>Total Score (Max 20)</td>
                             <td style={{ ...TDS, fontWeight: "bold", color: "#1e3a5f" }}>{courseFileScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
@@ -1142,7 +1148,19 @@ export default function StandardMyAppraisal({
                           {innovRows.map((r, i) => (
                             <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
                               <td style={TDC}>{i + 1}</td>
-                              <td style={TD}><TI val={r.method} onChange={(v) => setInnov(i, "method", v)} /></td>
+                              <td style={TD}>
+                                <select
+                                  value={r.method || ""}
+                                  onChange={(e) => setInnov(i, "method", e.target.value)}
+                                  style={{ width: "100%", height: 30, border: "1px solid #cbd5e1", borderRadius: 4, background: "#fff", fontFamily: "inherit", fontSize: 11 }}
+                                >
+                                  <option value="">Select Method</option>
+                                  {r.method && !LEGACY_INNOVATIVE_METHODS.has(r.method) && <option value={r.method}>{r.method}</option>}
+                                  {innovativeMethodOptionsForRow(r.method).map((option) => (
+                                    <option key={option.value} value={option.value}>{option.label}</option>
+                                  ))}
+                                </select>
+                              </td>
                               <td style={TD}><TI val={r.details} onChange={(v) => setInnov(i, "details", v)} /></td>
                               <td style={TD}><DocCell id={`innov-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`innov-${i}`} docs={docs} /></td>

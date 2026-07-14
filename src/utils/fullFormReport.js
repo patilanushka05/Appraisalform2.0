@@ -892,7 +892,7 @@ export const generateStandardReport = async ({
   <h3>(ii) Course File (Max 20)</h3>
   <table><tr><th>SN</th><th>Course/Paper</th><th>Title</th><th>Details</th><th>API Score</th></tr>
   ${courseFile.map((c, i) => `<tr><td class="c">${i + 1}</td><td>${c.course || "&nbsp;"}</td><td>${c.title || "&nbsp;"}</td><td>${c.details || "&nbsp;"}</td><td class="c">${c.score || "&nbsp;"}</td></tr>`).join("")}
-  <tr class="tr"><td colspan="4" class="c b">Average Score (Max 20)</td><td class="c">${courseFileScore.toFixed(1)}</td></tr></table>
+  <tr class="tr"><td colspan="4" class="c b">Total Score (Max 20)</td><td class="c">${courseFileScore.toFixed(1)}</td></tr></table>
   <h3>(iii) Innovative Teaching-Learning Methodologies (Max 10)</h3>
   <table><tr><th>SN</th><th>Methods Used</th><th>Details</th><th>API Score</th></tr>
   ${(innovRows || []).map((r, i) => `<tr><td class="c">${i + 1}</td><td>${r.method || r.details || "&nbsp;"}</td><td>${r.details || "&nbsp;"}</td><td class="c">${r.score || "&nbsp;"}</td></tr>`).join("")}
