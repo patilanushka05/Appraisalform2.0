@@ -3,7 +3,7 @@ import { Navigate } from "react-router-dom";
 import { normalizeRole } from "../auth/session";
 import { departmentHasHod, getDeanTrack } from "../utils/hierarchy";
 import { DEAN_TRACKS, getSchoolKey, isCisrSchool, normalizeHierarchyText } from "../constants/universityHierarchy";
-import { FORM_TYPES, formTypeForSchool } from "../constants/formRouting";
+import { formTypeForSchool } from "../constants/formRouting";
 
 // Each dashboard is its own async chunk - only the one matching the user's role
 // is ever downloaded, cutting the initial JS payload by ~90% vs eager imports.
@@ -18,8 +18,6 @@ const DeanDashboard             = lazy(() => import("./DeanDashboard"));
 const NonEngineeringDeanDashboard = lazy(() => import("./NonEngineeringDeanDashboard"));
 const DirectorDashboard         = lazy(() => import("./DirectorDashboard"));
 const VCDashboard               = lazy(() => import("./VCDashboard"));
-const MediaCommDashboard        = lazy(() => import("./MediaCommDashboard"));
-const DesignArtsDashboard       = lazy(() => import("./DesignArtsDashboard"));
 
 function DashboardLoader() {
   return (
@@ -47,8 +45,6 @@ function DashboardSwitch({ role, school, department, formType }) {
   switch (role) {
     case "faculty":
       if (isCisrSchool(school)) return <CISRFacultyDashboard />;
-      if (formType === FORM_TYPES.MEDIA_COMM) return <MediaCommDashboard fixedRole="faculty" />;
-      if (formType === FORM_TYPES.DESIGN_ARTS) return <DesignArtsDashboard fixedRole="faculty" />;
       if (!formType) return <UnknownSchoolDashboard />;
       return <Dashboard />;
 
@@ -64,8 +60,6 @@ function DashboardSwitch({ role, school, department, formType }) {
     }
 
     case "director":
-      if (formType === FORM_TYPES.MEDIA_COMM) return <MediaCommDashboard fixedRole="director" />;
-      if (formType === FORM_TYPES.DESIGN_ARTS) return <DesignArtsDashboard fixedRole="director" />;
       if (!formType) return <UnknownSchoolDashboard />;
       return <DirectorDashboard />;
 

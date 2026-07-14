@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars, no-undef, react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
+/* eslint-disable no-unused-vars, react-hooks/exhaustive-deps, react-hooks/set-state-in-effect */
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, LogoutConfirmModal, ScoreBar, StatusBadge } from "../components/dashboard/dashboardPrimitives";
@@ -61,7 +61,7 @@ import {
 import { canReviewerRejectProfile, getReviewChain, pendingStatusFor, profileFromsessionStorage, reviewedStatusFor, roleLabel, visiblePreviousReviewRoles, workflowValidationError, isAppraisalFinalisedByVc, isRejectedStatus, isPendingReviewStatusFor, hasActiveRejection, reviewListFrom } from "../utils/hierarchy";
 import { n, pct, RO, TI } from "../features/faculty-appraisal/shared";
 
-import { emptyMediaForm, ALL_ARRAY_KEYS, titleCase, calculateMediaTotals, getMediaEffectiveMaxScores, validateMediaBeforeSubmit, mergeForm, preserveSavedReviewScores, PART_A_SECTIONS, PART_B_SECTIONS, MediaForm, MediaCommAuthorityReviewPanel, SectionSelector, AccuracyCheckbox, CompactAuthoritySummaryCard, isReviewerReviewComplete, normalizeScoresForSubmit, summaryRowIfApplicable } from "../components/appraisal/mediaCommunication/MediaCommunicationAppraisalForm";
+import { emptyMediaForm, ALL_ARRAY_KEYS, titleCase, calculateMediaTotals, getMediaEffectiveMaxScores, validateMediaBeforeSubmit, mergeForm, preserveSavedReviewScores, PART_A_SECTIONS, PART_B_SECTIONS, MediaForm, MediaCommAuthorityReviewPanel, SectionSelector, AccuracyCheckbox, CompactAuthoritySummaryCard, isReviewerReviewComplete, normalizeScoresForSubmit, summaryRowIfApplicable, b8SummaryRowIfApplicable, SECTION_OPTIONS, SummaryBox, WorkflowTracker, ACCENT, ACCENT2, userInitials } from "../components/appraisal/mediaCommunication/MediaCommunicationAppraisalForm";
 export default function MediaCommDashboard({ fixedRole }) {
  const navigate = useNavigate();
  const role = fixedRole || sessionStorage.getItem("role") || "faculty";
@@ -79,7 +79,7 @@ export default function MediaCommDashboard({ fixedRole }) {
  const [attachmentsConfirmed, setAttachmentsConfirmed] = useState(false);
 
  const [showLogoutModal, setShowLogoutModal] = useState(false);
- const [sectionSaveStatus, setSectionSaveStatus] = useState({ partA: true, partB: true });
+ const [sectionSaveStatus, setSectionSaveStatus] = useState({ partA: false, partB: false });
  const [savingSection, setSavingSection] = useState(null);
  const [declaration, setDeclaration] = useState(null);
  const [reviews, setReviews] = useState([]);
@@ -193,6 +193,10 @@ export default function MediaCommDashboard({ fixedRole }) {
  };
 
  const handleSubmitAppraisal = async () =>{
+ if (locked) {
+ alert("This appraisal has already been submitted and is locked for review.");
+ return;
+ }
  if (!confirmed || !attachmentsConfirmed) {
  alert("Please tick both declaration checkboxes before submitting.");
  return;
@@ -213,8 +217,16 @@ export default function MediaCommDashboard({ fixedRole }) {
  alert(validationErrors.join("\n"));
  return;
  }
+ const confirmSubmit = window.confirm("Are you sure you want to submit your appraisal? This will save your data to the database.");
+ if (!confirmSubmit) return;
+ const finalSectionSaveStatus = { ...sectionSaveStatus, partA: true, partB: true };
+ const submittedForm = {
+ ...normalizedForm,
+ sectionSaveStatus: finalSectionSaveStatus,
+ };
  setSubmitting(true);
  try {
+ const submittedAt = new Date().toISOString();
  await submitAppraisal({
  facultyEmail: userEmail,
  academicYear,
@@ -226,12 +238,14 @@ export default function MediaCommDashboard({ fixedRole }) {
  effectivePartBMax: totals.maxScores.partB,
  effectiveGrandMax: totals.maxScores.grand,
  },
- form: normalizedForm,
+ form: submittedForm,
  docs,
  submitterProfile,
  activeProfile: submitterProfile,
  });
- setDeclaration({ status: pendingStatusFor(getReviewChain({ ...profile, appraisal_role: role })[0]), submitted_at: new Date().toISOString() });
+ setSectionSaveStatus(finalSectionSaveStatus);
+ setDeclaration({ status: pendingStatusFor(getReviewChain({ ...profile, appraisal_role: role })[0]), submitted_at: submittedAt, updated_at: submittedAt });
+ setReviews([]);
  alert("SoMCS appraisal submitted successfully.");
  } catch (err) {
  alert(`Unable to submit appraisal.\n\n${err.message}`);
@@ -452,6 +466,11 @@ export default function MediaCommDashboard({ fixedRole }) {
  status={declaration?.status || form.status}
  alertOnceKey={`${userEmail}:${academicYear}:${declaration?.status || form.status || ""}`}
 />
+ {locked && (
+<div style={{ background: "#ecfdf5", border: "1px solid #bbf7d0", color: "#166534", borderRadius: 9, padding: "10px 14px", fontSize: 12, fontWeight: 700 }}>
+ Submitted and locked for review. Your saved data is visible here, but editing is disabled while authorities review it.
+</div>
+ )}
  {(selfSectionView === "partA" || selfSectionView === "partB") && (
 <>
 <MediaForm
@@ -489,7 +508,7 @@ export default function MediaCommDashboard({ fixedRole }) {
 <AccuracyCheckbox checked={confirmed} onChange={setConfirmed} />
 <label style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 12, color: "#334155", lineHeight: 1.5, padding: "12px 14px", background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 8, cursor: "pointer" }}>
 <input type="checkbox" checked={attachmentsConfirmed} onChange={(e) =>setAttachmentsConfirmed(e.target.checked)} style={{ marginTop: 3 }} />
-<span>I confirm that<strong>all required supporting documents and attachments have been uploaded</strong>against the respective entries. I understand that any<strong>missing or false attachment is my sole responsibility</strong>and may result in the rejection or revision of my appraisal.</span>
+<span>I confirm that <strong>all required supporting documents and attachments have been uploaded</strong> against the respective entries. I understand that any <strong>missing or false attachment is my sole responsibility</strong> and may result in the rejection or revision of my appraisal.</span>
 </label>
 </>
  )}
@@ -498,7 +517,7 @@ export default function MediaCommDashboard({ fixedRole }) {
  Generate Report
 </button>
 <button onClick={handleSubmitAppraisal} disabled={submitting || locked || !confirmed || !attachmentsConfirmed} style={smallButton((locked || !confirmed || !attachmentsConfirmed) ? "#94a3b8" : "#059669")}>
- {locked ? "Appraisal Locked" : submitting ? "Submitting..." : "Submit Appraisal"}
+ {locked ? "Submitted & Locked" : submitting ? "Submitting..." : "Submit Appraisal"}
 </button>
 </div>
 </div>

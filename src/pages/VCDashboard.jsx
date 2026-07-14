@@ -3,12 +3,10 @@
 import { useNavigate } from "react-router-dom";
 import { Avatar, LogoutConfirmModal } from "../components/dashboard/dashboardPrimitives";
 import { fetchNonTeachingQueueForRole, isNonTeachingReviewComplete } from "../services/nonTeachingWorkflow";
-import { fetchReviewQueueForRole, loadReviewerDraft, saveReviewerDraft, submitWorkflowReview, fetchSavedAppraisal, mergeFacultyInfo, ACR_DETAIL_POINTS, MAX_SCORES, APP_INFO, createAcrRows, FORM_TYPES, formTypeForSchool, buildReviewRemarks, openFullFormReport, SummaryOtherInfoField, summaryOtherInfoValueFrom, SCORE_LIMITS, clampScore, clampReviewScore, effectiveMaxScore, projectGuidanceRowMax, researchGuidanceRowMax, researchGuidanceScore, reviewRowMaxForSection, reviewSectionScore, rowHasReviewableData, selfEffectivePartAMax, societyRowLocked, societyRowScore, standardReviewSummary, AppraisalHeaderImage, ViewDocsCell, SectionCard as SC } from "../features/faculty-appraisal";
+import { fetchReviewQueueForRole, loadReviewerDraft, saveReviewerDraft, submitWorkflowReview, fetchSavedAppraisal, mergeFacultyInfo, ACR_DETAIL_POINTS, MAX_SCORES, APP_INFO, createAcrRows, buildReviewRemarks, openFullFormReport, SummaryOtherInfoField, summaryOtherInfoValueFrom, SCORE_LIMITS, clampScore, clampReviewScore, effectiveMaxScore, projectGuidanceRowMax, researchGuidanceRowMax, researchGuidanceScore, reviewRowMaxForSection, reviewSectionScore, rowHasReviewableData, selfEffectivePartAMax, societyRowLocked, societyRowScore, standardReviewSummary, AppraisalHeaderImage, ViewDocsCell, SectionCard as SC } from "../features/faculty-appraisal";
 
 import { DEAN_TRACKS, UNIVERSITY_SCHOOLS, normalizeHierarchyText } from "../constants/universityHierarchy";
 import { canReviewerRejectProfile, getSchoolKey, profileFromsessionStorage, rejectedStatusFor, visiblePreviousReviewRoles, isAppraisalFinalisedByVc, isPendingReviewStatusFor } from "../utils/hierarchy";
-import { DesignArtsAuthorityReviewPanel } from "../components/appraisal/designArts/DesignArtsAppraisalForm";
-import { MediaCommAuthorityReviewPanel } from "../components/appraisal/mediaCommunication/MediaCommunicationAppraisalForm";
 import { NonTeachingAuthorityReviewPanel } from "./NonTeachingStaffDashboard";
 import { n, pct, grade, RO } from "../features/faculty-appraisal/shared";
 
@@ -1865,24 +1863,6 @@ export default function VCDashboard() {
  setReviewing(null);
  }}
  />
- ) : formTypeForSchool(getSchoolKey(reviewing.person?.school)) === FORM_TYPES.MEDIA_COMM ? (
-<MediaCommAuthorityReviewPanel
- person={reviewing.person}
- reviewerRole="vc"
- onBack={() =>setReviewing(null)}
- onSubmit={(id, scores, remarks, sectionScores, reviewConfirmed, decision) =>handleSubmit(id, scores, remarks, reviewing.personMode, sectionScores, reviewConfirmed, decision)}
- readOnly={isVcReviewed(reviewing.person)}
- showReport
- />
- ) : formTypeForSchool(getSchoolKey(reviewing.person?.school)) === FORM_TYPES.DESIGN_ARTS ? (
-<DesignArtsAuthorityReviewPanel
- person={reviewing.person}
- reviewerRole="vc"
- onBack={() =>setReviewing(null)}
- onSubmit={(id, scores, remarks, sectionScores, reviewConfirmed, decision) =>handleSubmit(id, scores, remarks, reviewing.personMode, sectionScores, reviewConfirmed, decision)}
- readOnly={isVcReviewed(reviewing.person)}
- showReport
- />
  ) : (
 <VCReviewPanel
  person={reviewing.person}
@@ -1891,8 +1871,7 @@ export default function VCDashboard() {
  onSubmit={handleSubmit}
  readOnly={isVcReviewed(reviewing.person)}
  />
- )
- )}
+ ))}
 </main>
 
  {/* Logout Modal */}

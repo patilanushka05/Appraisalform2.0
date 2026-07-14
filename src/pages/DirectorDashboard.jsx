@@ -5,19 +5,14 @@ import { api } from "../services/api";
 import { Avatar, CompactSummaryCard, ScoreBar, StatusBadge } from "../components/dashboard/dashboardPrimitives";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import DashboardSidebar from "../components/dashboard/DashboardSidebar";
-import { ACR_DETAIL_POINTS, SOCIETY_LABELS, MAX_SCORES, APP_INFO, createAcrRows, fetchSavedAppraisal, loadAppraisalDocuments, loadSavedAppraisal, mergeFacultyInfo, saveAppraisalDraftSection, submitAppraisal, fetchReviewQueueForRole, loadReviewerDraft, saveReviewerDraft, submitWorkflowReview, INNOVATIVE_METHODS, SCORE_LIMITS, averageSectionScore, clampScore, clampReviewScore, courseFileAverageScore, courseFileRowScore, effectiveMaxScore, feedbackAverage, feedbackRowScore, feedbackSectionScore, innovativeSelectionsFromDetails, innovativeTeachingScore, isAllowedAttachmentFile, isValidDDMMYYYY, maskDateDDMMYYYY, normalizeAutoScores, projectGuidanceRowMax, researchGuidanceRowMax, researchGuidanceScore, reviewSectionScore, rowHasReviewableData, scoreRemaining, selfEffectivePartAMax, societyRowLocked, societyRowScore, sumSectionScore, toggleInnovativeMethod, validateCompleteRows, generateStandardReport, standardSubmittedScoreSummary, FORM_TYPES, formTypeForSchool, AppraisalHeaderImage, SummaryOtherInfoField, summaryOtherInfoValueFrom, RejectionNotice, DocCell, ViewCell, ViewDocsCell, RowButtons as RowBtns, SectionSaveFooter, SectionCard as SC, T, TH, TH_HOD, TH_DIR, TD, TDC, TDS, TDS_HOD, TDS_DIR, TDV, MyAppraisalSection } from "../features/faculty-appraisal";
+import { ACR_DETAIL_POINTS, SOCIETY_LABELS, MAX_SCORES, APP_INFO, createAcrRows, fetchSavedAppraisal, loadAppraisalDocuments, loadSavedAppraisal, mergeFacultyInfo, saveAppraisalDraftSection, submitAppraisal, fetchReviewQueueForRole, loadReviewerDraft, saveReviewerDraft, submitWorkflowReview, INNOVATIVE_METHODS, SCORE_LIMITS, averageSectionScore, clampScore, clampReviewScore, courseFileAverageScore, courseFileRowScore, effectiveMaxScore, feedbackAverage, feedbackRowScore, feedbackSectionScore, innovativeSelectionsFromDetails, innovativeTeachingScore, isAllowedAttachmentFile, isValidDDMMYYYY, maskDateDDMMYYYY, normalizeAutoScores, projectGuidanceRowMax, researchGuidanceRowMax, researchGuidanceScore, reviewSectionScore, rowHasReviewableData, scoreRemaining, selfEffectivePartAMax, societyRowLocked, societyRowScore, sumSectionScore, toggleInnovativeMethod, validateCompleteRows, generateStandardReport, standardSubmittedScoreSummary, AppraisalHeaderImage, SummaryOtherInfoField, summaryOtherInfoValueFrom, RejectionNotice, DocCell, ViewCell, ViewDocsCell, RowButtons as RowBtns, SectionSaveFooter, SectionCard as SC, T, TH, TH_HOD, TH_DIR, TD, TDC, TDS, TDS_HOD, TDS_DIR, TDV, MyAppraisalSection } from "../features/faculty-appraisal";
 import { canReviewerRejectProfile, rejectedStatusFor, reviewedStatusFor, profileFromsessionStorage, workflowValidationError, roleLabel, getSchoolKey, isAppraisalFinalisedByVc, isRejectedStatus, isPendingReviewStatusFor, hasActiveRejection, reviewListFrom } from "../utils/hierarchy";
-import { DesignArtsAuthorityReviewPanel } from "../components/appraisal/designArts/DesignArtsAppraisalForm";
-import { MediaCommAuthorityReviewPanel } from "../components/appraisal/mediaCommunication/MediaCommunicationAppraisalForm";
 import { n, pct, grade, RO, TI } from "../features/faculty-appraisal/shared";
 
 // - Helpers - (n, pct, grade, RO, TI → imported from shared)
 const NON_ENGINEERING_REVIEW_SCHOOLS = new Set(["SoCM", "SoMCS", "SoD", "SoAA"]);
 const isNonEngineeringReviewSubject = (item = {}) =>
  NON_ENGINEERING_REVIEW_SCHOOLS.has(getSchoolKey(item.school || item.schoolName || item.info?.school || ""));
-const schoolCodeForSubject = (item = {}) =>
- item.schoolCode || getSchoolKey(item.school || item.schoolName || item.info?.school || item.department || "");
-const formTypeForSubject = (item = {}) =>formTypeForSchool(schoolCodeForSubject(item)) || FORM_TYPES.DEFAULT;
 const docsCount = (docs = {}) =>{
  if (!docs || typeof docs !== "object") return 0;
  return Object.values(docs).reduce((total, value) =>{
@@ -774,30 +769,12 @@ return (
 
  {/* REVIEW PANEL */}
  {activeMainTab === "facultyApprovals" && reviewingFaculty && (
- formTypeForSubject(reviewingFaculty) === FORM_TYPES.MEDIA_COMM ? (
-<MediaCommAuthorityReviewPanel
- person={reviewingFaculty}
- reviewerRole="director"
- onBack={() =>setReviewingFaculty(null)}
- onSubmit={(id, scores, remarks, sectionScores, reviewConfirmed, decision) =>handleSubmitReview("faculty", id, scores, remarks, sectionScores, reviewConfirmed, decision)}
- readOnly={isDirectorReviewed(reviewingFaculty)}
- />
- ) : formTypeForSubject(reviewingFaculty) === FORM_TYPES.DESIGN_ARTS ? (
-<DesignArtsAuthorityReviewPanel
- person={reviewingFaculty}
- reviewerRole="director"
- onBack={() =>setReviewingFaculty(null)}
- onSubmit={(id, scores, remarks, sectionScores, reviewConfirmed, decision) =>handleSubmitReview("faculty", id, scores, remarks, sectionScores, reviewConfirmed, decision)}
- readOnly={isDirectorReviewed(reviewingFaculty)}
- />
- ) : (
 <ReviewPanel
  faculty={reviewingFaculty}
  onBack={() =>setReviewingFaculty(null)}
  onSubmit={(id, total, remarks, sectionScores, reviewConfirmed, decision) =>handleSubmitReview("faculty", id, total, remarks, sectionScores, reviewConfirmed, decision)}
  readOnly={isDirectorReviewed(reviewingFaculty)}
  />
- )
  )}
  {activeMainTab === "hodApprovals" && reviewingHod && (
 <ReviewPanel

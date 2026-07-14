@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars, no-undef, react-hooks/preserve-manual-memoization, react-refresh/only-export-components */
+/* eslint-disable no-unused-vars, react-hooks/preserve-manual-memoization, react-refresh/only-export-components */
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, LogoutConfirmModal, ScoreBar, StatusBadge } from "../../dashboard/dashboardPrimitives";
@@ -65,17 +65,18 @@ import PartB from "./PartB/PartB";
 import SectionShell from "./common/SectionShell";
 import { thStyle, tdStyle, tdCenter } from "./common/TableStyles";
 
-const ACCENT = "#9d174d";
-const ACCENT2 = "#4338ca";
+export const ACCENT = "#9d174d";
+export const ACCENT2 = "#4338ca";
 const VERIFY_TEXT = "I have verified all the details and confirm that the information provided is correct. I am responsible for the accuracy of this data.";
-const PART_A_MAX = 200;
-const PART_B_MAX = 375;
-const GRAND_MAX = 575;
-const SECTION_OPTIONS = [
+export const PART_A_MAX = 200;
+export const PART_B_MAX = 375;
+export const GRAND_MAX = 575;
+export const SECTION_OPTIONS = [
  { value: "partA", label: "Part-A Section" },
  { value: "partB", label: "Part-B Section" },
  { value: "summary", label: "Summary Section" },
 ];
+const smallButton = (background) =>({ padding: "8px 14px", background, color: "#fff", border: "none", borderRadius: 7, cursor: background === "#94a3b8" ? "not-allowed" : "pointer", fontWeight: 800, fontSize: 12, fontFamily: "inherit" });
 export const titleCase = (value) =>String(value || "").charAt(0).toUpperCase() + String(value || "").slice(1);
 export const isReviewerReviewComplete = (item = {}, reviewerRole = "") =>{
  const status = String(item?.status || item?.workflowStatus || item?.workflow_status || "");
@@ -104,7 +105,7 @@ export const designArtsSchoolName = (...sources) =>{
  .find(Boolean);
  return school || DESIGN_ARTS_FALLBACK_SCHOOL;
 };
-const userInitials = (name) =>
+export const userInitials = (name) =>
  String(name || "User")
  .split(" ")
  .filter(Boolean)
@@ -279,7 +280,7 @@ export const getDesignArtsEffectiveMaxScores = (form = {}, { self = false } = {}
 export const summaryRowIfApplicable = (applicability = {}, key, row) =>
  applicability[key] === "notApplicable" ? [] : [row];
 
-const b8SummaryRowIfApplicable = (applicability = {}, row) =>
+export const b8SummaryRowIfApplicable = (applicability = {}, row) =>
  applicability.fdps === "notApplicable" && applicability.training === "notApplicable" ? [] : [row];
 
 const ensureIds = (rows) =>Array.isArray(rows) ? rows.map((row) =>(row._id ? row : { ...row, _id: uid() })) : rows;
@@ -755,7 +756,7 @@ export function AccuracyCheckbox({ checked, onChange, disabled = false }) {
  );
 }
 
-function SummaryBox({ totals, roleScoreLabel = "Score", maxScores = { partA: PART_A_MAX, partB: PART_B_MAX, grand: GRAND_MAX } }) {
+export function SummaryBox({ totals, roleScoreLabel = "Score", maxScores = { partA: PART_A_MAX, partB: PART_B_MAX, grand: GRAND_MAX } }) {
  return (
 <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 16, display: "grid", gap: 12 }}>
  {[
@@ -835,7 +836,7 @@ export function SectionSelector({ value, onChange, label = "Appraisal Section", 
  );
 }
 
-function WorkflowTracker({ declaration, reviews, profile }) {
+export function WorkflowTracker({ declaration, reviews, profile }) {
  const chain = getReviewChain(profile);
  if (!declaration) {
  return<div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: 14, color: "#64748b", fontSize: 12 }}>Submit the appraisal to see the approval route.</div>;

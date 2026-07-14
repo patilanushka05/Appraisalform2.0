@@ -12,9 +12,8 @@
  *   8. SoEMR  — School of Engineering Management & Research
  *
  * Form-type assignment:
- *   FORM_A — 5 schools: SoCSEA (1), SoCM (2), SoBB (3), SoCE (7), SoEMR (8)
- *   FORM_B — 1 school : SoMCS (4)
- *   FORM_C — 2 schools: SoD (5), SoAA (6)
+ *   FORM_A — all teaching schools use the engineering-equivalent appraisal structure.
+ *   FORM_B / FORM_C are retained only as legacy identifiers for older saved records.
  *
  * CISR uses FORM_A (engineering-equivalent appraisal structure).
  */
@@ -25,9 +24,9 @@ export const FORM_TYPES = {
 };
 
 export const FORM_SCHOOL_CODES = {
-  [FORM_TYPES.DEFAULT]:    ["SoCSEA", "SoCM", "SoBB", "SoCE", "SoEMR", "CISR"],
-  [FORM_TYPES.MEDIA_COMM]: ["SoMCS"],
-  [FORM_TYPES.DESIGN_ARTS]: ["SoD", "SoAA"],
+  [FORM_TYPES.DEFAULT]:    ["SoCSEA", "SoCM", "SoBB", "SoMCS", "SoD", "SoAA", "SoCE", "SoEMR", "CISR"],
+  [FORM_TYPES.MEDIA_COMM]: [],
+  [FORM_TYPES.DESIGN_ARTS]: [],
 };
 
 export const formTypeForSchool = (schoolCode) => {
