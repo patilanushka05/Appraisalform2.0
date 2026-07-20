@@ -489,7 +489,7 @@ export default function HODDashboard({
  )}
 >
 
- {activeMainTab === "myAppraisal" && <MyAppraisalSection sectionTab={hodAppraisalTab} onSectionTabChange={handleMyAppraisalSectionChange} defaultDesignation={sessionStorage.getItem("role") === reviewerRole ? reviewerDesignation : ""} titleNameFallback="HOD" subtitleSeparator=" - " />}
+{activeMainTab === "myAppraisal" && <MyAppraisalSection sectionTab={hodAppraisalTab} onSectionTabChange={handleMyAppraisalSectionChange} defaultDesignation={sessionStorage.getItem("role") === reviewerRole ? reviewerDesignation : ""} defaultAcademicYear={sessionStorage.getItem("academicYear") || APP_INFO.DEFAULT_AY} titleNameFallback="HOD" subtitleSeparator=" - " />}
 
  {activeMainTab === "approvals" && !reviewingFaculty && (
 <>

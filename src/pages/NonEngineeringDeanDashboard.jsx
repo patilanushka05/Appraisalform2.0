@@ -1166,7 +1166,7 @@ export default function NonEngineeringDeanDashboard() {
  )}
 >
 
- {activeMainTab === "myAppraisal" && <MyAppraisalSection sectionTab={hodAppraisalTab} onSectionTabChange={handleMyAppraisalSectionChange} defaultDesignation={sessionStorage.getItem("role") === "dean" ? "Dean" : ""} defaultAcademicYear={sessionStorage.getItem("academicYear") || "2026-2027"} titleNameFallback="Dean" subtitleSeparator=" - " />}
+{activeMainTab === "myAppraisal" && <MyAppraisalSection sectionTab={hodAppraisalTab} onSectionTabChange={handleMyAppraisalSectionChange} defaultDesignation={sessionStorage.getItem("role") === "dean" ? "Dean" : ""} defaultAcademicYear={sessionStorage.getItem("academicYear") || APP_INFO.DEFAULT_AY} titleNameFallback="Dean" subtitleSeparator=" - " />}
 
  {(activeMainTab === "directorApprovals" || activeMainTab === "facultyApprovals") && !reviewingApproval && (
 <>
