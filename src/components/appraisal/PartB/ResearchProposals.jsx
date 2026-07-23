@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { HodInput } from "../../Inputs";
 import {
   SCORE_LIMITS,
@@ -29,21 +29,20 @@ export default function ResearchProposals({ ctx }) {
  return (
 <>
 {/* B7: Proposals */}
-<SC title="B7(a). Submitted Research Proposals (Max 10)" accent="#0ea5e9">
+<SC title="B6. Consultancy, Testing & Training (Max 20)" accent="#0ea5e9">
 <table style={T}>
 <thead><tr>
-<th style={TH}>SN</th><th style={TH}>Title</th><th style={TH}>Duration</th>
-<th style={TH}>Funding Agency</th><th style={TH}>Amount</th>
+<th style={TH}>SN</th><th style={TH}>Client / Organisation</th><th style={TH}>Nature of Engagement</th>
+<th style={TH}>Revenue Generated (₹)</th>
 <th style={TH}>View Docs</th><th style={TH}>Faculty Score</th><th style={TH_HOD}>{reviewerScoreLabel}</th>
 </tr></thead>
 <tbody>
  {rows(proposals).map((r, i) =>(
 <tr key={i}>
 <td style={TDC}>{i + 1}</td>
-<td style={TD}><RO val={r.title} /></td>
-<td style={TDC}><RO val={r.duration} center /></td>
-<td style={TD}><RO val={r.agency} /></td>
-<td style={TDC}><RO val={r.amount} center /></td>
+<td style={TD}><RO val={r.agency || r.title} /></td>
+<td style={TD}><RO val={r.duration || r.nature} /></td>
+<td style={TDC}><RO val={r.amount || r.revenue} center /></td>
 <td style={TDV}><ViewDocsCell docKey={`prop-${i}`} docs={docs} /></td>
 <td style={TDS}><RO val={r.score} center /></td>
 <td style={TDS_HOD}><HodInput val={get("proposals", i, "hod")} onChange={v =>set("proposals", i, "hod", v)} /></td>

@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { HodInput } from "../../Inputs";
 import {
   SCORE_LIMITS,
@@ -28,8 +28,8 @@ export default function Projects({ ctx }) {
  const { faculty, docs, lectures, courseFile, projects, quals, feedback, deptActs, uniActs, society, industry, acr, journals, books, ict, research, projects2, externalProjects, patents, awards, confs, proposals, products, fdps, training, rows, get, set, reviewerLabel, reviewerScoreLabel, innovativeRows, getInnovHod, setInnovHod } = ctx;
  return (
 <>
-{/* A4: Projects */}
- {faculty.sectionApplicability?.projects !== "notApplicable" &&<SC title="A4. Projects (Max 10)" accent="#8b5cf6">
+{/* A6: Guided Students Project */}
+ {faculty.sectionApplicability?.projects !== "notApplicable" &&<SC title="A6. Guided Students Project (Max 10/20)" accent="#8b5cf6">
 <table style={T}>
 <thead><tr>
 <th style={TH}>SN</th><th style={TH}>Project Type</th>

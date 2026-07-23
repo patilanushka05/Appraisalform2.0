@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { HodInput } from "../../Inputs";
 import {
   SCORE_LIMITS,
@@ -29,10 +29,10 @@ export default function DirectorResearchGuidance({ ctx }) {
  return (
 <>
 {/* B4: Research Guidance */}
- {faculty.sectionApplicability?.research !== "notApplicable" &&<SC title="B4(a). Research Guidance - PhD / PG (Max 30)" accent="#059669">
+ {faculty.sectionApplicability?.research !== "notApplicable" &&<SC title="B5. Research Guidance (Max 20)" accent="#059669">
 <table style={T}>
 <thead><tr>
-<th style={TH}>SN</th><th style={TH}>Degree</th><th style={TH}>Student Name</th><th style={TH}>Status</th>
+<th style={TH}>SN</th><th style={TH}>Degree (PhD/PG)</th><th style={TH}>Name of Student / Scholar</th><th style={TH}>Status (Ongoing/Awarded)</th><th style={TH}>Date</th>
 <th style={TH}>View Docs</th><th style={TH}>Faculty Score</th><th style={TH_DIR}>Director Score</th>
 </tr></thead>
 <tbody>
@@ -41,9 +41,10 @@ export default function DirectorResearchGuidance({ ctx }) {
 <td style={TDC}>{i + 1}</td>
 <td style={TDC}><RO val={r.degree} center /></td>
 <td style={TD}><RO val={r.name} /></td>
-<td style={TD}><RO val={r.thesis} /></td>
+<td style={TD}><RO val={r.status || r.thesis} /></td>
+<td style={TDC}><RO val={r.date} center /></td>
 <td style={TDV}><ViewDocsCell docKey={`res-${i}`} docs={docs} /></td>
-<td style={TDS}><RO val={r.degree || r.name || r.thesis || r.score ? researchGuidanceScore(r).toFixed(1) : ""} center /></td>
+<td style={TDS}><RO val={r.score} center /></td>
 <td style={TDS_DIR}><DirInput val={getDir("research", i, "dir")} onChange={v =>setDir("research", i, "dir", v)} /></td>
 </tr>
  ))}

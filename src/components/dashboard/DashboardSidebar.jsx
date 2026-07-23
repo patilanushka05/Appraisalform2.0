@@ -74,15 +74,11 @@ export default function DashboardSidebar({
 
       <div style={{ height: 1, background: "rgba(255,255,255,0.08)" }} />
 
-      {navItems.map((tab) => {
+      {navItems.filter((tab) => tab.id !== "guidelines").map((tab) => {
         const button = (
           <button
             key={tab.id}
             onClick={() => {
-              if (tab.id === "guidelines") {
-                window.open("/faculty-appraisal-guidelines.pdf", "_blank");
-                return;
-              }
               onTabSelect?.(tab.id);
             }}
             className={activeTab === tab.id ? "is-active" : ""}

@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { HodInput } from "../../Inputs";
 import {
   SCORE_LIMITS,
@@ -32,7 +32,7 @@ export default function DirectorInnovativeTeaching({ ctx }) {
 <SC title="A3. Innovative Teaching-Learning (Max 10)" accent="#8b5cf6">
 <table style={T}>
 <thead><tr>
-<th style={TH}>SN</th><th style={TH}>Method</th><th style={TH}>Details</th><th style={TH}>View Docs</th><th style={TH}>Faculty Score</th><th style={TH_DIR}>Director Score</th>
+<th style={TH}>SN</th><th style={TH}>Method</th><th style={TH}>Proof Attached (Yes/No)</th><th style={TH}>View Docs</th><th style={TH}>Faculty Score</th><th style={TH_DIR}>Director Score</th>
 </tr></thead>
 <tbody>
  {innovativeRows.map((row, index) =>{

@@ -388,7 +388,6 @@ export default function DesignArtsDashboard({ fixedRole }) {
 </>
  )}
  {role !== "faculty" &&<button onClick={() =>{ setActiveTab("approvals"); setReviewing(null); }} style={navButton(activeTab === "approvals")}>Approvals ({pendingCount})</button>}
-<button onClick={() =>{ window.open('/faculty-appraisal-guidelines.pdf', '_blank'); }} style={navButton(false)}>Guidelines</button>
 <div style={{ marginTop: "auto", borderTop: "1px solid #1e293b", paddingTop: 12, display: "grid", gap: 10 }}>
 <button
  type="button"

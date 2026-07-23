@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { HodInput } from "../../Inputs";
 import {
   SCORE_LIMITS,
@@ -28,16 +28,16 @@ export default function DirectorInternalProjects({ ctx }) {
  const { faculty, docs, lectures, courseFile, projects, quals, feedback, deptActs, uniActs, society, industry, acr, journals, books, ict, research, projects2, externalProjects, patents, awards, confs, proposals, products, fdps, training, rows, getDir, setDir, getInnovDir, setInnovDir, innovativeRows } = ctx;
  return (
 <>
-<SC title="B4(b). Research / Consultancy Internal Projects (Max 15)" accent="#059669">
+<SC title="B4. Funded Research Projects (Max 40)" accent="#059669">
 <div style={{ overflowX: "auto" }}>
 <table style={T}>
 <thead><tr>
-<th style={TH}>SN</th><th style={TH}>Title</th><th style={TH}>Agency</th>
-<th style={TH}>Sanction Date</th><th style={TH}>Amount</th><th style={TH}>Role</th><th style={TH}>Status</th>
-<th style={TH}>Faculty Score</th><th style={TH_DIR}>Director Score</th>
+<th style={TH}>SN</th><th style={TH}>Title of Project</th><th style={TH}>Funding Agency</th>
+<th style={TH}>Sanction Date</th><th style={TH}>Amount (₹)</th><th style={TH}>PI / Co-PI</th><th style={TH}>Status</th>
+<th style={TH}>View Docs</th><th style={TH}>Faculty Score</th><th style={TH_DIR}>Director Score</th>
 </tr></thead>
 <tbody>
- {rows(faculty.projects2).map((r, i) =>(
+ {rows(projects2).map((r, i) =>(
 <tr key={i} style={i % 2 ? { background: "#f8fafc" } : {}}>
 <td style={TDC}>{i + 1}</td>
 <td style={TD}><RO val={r.title} /></td>
@@ -46,6 +46,7 @@ export default function DirectorInternalProjects({ ctx }) {
 <td style={TDC}><RO val={r.amount} center /></td>
 <td style={TD}><RO val={r.role} /></td>
 <td style={TD}><RO val={r.status} /></td>
+<td style={TDV}><ViewDocsCell docKey={`project2-${i}`} docs={docs} /></td>
 <td style={TDS}><RO val={r.score} center /></td>
 <td style={TDS_DIR}><DirInput val={getDir("projects2", i, "dir")} max={SCORE_LIMITS.researchInternalProjects} onChange={v =>setDir("projects2", i, "dir", v)} /></td>
 </tr>

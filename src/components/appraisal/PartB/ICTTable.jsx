@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { HodInput } from "../../Inputs";
 import {
   SCORE_LIMITS,
@@ -29,10 +29,10 @@ export default function ICTTable({ ctx }) {
  return (
 <>
 {/* B3: ICT */}
-<SC title="B3. ICT / E-Content / Pedagogy (Max 20)" accent="#0ea5e9">
+<SC title="B11. ICT Content, MOOCs & E-Learning (Max 20)" accent="#0ea5e9">
 <table style={T}>
 <thead><tr>
-<th style={TH}>SN</th><th style={TH}>Title</th><th style={TH}>Type</th><th style={TH}>Quadrants</th>
+<th style={TH}>SN</th><th style={TH}>Title</th><th style={TH}>Platform / Type</th><th style={TH}>Reach / Views (if available)</th>
 <th style={TH}>View Docs</th><th style={TH}>Faculty Score</th><th style={TH_HOD}>{reviewerScoreLabel}</th>
 </tr></thead>
 <tbody>
@@ -40,8 +40,8 @@ export default function ICTTable({ ctx }) {
 <tr key={i}>
 <td style={TDC}>{i + 1}</td>
 <td style={TD}><RO val={r.title} /></td>
-<td style={TD}><RO val={r.type} /></td>
-<td style={TDC}><RO val={r.quad} center /></td>
+<td style={TD}><RO val={r.type || r.desc} /></td>
+<td style={TD}><RO val={r.quad || r.reach} /></td>
 <td style={TDV}><ViewDocsCell docKey={`ict-${i}`} docs={docs} /></td>
 <td style={TDS}><RO val={r.score} center /></td>
 <td style={TDS_HOD}><HodInput val={get("ict", i, "hod")} onChange={v =>set("ict", i, "hod", v)} /></td>

@@ -298,9 +298,9 @@ const preserveSavedReviewScores = (form = {}, source = {}) =>{
 };
 const VC_REPORT_PART_A_SECTIONS = [
  { key: "lectures", title: "A(i). Lectures / Tutorials / Practicals", max: 50, doc: "lec", fields: [["sem", "Semester"], ["code", "Course Code / Name"], ["planned", "Classes (as per course structure)"], ["conducted", "Classes Actually Conducted"]] },
- { key: "courseFile", title: "A(ii). Course File", max: 20, doc: "cf", fields: [["course", "Course / Paper"], ["title", "Program & Semester"], ["details", "Availability as per IQAC format"]] },
- { key: "projects", title: "A(iv). Project Guidance", max: 10, doc: "proj", fields: [["label", "Project Category"]] },
- { key: "quals", title: "A(v). Qualification Enhancement", max: 10, doc: "qual", fields: [["label", "Category"]] },
+ { key: "courseFile", title: "A(ii). Course File", max: 20, doc: "cf", fields: [["course", "Course / Paper"], ["title", "Title"], ["details", "IQAC Index Compliance (Yes/No, with proof)"]] },
+ { key: "projects", title: "A(vi). Guided Students Project", max: 10, doc: "proj", fields: [["label", "Project Category"]] },
+ { key: "quals", title: "A(viii). Qualification Enhancement", max: 10, doc: "qual", fields: [["label", "Category"]] },
  { key: "feedback", title: "Student Feedback", max: 10, doc: "fb", fields: [["code", "Course Code / Name"], ["fb1", "First Feedback(%)"], ["fb2", "Second Feedback(%)"]] },
  { key: "deptActs", title: "Departmental / School Activities", max: 20, doc: "dept", fields: [["activity", "Activity"], ["nature", "Nature"]] },
  { key: "uniActs", title: "University Level Activities", max: 30, doc: "uni", fields: [["activity", "Activity"], ["nature", "Nature"]] },
@@ -309,19 +309,17 @@ const VC_REPORT_PART_A_SECTIONS = [
  { key: "acr", title: "(xi) Annual Confidential Report (ACR) - Max 25 marks", max: 25, doc: "acr", fields: [["label", "Attribute"]] },
 ];
 const VC_REPORT_PART_B_SECTIONS = [
- { key: "journals", title: "B1. Research Papers / Journal Publications", max: 120, doc: "jour", fields: [["title", "Title"], ["journal", "Journal"], ["issn", "ISSN"], ["index", "Journal Indexing"]] },
- { key: "books", title: "B2. Books / Book Chapters", max: 50, doc: "book", fields: [["title", "Title with Page Nos."], ["book", "Book Title, Editor & Publisher"], ["issn", "ISSN / ISBN No."], ["pub", "Type of Publisher"], ["coauth", "Co-authors (from DYPIU)"], ["first", "First Author"]] },
- { key: "ict", title: "B3. ICT / E-Content", max: 20, doc: "ict", fields: [["title", "Title"], ["desc", "Description"], ["type", "Type"], ["quad", "Quadrants"]] },
- { key: "research", title: "B4(a). Research Guidance", max: 30, doc: "res", fields: [["degree", "Degree"], ["name", "Student Name"], ["thesis", "Thesis / Status"]] },
- { key: "projects2", title: "B4(b). Research / Consultancy Internal Projects", max: 15, doc: "project2", fields: [["title", "Title"], ["agency", "Funding Agency"], ["date", "Date of Sanction"], ["amount", "Grant Amount"], ["role", "Role PI / Co-PI / Consultant"], ["status", "Status"]] },
- { key: "externalProjects", title: "B4(c). Research / Consultancy External Projects", max: 30, doc: "externalProject", fields: [["title", "Title"], ["agency", "Funding Agency"], ["date", "Date of Sanction"], ["amount", "Grant Amount"], ["role", "Role PI / Co-PI / Consultant"], ["status", "Status"]] },
- { key: "patents", title: "B5(a). Patents (IPR)", max: 40, doc: "pat", fields: [["title", "Title"], ["type", "National / International"], ["date", "Date"], ["status", "Status"], ["fileNo", "File No."]] },
- { key: "awards", title: "B5(b). Awards", max: 10, doc: "awd", fields: [["title", "Title"], ["date", "Date"], ["agency", "Agency"], ["level", "Level"]] },
- { key: "confs", title: "B6. Invited Lectures / Resource Person / Paper Presentations", max: 30, doc: "conf", fields: [["title", "Title"], ["type", "Type"], ["org", "Organization"], ["level", "Level"]] },
- { key: "proposals", title: "B7(a). Submitted Research Proposals", max: 10, doc: "prop", fields: [["title", "Title"], ["duration", "Duration"], ["agency", "Funding Agency"], ["amount", "Grant Amount Requested"]] },
- { key: "products", title: "B7(b). Product Developed and Used by Students in Lab / Commercialized", max: 10, doc: "prod", fields: [["details", "Details of Product"], ["usage", "Used by Students in Lab / Commercialized"]] },
- { key: "fdps", title: "B8(a). FDP / Workshops Attended", max: 10, doc: "fdp", fields: [["program", "Program"], ["duration", "Duration"], ["org", "Organization"]] },
- { key: "training", title: "B8(b). Industrial Training", max: 10, doc: "train", fields: [["company", "Company"], ["duration", "Duration"], ["nature", "Nature"]] },
+ { key: "journals", title: "B1. Journal Publications", max: 100, doc: "jour", fields: [["title", "Title"], ["journal", "Journal"], ["issn", "ISSN"], ["impactFactor", "Impact Factor"], ["authorPosition", "Author Position"]] },
+ { key: "books", title: "B2. Books, Book Chapters & Edited Volumes", max: 30, doc: "book", fields: [["title", "Title"], ["book", "Publisher & ISBN"], ["pub", "Type (Book/Chapter/Editor/Translation)"], ["level", "Level (Intl./National/Local)"], ["coauth", "Co-authors from DYPIU"]] },
+ { key: "patents", title: "B3. Patents, Copyrights & IP and Product Development", max: 40, doc: "pat", fields: [["title", "Title"], ["type", "National / International"], ["status", "Status (Published/Granted)"], ["fileNo", "Filing / Grant No. & Date"]] },
+ { key: "projects2", title: "B4. Funded Research Projects", max: 40, doc: "project2", fields: [["title", "Title of Project"], ["agency", "Funding Agency"], ["date", "Sanction Date"], ["amount", "Amount (₹)"], ["role", "PI / Co-PI"], ["status", "Status"]] },
+ { key: "research", title: "B5. Research Guidance", max: 20, doc: "res", fields: [["degree", "Degree (PhD/PG)"], ["name", "Name of Student / Scholar"], ["status", "Status (Ongoing/Awarded)"], ["date", "Date"]] },
+ { key: "proposals", title: "B6. Consultancy, Testing & Training", max: 20, doc: "prop", fields: [["agency", "Client / Organisation"], ["duration", "Nature of Engagement"], ["amount", "Revenue Generated (₹)"]] },
+ { key: "confs", title: "B7. Conference / FDP / Training / Workshop Contributions Organised", max: 20, doc: "conf", fields: [["title", "Event / Session Title"], ["role", "Role"], ["date", "Date"], ["level", "Level (Intl./National)"]] },
+ { key: "fdps", title: "B8. Conference / FDP / Industry Training - Attended", max: 20, doc: "fdp", fields: [["program", "Programme / Event"], ["duration", "Duration"], ["org", "Organised By"]] },
+ { key: "awards", title: "B9. Research Awards, Fellowships, Reviewer of Journal & Citations", max: 20, doc: "awd", fields: [["title", "Title of Award / Fellowship / Metric"], ["agency", "Awarding Agency"], ["level", "Level"], ["date", "Date"]] },
+ { key: "products", title: "B10. Innovation, Start-ups & Technology Transfer", max: 20, doc: "prod", fields: [["details", "Title / Start-up / Product"], ["role", "Role"], ["status", "Status"]] },
+ { key: "ict", title: "B11. ICT Content, MOOCs & E-Learning", max: 20, doc: "ict", fields: [["title", "Title"], ["type", "Platform / Type"], ["quad", "Reach / Views (if available)"]] },
 ];
 
 const buildVcSectionScores = (person, vcData) =>{
@@ -492,7 +490,7 @@ function VCReviewForm({ person, vcData, setVcData, personMode = "director", sect
  {/* A2 Course File */}
 <SC title="A2. Course File (Max 20)" accent="#7c3aed">
 <table style={T}><thead><tr>
-<th style={TH}>SN</th><th style={TH}>Course</th><th style={TH}>Program & Semester</th><th style={TH}>Availability as per IQAC format</th>
+<th style={TH}>SN</th><th style={TH}>Course</th><th style={TH}>Title</th><th style={TH}>IQAC Index Compliance (Yes/No, with proof)</th>
  {renderScoreHeaders()}
 </tr></thead>
 <tbody>{rows(person.courseFile).map((r, i) =>(
@@ -509,7 +507,7 @@ function VCReviewForm({ person, vcData, setVcData, personMode = "director", sect
  {/* A3 Innovative */}
 <SC title="A3. Innovative Teaching-Learning (Max 10)" accent="#7c3aed">
 <table style={T}><thead><tr>
-<th style={TH}>SN</th><th style={TH}>Method</th><th style={TH}>Details</th>
+<th style={TH}>SN</th><th style={TH}>Method</th><th style={TH}>Proof Attached (Yes/No)</th>
 <th style={TH}>View Docs</th>
  {renderScoreHeaders()}
 </tr></thead>

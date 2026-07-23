@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { HodInput } from "../../Inputs";
 import {
   SCORE_LIMITS,
@@ -28,8 +28,8 @@ export default function Qualification({ ctx }) {
  const { faculty, docs, lectures, courseFile, projects, quals, feedback, deptActs, uniActs, society, industry, acr, journals, books, ict, research, projects2, externalProjects, patents, awards, confs, proposals, products, fdps, training, rows, get, set, reviewerLabel, reviewerScoreLabel, innovativeRows, getInnovHod, setInnovHod } = ctx;
  return (
 <>
-{/* A5: Qualification */}
-<SC title="A5. Qualification Enhancement (Max 10)" accent="#8b5cf6">
+{/* A8: Qualification */}
+<SC title="A8. Qualification Enhancement (Max 10)" accent="#8b5cf6">
 <table style={T}>
 <thead><tr>
 <th style={TH}>SN</th><th style={TH}>Description</th>

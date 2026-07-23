@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { HodInput } from "../../Inputs";
 import {
   SCORE_LIMITS,
@@ -33,7 +33,8 @@ export default function DirectorCourseFileTable({ ctx }) {
 <table style={T}>
 <thead><tr>
 <th style={{ ...TH, width: 30 }}>SN</th>
-<th style={TH}>Course</th><th style={TH}>Program & Semester</th><th style={TH}>Availability as per IQAC format</th>
+<th style={TH}>Course</th><th style={TH}>Title</th><th style={TH}>IQAC Index Compliance (Yes/No, with proof)</th>
+<th style={TH}>View Docs</th>
 <th style={TH}>Faculty Score</th><th style={TH_DIR}>Director Score</th>
 </tr></thead>
 <tbody>
@@ -43,6 +44,7 @@ export default function DirectorCourseFileTable({ ctx }) {
 <td style={TD}><RO val={r.course} /></td>
 <td style={TD}><RO val={r.title} /></td>
 <td style={TDC}><RO val={r.details} center /></td>
+<td style={TDV}><ViewDocsCell docKey={[`courseFile-${i}`, `cf-${i}`]} docs={docs} /></td>
 <td style={TDS}><RO val={courseFileRowScore(r) ? String(courseFileRowScore(r)) : ""} center /></td>
 <td style={TDS_DIR}><DirInput val={getDir("courseFile", i, "dir")} onChange={v =>setDir("courseFile", i, "dir", v)} max={SCORE_LIMITS.courseFileRow} /></td>
 </tr>
