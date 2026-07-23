@@ -14,31 +14,27 @@ export const SOCIETY_LABELS = [
 
 export const ACR_LABELS = [
   "Self-motivation & Proactiveness",
-  "Punctuality",
+  "Knowledge & Competence",
   "Target-based Work",
-  "Effectiveness",
-  "Obedience"
+  "Leadership & Supervisory Skills",
+  "Adaptability & Learning"
 ];
 
 export const ACR_DETAIL_POINTS = {
   "Self-motivation & Proactiveness": [
     "List of activities/initiatives other than regular load/duties.",
   ],
-  Punctuality: [
-    "Late marks (office report).",
-    "Punctuality in lecture/practical.",
-    "Timely daily-report checking.",
-    "Absentee without intimation.",
+  "Knowledge & Competence": [
+    "Domain/technical expertise relevant to role, Understanding of policies, procedures, and compliance requirements",
   ],
   "Target-based Work": [
-    "Tasks allotted.",
-    "Timely completion observed by HOD.",
+    "Tasks allotted; timely completion observed by authorities, Accuracy and thoroughness of output. Volume of work handled relative to role expectations, Adherence to deadlines and timelines",
   ],
-  Effectiveness: [
-    "Work done without errors & least follow-up, observed by HOD.",
+  "Leadership & Supervisory Skills": [
+    "Team management and delegation, Mentoring/developing subordinates, Decision-making under ambiguity",
   ],
-  Obedience: [
-    "To be observed by HOD and Director.",
+  "Adaptability & Learning": [
+    "Openness to change, new tools, or new processes, Response to feedback and coaching, Handling of unexpected/crisis situations",
   ],
 };
 

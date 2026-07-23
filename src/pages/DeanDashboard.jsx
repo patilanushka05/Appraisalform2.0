@@ -469,8 +469,8 @@ function DeanReviewScoreForm({ approval, deanData, setDeanData, sectionView = "p
  docPrefix="courseFile"
  columns={[
  { label: "Course / Paper", render: (r) =>r.course },
- { label: "Program & Semester", render: (r) =>r.title },
- { label: "Details", render: (r) =>r.details },
+ { label: "Title", render: (r) =>r.title },
+ { label: "IQAC Index Compliance (Yes/No, with proof)", render: (r) =>r.details },
  ]}
  />
 
@@ -480,7 +480,7 @@ function DeanReviewScoreForm({ approval, deanData, setDeanData, sectionView = "p
 <tr>
 <th style={TH}>SN</th>
 <th style={TH}>Method</th>
-<th style={TH}>Details</th>
+<th style={TH}>Proof Attached (Yes/No)</th>
 <th style={TH}>View Docs</th>
 <th style={TH}>Self Score</th>
 <th style={TH_DEAN}>Dean</th>
@@ -502,7 +502,7 @@ function DeanReviewScoreForm({ approval, deanData, setDeanData, sectionView = "p
 </SC>
 
 <ReviewTable
- title="A4. Projects Guided"
+ title="A6. Guided Students Project"
  accent="#8b5cf6"
  sectionKey="projects"
  docPrefix="proj"
@@ -510,7 +510,7 @@ function DeanReviewScoreForm({ approval, deanData, setDeanData, sectionView = "p
  />
 
 <ReviewTable
- title="A5. Qualification Enhancement"
+ title="A8. Qualification Enhancement"
  accent="#8b5cf6"
  sectionKey="quals"
  docPrefix="qual"
@@ -587,7 +587,7 @@ function DeanReviewScoreForm({ approval, deanData, setDeanData, sectionView = "p
 </div>
 
 <ReviewTable
- title="B1. Research Papers / Journal Publications"
+ title="B1. Journal Publications"
  accent="#7c3aed"
  sectionKey="journals"
  docPrefix="jour"
@@ -595,165 +595,137 @@ function DeanReviewScoreForm({ approval, deanData, setDeanData, sectionView = "p
  { label: "Title", render: (r) =>r.title },
  { label: "Journal", render: (r) =>r.journal },
  { label: "ISSN", render: (r) =>r.issn, center: true },
- { label: "Journal Indexing", render: (r) =>r.index, center: true },
+ { label: "Impact Factor", render: (r) =>r.impactFactor || r.impact, center: true },
+ { label: "Author Position", render: (r) =>r.authorPosition || r.position, center: true },
  ]}
  />
 
 <ReviewTable
- title="B2. Books / Book Chapters"
+ title="B2. Books, Book Chapters & Edited Volumes"
  accent="#7c3aed"
  sectionKey="books"
  docPrefix="book"
  columns={[
- { label: "Title with Page Nos.", render: (r) =>r.title },
- { label: "Book Title, Editor & Publisher", render: (r) =>r.book },
- { label: "ISSN / ISBN No.", render: (r) =>r.issn, center: true },
- { label: "Type of Publisher", render: (r) =>r.pub },
- { label: "Co-authors (from DYPIU)", render: (r) =>r.coauth },
- { label: "First Author", render: (r) =>r.first, center: true },
- ]}
- />
-
-<ReviewTable
- title="B3. ICT / E-Content / Pedagogy"
- accent="#0ea5e9"
- sectionKey="ict"
- docPrefix="ict"
- columns={[
  { label: "Title", render: (r) =>r.title },
- { label: "Description", render: (r) =>r.desc },
- { label: "Type", render: (r) =>r.type },
- { label: "Quadrants", render: (r) =>r.quad, center: true },
+ { label: "Publisher & ISBN", render: (r) =>r.book || r.publisherIsbn },
+ { label: "Type (Book/Chapter/Editor/Translation)", render: (r) =>r.pub || r.type },
+ { label: "Level (Intl./National/Local)", render: (r) =>r.level },
+ { label: "Co-authors from DYPIU", render: (r) =>r.coauth },
  ]}
  />
 
 <ReviewTable
- title="B4(a). Research Guidance"
- accent="#059669"
- sectionKey="research"
- docPrefix="res"
- columns={[
- { label: "Degree", render: (r) =>r.degree, center: true },
- { label: "Student Name", render: (r) =>r.name },
- { label: "Thesis Title / Status", render: (r) =>r.thesis },
- ]}
- />
-
-<ReviewTable
- title="B4(b). Research / Consultancy Internal Projects"
- accent="#059669"
- sectionKey="projects2"
- docPrefix="project2"
- columns={[
- { label: "Title", render: (r) =>r.title },
- { label: "Funding Agency", render: (r) =>r.agency },
- { label: "Date of Sanction", render: (r) =>r.date, center: true },
- { label: "Grant Amount", render: (r) =>r.amount, center: true },
- { label: "Role PI / Co-PI / Consultant", render: (r) =>r.role },
- { label: "Status", render: (r) =>r.status },
- ]}
- />
-
-<ReviewTable
- title="B4(c). Research / Consultancy External Projects"
- accent="#059669"
- sectionKey="externalProjects"
- docPrefix="externalProject"
- columns={[
- { label: "Title", render: (r) =>r.title },
- { label: "Funding Agency", render: (r) =>r.agency },
- { label: "Date of Sanction", render: (r) =>r.date, center: true },
- { label: "Grant Amount", render: (r) =>r.amount, center: true },
- { label: "Role PI / Co-PI / Consultant", render: (r) =>r.role },
- { label: "Status", render: (r) =>r.status },
- ]}
- />
-
-<ReviewTable
- title="B5(a). Patents (IPR)"
+ title="B3. Patents, Copyrights & IP and Product Development"
  accent="#f97316"
  sectionKey="patents"
  docPrefix="pat"
  columns={[
  { label: "Title", render: (r) =>r.title },
- { label: "National / International", render: (r) =>r.type, center: true },
- { label: "Date", render: (r) =>r.date, center: true },
- { label: "Status", render: (r) =>r.status, center: true },
- { label: "File No.", render: (r) =>r.fileNo, center: true },
+ { label: "National / International", render: (r) =>r.type || r.level, center: true },
+ { label: "Status (Published/Granted)", render: (r) =>r.status, center: true },
+ { label: "Filing / Grant No. & Date", render: (r) =>r.fileNo || r.date, center: true },
  ]}
  />
 
 <ReviewTable
- title="B5(b). Awards"
- accent="#f97316"
- sectionKey="awards"
- docPrefix="awd"
+ title="B4. Funded Research Projects"
+ accent="#059669"
+ sectionKey="projects2"
+ docPrefix="project2"
  columns={[
- { label: "Award Title", render: (r) =>r.title },
- { label: "Date", render: (r) =>r.date, center: true },
- { label: "Agency", render: (r) =>r.agency },
- { label: "Level", render: (r) =>r.level },
+ { label: "Title of Project", render: (r) =>r.title },
+ { label: "Funding Agency", render: (r) =>r.agency },
+ { label: "Sanction Date", render: (r) =>r.date, center: true },
+ { label: "Amount (₹)", render: (r) =>r.amount, center: true },
+ { label: "PI / Co-PI", render: (r) =>r.role },
+ { label: "Status", render: (r) =>r.status },
  ]}
  />
 
 <ReviewTable
- title="B6. Invited Lectures / Resource Person / Paper Presentations"
- accent="#6366f1"
- sectionKey="confs"
- docPrefix="conf"
+ title="B5. Research Guidance"
+ accent="#059669"
+ sectionKey="research"
+ docPrefix="res"
  columns={[
- { label: "Title / Session", render: (r) =>r.title },
- { label: "Type", render: (r) =>r.type },
- { label: "Organizer", render: (r) =>r.org },
- { label: "Level", render: (r) =>r.level },
+ { label: "Degree (PhD/PG)", render: (r) =>r.degree, center: true },
+ { label: "Name of Student / Scholar", render: (r) =>r.name },
+ { label: "Status (Ongoing/Awarded)", render: (r) =>r.status || r.thesis },
+ { label: "Date", render: (r) =>r.date, center: true },
  ]}
  />
 
 <ReviewTable
- title="B7(a). Submitted Research Proposals"
+ title="B6. Consultancy, Testing & Training"
  accent="#0ea5e9"
  sectionKey="proposals"
  docPrefix="prop"
  columns={[
- { label: "Title of Proposal", render: (r) =>r.title },
- { label: "Duration", render: (r) =>r.duration, center: true },
- { label: "Funding Agency", render: (r) =>r.agency },
- { label: "Grant Amount Requested", render: (r) =>r.amount, center: true },
+ { label: "Client / Organisation", render: (r) =>r.agency || r.title },
+ { label: "Nature of Engagement", render: (r) =>r.duration || r.nature },
+ { label: "Revenue Generated (₹)", render: (r) =>r.amount || r.revenue, center: true },
  ]}
  />
 
 <ReviewTable
- title="B7(b). Product Developed and Used by Students in Lab / Commercialized"
- accent="#0ea5e9"
- sectionKey="products"
- docPrefix="prod"
+ title="B7. Conference / FDP / Training / Workshop Contributions Organised"
+ accent="#6366f1"
+ sectionKey="confs"
+ docPrefix="conf"
  columns={[
- { label: "Details of Product", render: (r) =>r.details },
- { label: "Used by Students in Lab / Commercialized", render: (r) =>r.usage },
+ { label: "Event / Session Title", render: (r) =>r.title },
+ { label: "Role", render: (r) =>r.role || r.type },
+ { label: "Date", render: (r) =>r.date, center: true },
+ { label: "Level (Intl./National)", render: (r) =>r.level || r.org },
  ]}
  />
 
 <ReviewTable
- title="B8(a). Self Development - FDP / Workshops"
+ title="B8. Conference / FDP / Industry Training - Attended"
  accent="#10b981"
  sectionKey="fdps"
  docPrefix="fdp"
  columns={[
- { label: "Program", render: (r) =>r.program },
+ { label: "Programme / Event", render: (r) =>r.program },
  { label: "Duration", render: (r) =>r.duration, center: true },
- { label: "Organizer", render: (r) =>r.org },
+ { label: "Organised By", render: (r) =>r.org },
  ]}
  />
 
 <ReviewTable
- title="B8(b). Industrial Training"
- accent="#10b981"
- sectionKey="training"
- docPrefix="train"
+ title="B9. Research Awards, Fellowships, Reviewer of Journal & Citations"
+ accent="#f97316"
+ sectionKey="awards"
+ docPrefix="awd"
  columns={[
- { label: "Company", render: (r) =>r.company },
- { label: "Duration", render: (r) =>r.duration, center: true },
- { label: "Nature", render: (r) =>r.nature },
+ { label: "Title of Award / Fellowship / Metric", render: (r) =>r.title },
+ { label: "Awarding Agency", render: (r) =>r.agency },
+ { label: "Level", render: (r) =>r.level },
+ { label: "Date", render: (r) =>r.date, center: true },
+ ]}
+ />
+
+<ReviewTable
+ title="B10. Innovation, Start-ups & Technology Transfer"
+ accent="#0ea5e9"
+ sectionKey="products"
+ docPrefix="prod"
+ columns={[
+ { label: "Title / Start-up / Product", render: (r) =>r.details || r.title },
+ { label: "Role", render: (r) =>r.role || r.usage },
+ { label: "Status", render: (r) =>r.status },
+ ]}
+ />
+
+<ReviewTable
+ title="B11. ICT Content, MOOCs & E-Learning"
+ accent="#0ea5e9"
+ sectionKey="ict"
+ docPrefix="ict"
+ columns={[
+ { label: "Title", render: (r) =>r.title },
+ { label: "Platform / Type", render: (r) =>r.type || r.desc },
+ { label: "Reach / Views (if available)", render: (r) =>r.quad || r.reach },
  ]}
  />
 </>)}
@@ -1084,7 +1056,6 @@ export default function DeanDashboard() {
  { id: "hodApprovals", icon: "", label: "HOD's Appraisal", sub: `${hodPendingCount} awaiting review`, badge: hodPendingCount },
  { id: "directorApprovals", icon: "", label: "Director's Appraisal", sub: `${directorPendingCount} awaiting review`, badge: directorPendingCount },
  { id: "facultyApprovals", icon: "", label: "Faculty's Appraisal", sub: `${facultyPendingCount} awaiting review`, badge: facultyPendingCount },
- { id: "guidelines", icon: "", label: "Guidelines", sub: "Faculty appraisal guidelines AY 2026-27" },
  ];
  const handleSubmitReview = async (id, scores, remarks, sectionScores, reviewConfirmed = false, decision = "approved") =>{
  if (!reviewConfirmed) {

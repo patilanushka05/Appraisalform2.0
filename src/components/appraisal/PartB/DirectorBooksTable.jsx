@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { HodInput } from "../../Inputs";
 import {
   SCORE_LIMITS,
@@ -29,12 +29,12 @@ export default function DirectorBooksTable({ ctx }) {
  return (
 <>
 {/* B2: Books */}
-<SC title="B2. Books / Book Chapters (Max 50)" accent="#7c3aed">
+<SC title="B2. Books, Book Chapters & Edited Volumes (Max 30)" accent="#7c3aed">
 <div style={{ overflowX: "auto" }}>
 <table style={T}>
 <thead><tr>
-<th style={TH}>SN</th><th style={TH}>Title with Page Nos.</th><th style={TH}>Book Title, Editor & Publisher</th>
-<th style={TH}>ISSN / ISBN No.</th><th style={TH}>Type of Publisher</th><th style={TH}>Co-authors (from DYPIU)</th><th style={TH}>First Author</th>
+<th style={TH}>SN</th><th style={TH}>Title</th><th style={TH}>Publisher & ISBN</th>
+<th style={TH}>Type (Book/Chapter/Editor/Translation)</th><th style={TH}>Level (Intl./National/Local)</th><th style={TH}>Co-authors from DYPIU</th>
 <th style={TH}>View Docs</th><th style={TH}>Faculty Score</th><th style={TH_DIR}>Director Score</th>
 </tr></thead>
 <tbody>
@@ -42,11 +42,10 @@ export default function DirectorBooksTable({ ctx }) {
 <tr key={i} style={i % 2 ? { background: "#f8fafc" } : {}}>
 <td style={TDC}>{i + 1}</td>
 <td style={TD}><RO val={r.title} /></td>
-<td style={TD}><RO val={r.book} /></td>
-<td style={TDC}><RO val={r.issn} center /></td>
-<td style={TD}><RO val={r.pub} /></td>
+<td style={TD}><RO val={r.book || r.publisherIsbn} /></td>
+<td style={TD}><RO val={r.pub || r.type} /></td>
+<td style={TD}><RO val={r.level} /></td>
 <td style={TD}><RO val={r.coauth} /></td>
-<td style={TDC}><RO val={r.first} center /></td>
 <td style={TDV}><ViewDocsCell docKey={`book-${i}`} docs={docs} /></td>
 <td style={TDS}><RO val={r.score} center /></td>
 <td style={TDS_DIR}><DirInput val={getDir("books", i, "dir")} onChange={v =>setDir("books", i, "dir", v)} /></td>

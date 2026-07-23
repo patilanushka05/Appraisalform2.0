@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { HodInput } from "../../Inputs";
 import {
   SCORE_LIMITS,
@@ -29,12 +29,12 @@ export default function Patents({ ctx }) {
  return (
 <>
 {/* B5: Patents */}
-<SC title="B5(a). Patents (IPR) (Max 40)" accent="#f97316">
+<SC title="B3. Patents, Copyrights & IP and Product Development (Max 40)" accent="#f97316">
 <div style={{ overflowX: "auto" }}>
 <table style={T}>
 <thead><tr>
 <th style={TH}>SN</th><th style={TH}>Title</th><th style={TH}>National / International</th>
-<th style={TH}>Filed</th><th style={TH}>Status</th><th style={TH}>File No.</th>
+<th style={TH}>Status (Published/Granted)</th><th style={TH}>Filing / Grant No. & Date</th>
 <th style={TH}>View Docs</th><th style={TH}>Faculty Score</th><th style={TH_HOD}>{reviewerScoreLabel}</th>
 </tr></thead>
 <tbody>
@@ -42,10 +42,9 @@ export default function Patents({ ctx }) {
 <tr key={i}>
 <td style={TDC}>{i + 1}</td>
 <td style={TD}><RO val={r.title} /></td>
-<td style={TDC}><RO val={r.type} center /></td>
-<td style={TDC}><RO val={r.date} center /></td>
+<td style={TDC}><RO val={r.type || r.level} center /></td>
 <td style={TDC}><RO val={r.status} center /></td>
-<td style={TDC}><RO val={r.fileNo} center /></td>
+<td style={TDC}><RO val={r.fileNo || r.date} center /></td>
 <td style={TDV}><ViewDocsCell docKey={`pat-${i}`} docs={docs} /></td>
 <td style={TDS}><RO val={r.score} center /></td>
 <td style={TDS_HOD}><HodInput val={get("patents", i, "hod")} onChange={v =>set("patents", i, "hod", v)} /></td>

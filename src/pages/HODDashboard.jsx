@@ -419,7 +419,6 @@ export default function HODDashboard({
  const navItems = [
  { id: "myAppraisal", icon: "", label: "My Appraisal", sub: "View your self-appraisal form" },
  { id: "approvals", icon: "", label: "Faculty's Appraisal", sub: `${pendingCount} awaiting review`, badge: pendingCount },
- { id: "guidelines", icon: "", label: "Guidelines", sub: "Faculty appraisal guidelines AY 2026-27" },
  ];
  const handleSubmitReview = async (id, scores, remarks, sectionScores, reviewConfirmed = false, decision = "approved") =>{
  if (!reviewConfirmed) {

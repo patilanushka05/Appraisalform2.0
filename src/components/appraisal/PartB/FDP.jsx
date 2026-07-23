@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { HodInput } from "../../Inputs";
 import {
   SCORE_LIMITS,
@@ -28,10 +28,10 @@ export default function FDP({ ctx }) {
  const { faculty, docs, lectures, courseFile, projects, quals, feedback, deptActs, uniActs, society, industry, acr, journals, books, ict, research, projects2, externalProjects, patents, awards, confs, proposals, products, fdps, training, rows, get, set, reviewerLabel, reviewerScoreLabel, innovativeRows, getInnovHod, setInnovHod } = ctx;
  return (
 <>
-<SC title="B8(a). FDP / Workshops Attended (Max 10)" accent="#10b981">
+<SC title="B8. Conference / FDP / Industry Training - Attended (Max 20)" accent="#10b981">
 <table style={T}>
 <thead><tr>
-<th style={TH}>SN</th><th style={TH}>Program</th><th style={TH}>Duration</th><th style={TH}>Organizer</th>
+<th style={TH}>SN</th><th style={TH}>Programme / Event</th><th style={TH}>Duration</th><th style={TH}>Organised By</th>
 <th style={TH}>View Docs</th><th style={TH}>Faculty Score</th><th style={TH_HOD}>{reviewerScoreLabel}</th>
 </tr></thead>
 <tbody>

@@ -1,4 +1,4 @@
-﻿import { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { api } from "../../../services/api";
 import { isAllowedAttachmentFile } from "../../../utils/appraisalFormUtils";
 
@@ -29,6 +29,387 @@ function DownloadIcon() {
   );
 }
 
+export const SECTION_GUIDELINES = {
+  A1: {
+    title: "A1. Course Delivery & Classroom Engagement (Max 40)",
+    rules: [
+      "10 marks per course (max 4 courses).",
+      "Score = 10 for 100% classes conducted vs. LMS JUNO schedule",
+      "9 marks for 91–99% classes conducted",
+      "8 marks for 81–90% classes conducted",
+      "7 marks for 70–80% classes conducted",
+      "0 marks for below 70% classes conducted"
+    ]
+  },
+  A2: {
+    title: "A2. Course File & Curriculum Documentation (Max 20)",
+    rules: [
+      "As per IQAC-approved index.",
+      "Score = 20 for 100% completion (Yes with proof).",
+      "Upload authentic IQAC index compliance document in Attachment column."
+    ]
+  },
+  A3: {
+    title: "A3. Innovative Teaching-Learning Methods (Max 20)",
+    rules: [
+      "4 marks per method used (max 5 methods, Max 20 marks total).",
+      "Attach class photos, LMS records, or activity report as proof for each claimed method."
+    ]
+  },
+  A4: {
+    title: "A4. Student Feedback Score (Max 10)",
+    rules: [
+      "Feedback ≥ 4.60 → 10 | 4.30–4.59 → 9 | 4.00–4.29 → 7 | 3.70–3.99 → 5 | 3.40–3.69 → 3 | 3.00–3.39 → 1 | < 3.00 → 0 + mentoring plan required.",
+      "Valid only if ≥ 50% of enrolled students respond."
+    ]
+  },
+  A5: {
+    title: "A5. Learning Outcomes Attainment & OBE Practice (Max 20)",
+    rules: [
+      "1. CO-PO mapping sheet: 5 marks",
+      "2. Attainment calculation: 10 marks",
+      "3. Corrective action plan taken: 5 marks"
+    ]
+  },
+  A6: {
+    title: "A6. Student Project Guidance (Max 20)",
+    rules: [
+      "Curriculum project guided — 5 marks/batch (max 4 batches).",
+      "PG (M.Tech/MBA etc.) awarded: 5 marks/student (max 10).",
+      "+3 bonus for industrial collaboration/sponsorship.",
+      "+3 bonus for award/competition outcome.",
+      "+3 bonus for student publication from project."
+    ]
+  },
+  A7: {
+    title: "A7. Student Mentoring & Counselling (Max 10)",
+    rules: [
+      "1. Mentoring meetings conducted (min 2/semester): 2 marks",
+      "2. Mentoring register maintained: 3 marks",
+      "3. Documented academic/career counselling outcomes: 3 marks"
+    ]
+  },
+  A8: {
+    title: "A8. Qualification Enhancement (Max 10)",
+    rules: [
+      "Higher qualification achieved during the AY — 10 marks.",
+      "Add-on certification / MOOC — 5 marks each."
+    ]
+  },
+  B1: {
+    title: "B1. Journal Publications (Max 100)",
+    rules: [
+      "Indexing (SCOPUS/SCI/SCIE/WoS): Q1 → 25, Q2 → 20, Q3 → 15, Q4 → 10 marks.",
+      "Impact Factor Bonus: IF ≤ 5 → +3, IF > 5 → +5.",
+      "Under review (max 2): 5 marks.",
+      "Multi-author DYPIU split: 70% first/corresponding author, 30% each co-author.",
+      "DYPIU affiliation mandatory."
+    ]
+  },
+  B2: {
+    title: "B2. Books, Book Chapters & Edited Volumes (Max 30)",
+    rules: [
+      "Book — International: 20, National: 15, Local (ISBN): 10 marks.",
+      "Chapter: 5 marks (70/30 split for DYPIU co-authors).",
+      "Editor — Intl: 10, National: 8, Local: 5 marks.",
+      "Translation — chapter/paper: 5, book: 10 marks."
+    ]
+  },
+  B3: {
+    title: "B3. Patents, Copyrights & IP and Product Development (Max 40)",
+    rules: [
+      "Patent Granted — National: 30, International: 20 marks.",
+      "Patent Published — National: 8, International: 5 marks.",
+      "Design Patent: 10 marks.",
+      "Copyright / Trademark: 5 marks (Arts/Design: 10).",
+      "Technology transfer: 15 marks.",
+      "Product used in lab/university: 10 marks/product."
+    ]
+  },
+  B4: {
+    title: "B4. Funded Research Projects (Max 40)",
+    rules: [
+      "Completed (external): >₹10L → 15, ₹5–10L → 10, <₹5L → 6 marks.",
+      "Ongoing (external): >₹10L → 10, ₹5–10L → 8, <₹5L → 5 marks.",
+      "Submitted proposal (external): >₹20L → 10, <₹20L → 5 marks.",
+      "Internal project: Completed → 10, Ongoing → 5 marks."
+    ]
+  },
+  B5: {
+    title: "B5. Research Guidance (Max 20)",
+    rules: [
+      "PhD awarded (supervisor): 10 marks/scholar.",
+      "PhD ongoing: 5 marks/scholar."
+    ]
+  },
+  B6: {
+    title: "B6. Consultancy, Testing & Training (Max 20)",
+    rules: [
+      "Revenue per engagement: up to ₹50K → 3, ₹50K–2L → 5, ₹2L–5L → 10, ₹5L–10L → 15, >₹10L → 20 marks."
+    ]
+  },
+  B7: {
+    title: "B7. Conference / FDP Contributions — Organised (Max 20)",
+    rules: [
+      "Conference organised (coordinator): 5 marks/event.",
+      "FDP organised (≥ 1 week, max 2): 5 marks/FDP."
+    ]
+  },
+  B8: {
+    title: "B8. Conference / FDP / Industry Training — Attended (Max 20)",
+    rules: [
+      "SCOPUS-indexed conference paper: 10 marks/paper.",
+      "Non-indexed: International → 5, National → 3, Poster → 2 marks.",
+      "Invited lecture / Resource person: 5 marks/session.",
+      "FDP / STTP / Conference attended: 5 marks/event (max 2).",
+      "Industrial training (min 3 days): 10 marks."
+    ]
+  },
+  B9: {
+    title: "B9. Research Awards, Fellowships & Citations (Max 20)",
+    rules: [
+      "Fellowship: International → 10, National/State → 5 marks.",
+      "Research excellence award: External → 10, Internal → 5 marks.",
+      "Best paper award: 5 marks.",
+      "H-index: 1–2 → 1 | 3–4 → 2 | 5–7 → 3 | 8–10 → 4 | >10 → 5 marks.",
+      "Cumulative citations > 100: 5 marks.",
+      "Journal Reviewer: 5 marks per paper reviewed."
+    ]
+  },
+  B10: {
+    title: "B10. Innovation, Start-ups & Technology Transfer (Max 20)",
+    rules: [
+      "Start-up incubated at university TBI: 15 marks.",
+      "Start-up mentored / co-founded: 10 marks.",
+      "Prototype demonstrated at national event: 8 marks.",
+      "Technology transfer agreement: 10 marks.",
+      "Innovation recognised by govt/external body: 7 marks."
+    ]
+  },
+  B11: {
+    title: "B11. ICT Content, MOOCs & E-Learning (Max 20)",
+    rules: [
+      "MOOC / Coursera / SWAYAM course developed: 5 marks/course.",
+      "E-content on course (publicly available): 5 marks/item."
+    ]
+  },
+  C1: {
+    title: "C1. Administration at University Level (Max 50)",
+    rules: [
+      "Short-term (one-time activity): 10 marks/activity.",
+      "Semester / Term (3–6 months): 20 marks/activity.",
+      "Academic Year (> 6 months): 30 marks/activity."
+    ]
+  },
+  C2: {
+    title: "C2. Administration at School Level (Max 30)",
+    rules: [
+      "Short-term: 5 marks/activity.",
+      "Semester / Term: 10 marks/activity.",
+      "Academic Year: 20 marks/activity."
+    ]
+  },
+  C3: {
+    title: "C3. Event Organisation & Institutional Visibility (Max 20)",
+    rules: [
+      "Conference / Seminar organised: 5 marks/event.",
+      "Dept symposium / hackathon / workshop: 5 marks/event.",
+      "Cultural / Sports / Fest: 5 marks/event.",
+      "Industry-Academia Conclave: 5 marks/event.",
+      "Media / PR contribution: 5 marks/contribution."
+    ]
+  },
+  C4: {
+    title: "C4. Mentoring Student Clubs, Outreach & Extension (Max 10)",
+    rules: [
+      "NSS PO / Unnat Bharat Abhiyan coordinator: 10 marks.",
+      "UGC-mandated programme: 5 marks/programme.",
+      "Health / Blood / Environmental drive: 5 marks/activity.",
+      "Community development project: 5 marks/project.",
+      "Mentoring club activity: 3 marks per activity."
+    ]
+  },
+  C5: {
+    title: "C5. Industry Interaction & Linkages (Max 10)",
+    rules: [
+      "MOU signed/renewed: 5 marks/MOU (max 2).",
+      "Center of Excellence (CoE) established: 10 marks.",
+      "Campus recruitment drive facilitated: 5 marks/company.",
+      "Industrial training programme coordinated: 5 marks/programme.",
+      "Expert lecture organized: 3 marks/session."
+    ]
+  },
+  C6: {
+    title: "C6. Alumni Engagement & Networking (Max 10)",
+    rules: [
+      "Alumni meet / reunion organised: 5 marks/event.",
+      "Alumni guest lecture / webinar coordinated: 5 marks/session.",
+      "Alumni feedback survey (submitted to BoS): 5 marks.",
+      "Any other alumni activity: 5 marks/activity."
+    ]
+  },
+  C7: {
+    title: "C7. Student Placement Mentoring & Career Development (Max 20)",
+    rules: [
+      "Students placed under direct mentoring: 2 marks/student.",
+      "Pre-placement training conducted: 5 marks.",
+      "New company facilitated: 5 marks/company (max 2).",
+      "Internship converted to PPO: 5 marks/student (max 2).",
+      "Competitive-exam mentoring (GATE/GRE/CAT/UPSC): 2 marks/student.",
+      "Mock interview / GD / resume session: 5 marks/session (max 2)."
+    ]
+  },
+  D: {
+    title: "Part D. Annual Confidential Report (ACR) (Max 50)",
+    rules: [],
+    rubricScale: {
+      title: "Suggested Rubric Scale (5-point, used per parameter):",
+      rows: [
+        { rating: "10 – Outstanding", descriptor: "Consistently exceeds expectations; sets benchmark for others" },
+        { rating: "8 – Very Good", descriptor: "Regularly meets and often exceeds expectations" },
+        { rating: "6 – Good/Satisfactory", descriptor: "Meets expectations reliably" },
+        { rating: "4 – Needs Improvement", descriptor: "Inconsistent; falls short in some areas, needs monitoring" },
+        { rating: "0 – Unsatisfactory", descriptor: "Consistently below expectations; requires intervention" }
+      ]
+    }
+  }
+};
+
+export function getGuidelineForTitle(titleText) {
+  if (!titleText) return null;
+  const str = typeof titleText === "string" ? titleText : String(titleText);
+  const match = str.match(/\b([A-D]\d{1,2})\b/i);
+  if (match) {
+    const key = match[1].toUpperCase();
+    if (SECTION_GUIDELINES[key]) return SECTION_GUIDELINES[key];
+  }
+  if (/course delivery|lectures/i.test(str)) return SECTION_GUIDELINES.A1;
+  if (/course file/i.test(str)) return SECTION_GUIDELINES.A2;
+  if (/innovative/i.test(str)) return SECTION_GUIDELINES.A3;
+  if (/feedback/i.test(str)) return SECTION_GUIDELINES.A4;
+  if (/obe|outcomes/i.test(str)) return SECTION_GUIDELINES.A5;
+  if (/project guidance|guided student/i.test(str)) return SECTION_GUIDELINES.A6;
+  if (/mentor/i.test(str)) return SECTION_GUIDELINES.A7;
+  if (/qualification/i.test(str)) return SECTION_GUIDELINES.A8;
+  if (/journal|publication/i.test(str)) return SECTION_GUIDELINES.B1;
+  if (/book/i.test(str)) return SECTION_GUIDELINES.B2;
+  if (/patent/i.test(str)) return SECTION_GUIDELINES.B3;
+  if (/funded|research project/i.test(str)) return SECTION_GUIDELINES.B4;
+  if (/guidance|phd/i.test(str)) return SECTION_GUIDELINES.B5;
+  if (/consultancy|testing/i.test(str)) return SECTION_GUIDELINES.B6;
+  if (/organised|organized/i.test(str)) return SECTION_GUIDELINES.B7;
+  if (/attended/i.test(str)) return SECTION_GUIDELINES.B8;
+  if (/award|citation|fellowship/i.test(str)) return SECTION_GUIDELINES.B9;
+  if (/startup|start-up|innovation|technology transfer/i.test(str)) return SECTION_GUIDELINES.B10;
+  if (/ict|mooc|e-learning/i.test(str)) return SECTION_GUIDELINES.B11;
+  if (/part d|acr|annual confidential/i.test(str)) return SECTION_GUIDELINES.D;
+  return null;
+}
+
+export function SectionInfoButton({ titleText, customGuideline }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const data = customGuideline || getGuidelineForTitle(titleText);
+  if (!data) return null;
+
+  return (
+    <div style={{ display: "inline-flex", position: "relative", marginLeft: 8, verticalAlign: "middle" }}>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
+        title="Click to view instructions & guidelines for filling this table"
+        aria-label="Guidelines info"
+        style={{
+          width: 22,
+          height: 22,
+          borderRadius: "50%",
+          background: isOpen ? "#4338ca" : "#e0e7ff",
+          color: isOpen ? "#fff" : "#4338ca",
+          border: "1.5px solid #a5b4fc",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 12,
+          fontWeight: 900,
+          fontStyle: "normal",
+          cursor: "pointer",
+          transition: "all 0.15s ease",
+          boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
+          lineHeight: 1,
+        }}
+      >
+        i
+      </button>
+
+      {isOpen && (
+        <div
+          style={{
+            position: "absolute",
+            top: 28,
+            left: 0,
+            zIndex: 9999,
+            width: 380,
+            maxWidth: "90vw",
+            background: "#ffffff",
+            border: "1px solid #cbd5e1",
+            borderRadius: 12,
+            padding: "14px 16px",
+            boxShadow: "0 16px 40px rgba(15, 23, 42, 0.22)",
+            color: "#1e293b",
+            textAlign: "left",
+            lineHeight: 1.4,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8, paddingBottom: 6, borderBottom: "1px solid #e2e8f0" }}>
+            <span style={{ fontWeight: 800, fontSize: 12.5, color: "#3730a3", display: "flex", alignItems: "center", gap: 6 }}>
+              ℹ️ Guidelines & Criteria
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              style={{ background: "none", border: "none", color: "#64748b", fontSize: 14, fontWeight: 800, cursor: "pointer", padding: "0 4px" }}
+            >
+              ✕
+            </button>
+          </div>
+          <div style={{ fontSize: 11.5, color: "#334155", fontWeight: 600 }}>
+            {data.title && <div style={{ fontWeight: 800, marginBottom: 6, color: "#1e1b4b", fontSize: 11.5 }}>{data.title}</div>}
+            {data.rules && data.rules.length > 0 && (
+              <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 4 }}>
+                {data.rules.map((rule, idx) => (
+                  <li key={idx}>{rule}</li>
+                ))}
+              </ul>
+            )}
+            {data.rubricScale && (
+              <div style={{ marginTop: data.rules && data.rules.length > 0 ? 10 : 4, paddingTop: data.rules && data.rules.length > 0 ? 8 : 0, borderTop: data.rules && data.rules.length > 0 ? "1px solid #e2e8f0" : "none" }}>
+                <div style={{ fontWeight: 800, marginBottom: 6, color: "#1e3a8a", fontSize: 11 }}>
+                  {data.rubricScale.title}
+                </div>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 10.5, border: "1px solid #cbd5e1" }}>
+                  <thead>
+                    <tr style={{ background: "#1e3a8a", color: "#ffffff" }}>
+                      <th style={{ padding: "4px 6px", textAlign: "left", border: "1px solid #cbd5e1" }}>Rating</th>
+                      <th style={{ padding: "4px 6px", textAlign: "left", border: "1px solid #cbd5e1" }}>Descriptor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.rubricScale.rows.map((r, i) => (
+                      <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
+                        <td style={{ padding: "4px 6px", fontWeight: 700, border: "1px solid #cbd5e1", whiteSpace: "nowrap" }}>{r.rating}</td>
+                        <td style={{ padding: "4px 6px", border: "1px solid #cbd5e1" }}>{r.descriptor}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function SectionCard({ title, subtitle, accent = "#6366f1", scoreBadge, children }) {
   return (
@@ -43,7 +424,10 @@ export function SectionCard({ title, subtitle, accent = "#6366f1", scoreBadge, c
             </svg>
           </span>
           <div>
-            <div className="appraisal-part-title" style={{ fontWeight: 800, fontSize: 18, color: accent, letterSpacing: 0 }}>{title}</div>
+            <div className="appraisal-part-title" style={{ fontWeight: 800, fontSize: 18, color: accent, letterSpacing: 0, display: "flex", alignItems: "center" }}>
+              <span>{title}</span>
+              <SectionInfoButton titleText={title} />
+            </div>
             {subtitle && <div style={{ color: "#6b7280", fontSize: 13, marginTop: 4, lineHeight: 1.45 }}>{subtitle}</div>}
           </div>
         </div>
@@ -202,5 +586,3 @@ export function ViewDocsCell({ docKey, docs, emptyText = "No docs", compact = fa
     </div>
   );
 }
-
-

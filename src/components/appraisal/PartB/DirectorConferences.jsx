@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { HodInput } from "../../Inputs";
 import {
   SCORE_LIMITS,
@@ -29,11 +29,11 @@ export default function DirectorConferences({ ctx }) {
  return (
 <>
 {/* B6: Conferences */}
-<SC title="B6. Invited Lectures / Resource Person / Paper Presentations (Max 30)" accent="#6366f1">
+<SC title="B7. Conference / FDP / Training / Workshop Contributions Organised (Max 20)" accent="#6366f1">
 <table style={T}>
 <thead><tr>
-<th style={TH}>SN</th><th style={TH}>Title / Session</th><th style={TH}>Type</th>
-<th style={TH}>Organizer</th><th style={TH}>Level</th>
+<th style={TH}>SN</th><th style={TH}>Event / Session Title</th><th style={TH}>Role</th>
+<th style={TH}>Date</th><th style={TH}>Level (Intl./National)</th>
 <th style={TH}>View Docs</th><th style={TH}>Faculty Score</th><th style={TH_DIR}>Director Score</th>
 </tr></thead>
 <tbody>
@@ -41,9 +41,9 @@ export default function DirectorConferences({ ctx }) {
 <tr key={i} style={i % 2 ? { background: "#f8fafc" } : {}}>
 <td style={TDC}>{i + 1}</td>
 <td style={TD}><RO val={r.title} /></td>
-<td style={TD}><RO val={r.type} /></td>
-<td style={TD}><RO val={r.org} /></td>
-<td style={TD}><RO val={r.level} /></td>
+<td style={TD}><RO val={r.role || r.type} /></td>
+<td style={TDC}><RO val={r.date} center /></td>
+<td style={TD}><RO val={r.level || r.org} /></td>
 <td style={TDV}><ViewDocsCell docKey={`conf-${i}`} docs={docs} /></td>
 <td style={TDS}><RO val={r.score} center /></td>
 <td style={TDS_DIR}><DirInput val={getDir("confs", i, "dir")} onChange={v =>setDir("confs", i, "dir", v)} /></td>

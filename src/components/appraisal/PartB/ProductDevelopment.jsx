@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { HodInput } from "../../Inputs";
 import {
   SCORE_LIMITS,
@@ -28,18 +28,19 @@ export default function ProductDevelopment({ ctx }) {
  const { faculty, docs, lectures, courseFile, projects, quals, feedback, deptActs, uniActs, society, industry, acr, journals, books, ict, research, projects2, externalProjects, patents, awards, confs, proposals, products, fdps, training, rows, get, set, reviewerLabel, reviewerScoreLabel, innovativeRows, getInnovHod, setInnovHod } = ctx;
  return (
 <>
-<SC title="B7(b). Product Developed and Used by Students in Lab / Commercialized (Max 10)" accent="#0ea5e9">
+<SC title="B10. Innovation, Start-ups & Technology Transfer (Max 20)" accent="#0ea5e9">
 <table style={T}>
 <thead><tr>
-<th style={TH}>SN</th><th style={TH}>Details of Product</th><th style={TH}>Used by Students in Lab / Commercialized</th>
+<th style={TH}>SN</th><th style={TH}>Title / Start-up / Product</th><th style={TH}>Role</th><th style={TH}>Status</th>
 <th style={TH}>View Docs</th><th style={TH}>Faculty Score</th><th style={TH_HOD}>{reviewerLabel} Score</th>
 </tr></thead>
 <tbody>
  {rows(products).map((r, i) =>(
 <tr key={i}>
 <td style={TDC}>{i + 1}</td>
-<td style={TD}><RO val={r.details} /></td>
-<td style={TD}><RO val={r.usage} /></td>
+<td style={TD}><RO val={r.details || r.title} /></td>
+<td style={TD}><RO val={r.role || r.usage} /></td>
+<td style={TD}><RO val={r.status} /></td>
 <td style={TDV}><ViewDocsCell docKey={`prod-${i}`} docs={docs} /></td>
 <td style={TDS}><RO val={r.score} center /></td>
 <td style={TDS_HOD}><HodInput val={get("products", i, "hod")} onChange={v =>set("products", i, "hod", v)} /></td>

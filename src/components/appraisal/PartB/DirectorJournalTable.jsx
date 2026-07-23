@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-unused-vars */
+/* eslint-disable no-unused-vars */
 import { HodInput } from "../../Inputs";
 import {
   SCORE_LIMITS,
@@ -29,12 +29,12 @@ export default function DirectorJournalTable({ ctx }) {
  return (
 <>
 {/* B1: Journals */}
-<SC title="B1. Research Papers / Journal Publications (Max 120)" accent="#7c3aed">
+<SC title="B1. Journal Publications (Max 100)" accent="#7c3aed">
 <div style={{ overflowX: "auto" }}>
 <table style={T}>
 <thead><tr>
 <th style={TH}>SN</th><th style={TH}>Title</th><th style={TH}>Journal</th>
-<th style={TH}>ISSN</th><th style={TH}>Journal Indexing</th>
+<th style={TH}>ISSN</th><th style={TH}>Impact Factor</th><th style={TH}>Author Position</th>
 <th style={TH}>View Docs</th><th style={TH}>Faculty Score</th><th style={TH_DIR}>Director Score</th>
 </tr></thead>
 <tbody>
@@ -44,7 +44,8 @@ export default function DirectorJournalTable({ ctx }) {
 <td style={TD}><RO val={r.title} /></td>
 <td style={TD}><RO val={r.journal} /></td>
 <td style={TDC}><RO val={r.issn} center /></td>
-<td style={TDC}><RO val={r.index} center /></td>
+<td style={TDC}><RO val={r.impactFactor || r.impact} center /></td>
+<td style={TDC}><RO val={r.authorPosition || r.position} center /></td>
 <td style={TDV}><ViewDocsCell docKey={`jour-${i}`} docs={docs} /></td>
 <td style={TDS}><RO val={r.score} center /></td>
 <td style={TDS_DIR}><DirInput val={getDir("journals", i, "dir")} onChange={v =>setDir("journals", i, "dir", v)} /></td>

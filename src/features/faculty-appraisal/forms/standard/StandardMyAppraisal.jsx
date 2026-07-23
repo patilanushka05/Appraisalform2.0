@@ -39,6 +39,7 @@ import {
   RejectionNotice,
   RowButtons as RowBtns,
   SectionCard as SC,
+  SectionInfoButton,
   SectionSaveFooter,
   SummaryOtherInfoField,
   T,
@@ -192,19 +193,20 @@ function SubsectionIcon({ type }) {
 
 function SubsectionTitle({ icon, children }) {
   return (
-    <div className="appraisal-subsection-title">
+    <div className="appraisal-subsection-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
       <SubsectionIcon type={icon} />
       <span>{children}</span>
+      <SectionInfoButton titleText={children} />
     </div>
   );
 }
 
 const partDParameters = [
-  { parameter: "Self-motivation & Proactiveness", description: "List of activities/initiatives other than regular load/duties", max: 10 },
-  { parameter: "Punctuality", description: "Late marks (office report), punctuality in lecture/practical, timely daily-report checking, absentee without intimation", max: 10 },
-  { parameter: "Target-based Work", description: "Tasks allotted; timely completion observed by HOD", max: 10 },
-  { parameter: "Effectiveness", description: "Work done without errors and least follow-up, observed by HOD", max: 10 },
-  { parameter: "Obedience", description: "Observed by HOD and Director", max: 10 },
+  { parameter: "Self-motivation & Proactiveness", description: "List of activities/initiatives other than regular load/duties.", max: 10 },
+  { parameter: "Knowledge & Competence", description: "Domain/technical expertise relevant to role, Understanding of policies, procedures, and compliance requirements", max: 10 },
+  { parameter: "Target-based Work", description: "Tasks allotted; timely completion observed by authorities, Accuracy and thoroughness of output. Volume of work handled relative to role expectations, Adherence to deadlines and timelines", max: 10 },
+  { parameter: "Leadership & Supervisory Skills", description: "Team management and delegation, Mentoring/developing subordinates, Decision-making under ambiguity", max: 10 },
+  { parameter: "Adaptability & Learning", description: "Openness to change, new tools, or new processes, Response to feedback and coaching, Handling of unexpected/crisis situations", max: 10 },
 ];
 
 export default function StandardMyAppraisal({
@@ -997,8 +999,8 @@ export default function StandardMyAppraisal({
     <h3>Part D. Annual Confidential Report &nbsp;(Max 50, Evaluator only)</h3>
     <table>
       <tr><th>SN</th><th>Parameter</th><th>Description / Indicators</th><th>Max Marks</th></tr>
-      ${partDParameters.map((row, i) => `<tr><td class="c">${i + 1}</td><td>${row.parameter}</td><td>${row.description}</td><td class="c">${row.max}</td></tr>`).join('')}
-      <tr class="tr"><td colspan="3" class="c b">Total (Evaluator only)</td><td class="c">${PART_D_MAX}</td></tr>
+      ${partDParameters.map((row, i) => `<tr><td class="c">D${i + 1}</td><td>${row.parameter}</td><td>${row.description}</td><td class="c">${row.max}</td></tr>`).join('')}
+      <tr class="tr"><td colspan="3" class="c b">Part D Total (Max: 50)</td><td class="c">${PART_D_MAX}</td></tr>
     </table>
 
     <div class="pb"></div>
@@ -1020,7 +1022,7 @@ export default function StandardMyAppraisal({
       <tr><td class="c">8</td><td>Conference / FDP / Industry Training Attended</td><td class="c">20</td><td class="c">${b8Score.toFixed(1)}</td></tr>
       <tr><td class="c">9</td><td>Research Awards, Fellowships &amp; Citations</td><td class="c">20</td><td class="c">${awardScore.toFixed(1)}</td></tr>
       <tr><td class="c">10</td><td>Innovation, Start-ups &amp; Technology Transfer</td><td class="c">20</td><td class="c">${productScore.toFixed(1)}</td></tr>
-      <tr><td class="c">11</td><td>ICT Content, MOOCs &amp; E-Learning</td><td class="c">15</td><td class="c">${ictScore.toFixed(1)}</td></tr>
+      <tr><td class="c">11</td><td>ICT Content, MOOCs &amp; E-Learning</td><td class="c">20</td><td class="c">${ictScore.toFixed(1)}</td></tr>
       <tr class="tr"><td colspan="2" class="c b">Part B Total</td><td class="c b">${effectivePartBMax}</td><td class="c b">${partBTotal.toFixed(1)}</td></tr>
       <tr class="tr"><td colspan="2" class="c b">Part B Marks Obtained (%)</td><td colspan="2" class="c b">${partBMarksPercentage}%</td></tr>
       <tr><td colspan="4" class="b" style="background:#d9d9d9;text-align:center">Part C - Administrative Role &amp; University Development Contribution</td></tr>
@@ -1272,7 +1274,7 @@ export default function StandardMyAppraisal({
                           </tr>
                         </thead>
                         <tbody>
-                          {lectures.map((r, i) => (
+                          {lectures.slice(0, 4).map((r, i) => (
                             <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
                               <td style={TDC}>{i + 1}</td>
                               <td style={TD}><TI val={r.sem} onChange={(v) => setLec(i, "sem", v)} /></td>
@@ -1290,7 +1292,17 @@ export default function StandardMyAppraisal({
                           </tr>
                         </tbody>
                       </table>
-                      <RowBtns onAdd={() => setLectures((p) => [...p, { sem: "", code: "", planned: "", conducted: "", score: "", hod: "", director: "" }])} onDel={() => setLectures((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={lectures.length > 1} />
+                      <RowBtns
+                        onAdd={() => {
+                          if (lectures.length >= 4) {
+                            alert("A1. Course Delivery & Classroom Engagement allows a maximum of 4 courses (4 rows).");
+                            return;
+                          }
+                          setLectures((p) => [...p, { sem: "", code: "", planned: "", conducted: "", score: "", hod: "", director: "" }]);
+                        }}
+                        onDel={() => setLectures((p) => (p.length > 1 ? p.slice(0, -1) : p))}
+                        canDel={lectures.length > 1}
+                      />
                     </div>
 
                     {/* A2. Course File */}
@@ -1301,8 +1313,10 @@ export default function StandardMyAppraisal({
                           <tr>
                             <th style={{ ...TH, width: 30 }}>SN</th>
                             <th style={TH}>Course / Paper</th>
-                            <th style={TH}>Program & Semester</th>
-                            <th style={TH}>Availability as per IQAC format</th>
+                            <th style={TH}>Title</th>
+                            <th style={TH}>IQAC Index Compliance (Yes/No, with proof)</th>
+                            <th style={TH}>Attachment</th>
+                            <th style={TH}>View Docs</th>
                             <th style={TH}>Score</th>
                           </tr>
                         </thead>
@@ -1311,20 +1325,21 @@ export default function StandardMyAppraisal({
                             <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
                               <td style={TDC}>{i + 1}</td>
                               <td style={TD}><TI val={r.course} onChange={(v) => setCF(i, "course", v)} /></td>
-                              <td style={TD}><TI val={r.title} onChange={(v) => setCF(i, "title", v)} /></td>
+                              <td style={TD}><TI val={r.title} onChange={(v) => setCF(i, "title", v)} placeholder="Title / Program & Semester" /></td>
                               <td style={TD}>
                                 <select value={r.details} onChange={(e) => setCF(i, "details", e.target.value)} style={{ width: "100%", height: 30, border: "1px solid #cbd5e1", borderRadius: 4, background: "#fff", fontFamily: "inherit", fontSize: 11 }}>
                                   <option value="">Select</option>
-                                  <option value="1.Available">1.Available</option>
-                                  <option value="2.Partially Available">2.Partially Available</option>
-                                  <option value="3.Not Available">3.Not Available</option>
+                                  <option value="Yes">Yes</option>
+                                  <option value="No">No</option>
                                 </select>
                               </td>
+                              <td style={TD}><DocCell id={`courseFile-${i}`} docs={docs} setDocs={setDocs} /></td>
+                              <td style={TD}><ViewCell id={`courseFile-${i}`} docs={docs} /></td>
                               <td style={TDS}><TI val={r.score} onChange={(v) => setCF(i, "score", v === "" ? "" : String(clampScore(v, SCORE_LIMITS.courseFileRow)))} numeric max={SCORE_LIMITS.courseFileRow} center /></td>
                             </tr>
                           ))}
                           <tr style={{ background: "#eff6ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={4}>Total Score (Max 20)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total Score (Max 20)</td>
                             <td style={{ ...TDS, fontWeight: "bold", color: "#1e3a5f" }}>{courseFileScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
@@ -1339,7 +1354,7 @@ export default function StandardMyAppraisal({
                         <thead><tr>
                           <th style={{ ...TH, width: 30 }}>SN</th>
                           <th style={TH}>Methods Used</th>
-                          <th style={TH}>Details</th>
+                          <th style={TH}>Proof Attached (Yes/No)</th>
                           <th style={TH}>Attachment</th>
                           <th style={TH}>View Docs</th>
                           <th style={TH}>Score</th>
@@ -1361,7 +1376,7 @@ export default function StandardMyAppraisal({
                                   ))}
                                 </select>
                               </td>
-                              <td style={TD}><TI val={r.details} onChange={(v) => setInnov(i, "details", v)} /></td>
+                              <td style={TD}><TI val={r.details} onChange={(v) => setInnov(i, "details", v)} placeholder="Yes / No (with details)" /></td>
                               <td style={TD}><DocCell id={`innov-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`innov-${i}`} docs={docs} /></td>
                               <td style={TDS}><TI val={r.score} onChange={(v) => setInnov(i, "score", v === "" ? "" : String(clampScore(v, A3_INNOVATIVE_ROW_MAX)))} numeric max={A3_INNOVATIVE_ROW_MAX} center /></td>
@@ -1444,9 +1459,12 @@ export default function StandardMyAppraisal({
                       <RowBtns onAdd={() => setObeRows((p) => [...p, { component: "", evidence: "", score: "", max: A5_OBE_MAX }])} onDel={() => setObeRows((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={obeRows.length > 1} />
                     </div>
 
-                    {/* A6. Student Project Guidance */}
+                    {/* A6. Guided Students Project */}
                     <div style={{ marginBottom: 16, order: 6 }}>
                       <SubsectionTitle icon="guidance">A6. Student Project Guidance - Max 20 marks</SubsectionTitle>
+                      <div style={{ fontSize: 11, color: "#64748b", marginBottom: 6 }}>
+                        Curriculum project guided — 5 marks/batch (max 4 batches); PG awarded: 5/student (max 10). +3 for industrial collaboration/sponsorship; +3 for award outcome; +3 for student publication.
+                      </div>
                       <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 10, fontSize: 12, fontWeight: 700, color: "#334155" }}>
                         {["applicable", "notApplicable"].map((value) => (
                           <label key={value} style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
@@ -1469,7 +1487,11 @@ export default function StandardMyAppraisal({
                           <thead>
                             <tr>
                               <th style={{ ...TH, width: 30 }}>SN</th>
-                              <th style={TH}>Project Description</th>
+                              <th style={TH}>Project Title / Batch</th>
+                              <th style={TH}>No. of Students</th>
+                              <th style={TH}>Industry Collab (Y/N)</th>
+                              <th style={TH}>Award (Y/N)</th>
+                              <th style={TH}>Student Pub (Y/N)</th>
                               <th style={TH}>Attachment</th>
                               <th style={TH}>View Docs</th>
                               <th style={TH}>Score</th>
@@ -1479,19 +1501,48 @@ export default function StandardMyAppraisal({
                             {projects.map((r, i) => (
                               <tr key={i}>
                                 <td style={TDC}>{i + 1}</td>
-                                <td style={TD}><TI val={r.label} readOnly={sectionApplicability.projects === "notApplicable"} onChange={(v) => setProj(i, "label", v)} /></td>
+                                <td style={TD}>
+                                  <TI 
+                                    val={r.label} 
+                                    readOnly={sectionApplicability.projects === "notApplicable"} 
+                                    onChange={(v) => setProj(i, "label", v)} 
+                                    placeholder="Project Title / Batch" 
+                                  />
+                                </td>
+                                <td style={TDC}><TI val={r.studentsCount} readOnly={sectionApplicability.projects === "notApplicable"} onChange={(v) => setProj(i, "studentsCount", v)} center placeholder="No." /></td>
+                                <td style={TDC}>
+                                  <select value={r.industryCollab || ""} disabled={sectionApplicability.projects === "notApplicable"} onChange={(e) => setProj(i, "industryCollab", e.target.value)} style={{ width: "100%", height: 28, border: "1px solid #cbd5e1", borderRadius: 4, fontSize: 11 }}>
+                                    <option value="">Select</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                  </select>
+                                </td>
+                                <td style={TDC}>
+                                  <select value={r.awardReceived || ""} disabled={sectionApplicability.projects === "notApplicable"} onChange={(e) => setProj(i, "awardReceived", e.target.value)} style={{ width: "100%", height: 28, border: "1px solid #cbd5e1", borderRadius: 4, fontSize: 11 }}>
+                                    <option value="">Select</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                  </select>
+                                </td>
+                                <td style={TDC}>
+                                  <select value={r.studentPub || ""} disabled={sectionApplicability.projects === "notApplicable"} onChange={(e) => setProj(i, "studentPub", e.target.value)} style={{ width: "100%", height: 28, border: "1px solid #cbd5e1", borderRadius: 4, fontSize: 11 }}>
+                                    <option value="">Select</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                  </select>
+                                </td>
                                 <td style={TD}><DocCell id={`proj-${i}`} docs={docs} setDocs={setDocs} readOnly={sectionApplicability.projects === "notApplicable"} /></td>
                                 <td style={TD}><ViewCell id={`proj-${i}`} docs={docs} /></td>
                                 <td style={TDS}><TI val={r.score} readOnly={sectionApplicability.projects === "notApplicable"} onChange={(v) => setProj(i, "score", v)} center numeric max={A6_PROJECT_GUIDANCE_MAX} /></td>
                               </tr>
                             ))}
                             <tr style={{ background: "#eff6ff" }}>
-                              <td style={{ ...TDC, fontWeight: "bold" }} colSpan={4}>Total Score (Max {sectionApplicability.projects === "notApplicable" ? 0 : 20})</td>
+                              <td style={{ ...TDC, fontWeight: "bold" }} colSpan={8}>Total Score (Max {sectionApplicability.projects === "notApplicable" ? 0 : 20})</td>
                               <td style={{ ...TDS, fontWeight: "bold" }}>{projectTotal.toFixed(1)}</td>
                             </tr>
                           </tbody>
                         </table>
-                        <RowBtns onAdd={() => setProjects((p) => [...p, { label: "", score: "" }])} onDel={() => setProjects((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={projects.length > 1} />
+                        <RowBtns onAdd={() => setProjects((p) => [...p, { label: "", studentsCount: "", industryCollab: "", awardReceived: "", studentPub: "", score: "" }])} onDel={() => setProjects((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={projects.length > 1} />
                       </>)}
                     </div>
 
@@ -1532,11 +1583,16 @@ export default function StandardMyAppraisal({
                     {/* A8. Qualifications */}
                     <div style={{ marginBottom: 16, order: 8 }}>
                       <SubsectionTitle icon="award">A8. Professional Development & Qualification Enhancement - Max 10 marks</SubsectionTitle>
+                      <div style={{ fontSize: 11, color: "#64748b", marginBottom: 6 }}>
+                        Higher qualification achieved during the AY — 10 marks; add-on certification/MOOC — 5 marks each.
+                      </div>
                       <table style={T}>
                         <thead>
                           <tr>
                             <th style={{ ...TH, width: 30 }}>SN</th>
-                            <th style={TH}>Qualification</th>
+                            <th style={TH}>Qualification / Certification Title</th>
+                            <th style={TH}>Awarding Body</th>
+                            <th style={TH}>Date</th>
                             <th style={TH}>Attachment</th>
                             <th style={TH}>View Docs</th>
                             <th style={TH}>Score</th>
@@ -1546,19 +1602,27 @@ export default function StandardMyAppraisal({
                           {quals.map((r, i) => (
                             <tr key={i}>
                               <td style={TDC}>{i + 1}</td>
-                              <td style={TD}><TI val={r.label} onChange={(v) => setQual(i, "label", v)} /></td>
+                              <td style={TD}>
+                                <TI 
+                                  val={r.label} 
+                                  onChange={(v) => setQual(i, "label", v)} 
+                                  placeholder="Higher qualification / Certification Title" 
+                                />
+                              </td>
+                              <td style={TD}><TI val={r.awardingBody} onChange={(v) => setQual(i, "awardingBody", v)} placeholder="Awarding Body" /></td>
+                              <td style={TDC}><TI val={r.date} onChange={(v) => setQual(i, "date", v)} placeholder="Date" /></td>
                               <td style={TD}><DocCell id={`qual-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`qual-${i}`} docs={docs} /></td>
                               <td style={TDS}><TI val={r.score} onChange={(v) => setQual(i, "score", v)} center numeric max={SCORE_LIMITS.qualificationRow} /></td>
                             </tr>
                           ))}
                           <tr style={{ background: "#eff6ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={4}>Total Score (Max 10)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total Score (Max 10)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{qualTotal.toFixed(1)}</td>
                           </tr>
                         </tbody>
                       </table>
-                      <RowBtns onAdd={() => setQuals((p) => [...p, { label: "", score: "" }])} onDel={() => setQuals((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={quals.length > 1} />
+                      <RowBtns onAdd={() => setQuals((p) => [...p, { label: "", awardingBody: "", date: "", score: "" }])} onDel={() => setQuals((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={quals.length > 1} />
                     </div>
                   </SC>
                 )}
@@ -1834,14 +1898,14 @@ export default function StandardMyAppraisal({
                       <tbody>
                         {partDParameters.map((row, index) => (
                           <tr key={row.parameter} style={index % 2 === 1 ? { background: "#f8fafc" } : {}}>
-                            <td style={TDC}>{index + 1}</td>
+                            <td style={TDC}>{`D${index + 1}`}</td>
                             <td style={{ ...TD, fontWeight: 700 }}>{row.parameter}</td>
                             <td style={TD}>{row.description}</td>
                             <td style={TDC}>{row.max}</td>
                           </tr>
                         ))}
                         <tr style={{ background: "#fef3c7" }}>
-                          <td style={{ ...TDC, fontWeight: "bold" }} colSpan={3}>Total (Max 50)</td>
+                          <td style={{ ...TDC, fontWeight: "bold" }} colSpan={3}>Part D Total (Max: 50)</td>
                           <td style={{ ...TDS, fontWeight: "bold" }}>{PART_D_MAX}</td>
                         </tr>
                       </tbody>
@@ -1867,7 +1931,8 @@ export default function StandardMyAppraisal({
                             <th style={TH}>Title</th>
                             <th style={TH}>Journal</th>
                             <th style={TH}>ISSN</th>
-                            <th style={TH}>Journal Indexing</th>
+                            <th style={TH}>Impact Factor</th>
+                            <th style={TH}>Author Position</th>
                             <th style={TH}>Attachment</th>
                             <th style={TH}>View Docs</th>
                             <th style={TH}>Score</th>
@@ -1880,19 +1945,20 @@ export default function StandardMyAppraisal({
                               <td style={TD}><TI val={r.title} onChange={(v) => setJour(i, "title", v)} textOnly /></td>
                               <td style={TD}><TI val={r.journal} onChange={(v) => setJour(i, "journal", v)} /></td>
                               <td style={TD}><TI val={r.issn} onChange={(v) => setJour(i, "issn", v)} /></td>
-                              <td style={TD}><TI val={r.index} onChange={(v) => setJour(i, "index", v)} /></td>
+                              <td style={TD}><TI val={r.impactFactor || r.impact} onChange={(v) => setJour(i, "impactFactor", v)} placeholder="Impact Factor" /></td>
+                              <td style={TD}><TI val={r.authorPosition || r.position} onChange={(v) => setJour(i, "authorPosition", v)} placeholder="1st / Corresponding / Co-Author" /></td>
                               <td style={TD}><DocCell id={`jour-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`jour-${i}`} docs={docs} /></td>
                               <td style={TDS}><TI val={r.score} onChange={(v) => setJour(i, "score", v)} center numeric /></td>
                             </tr>
                           ))}
                           <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Score (Max 100)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={8}>Total Score (Max 100)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{journalScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
                       </table>
-                      <RowBtns onAdd={() => setJournals((p) => [...p, { title: "", journal: "", issn: "", index: "", score: "" }])} onDel={() => setJournals((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={journals.length > 1} />
+                      <RowBtns onAdd={() => setJournals((p) => [...p, { title: "", journal: "", issn: "", impactFactor: "", authorPosition: "", score: "" }])} onDel={() => setJournals((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={journals.length > 1} />
                     </div>
 
                     {/* B2. Books / Chapters */}
@@ -1902,12 +1968,11 @@ export default function StandardMyAppraisal({
                         <thead>
                           <tr>
                             <th style={{ ...TH, width: 30 }}>SN</th>
-                            <th style={TH}>Title with Page Nos.</th>
-                            <th style={TH}>Book Title, Editor & Publisher</th>
-                            <th style={TH}>ISSN / ISBN No.</th>
-                            <th style={TH}>Type of Publisher</th>
-                            <th style={TH}>Co-authors (from DYPIU)</th>
-                            <th style={TH}>First Author</th>
+                            <th style={TH}>Title</th>
+                            <th style={TH}>Publisher & ISBN</th>
+                            <th style={TH}>Type (Book/Chapter/Editor/Translation)</th>
+                            <th style={TH}>Level (Intl./National/Local)</th>
+                            <th style={TH}>Co-authors from DYPIU</th>
                             <th style={TH}>Attachment</th>
                             <th style={TH}>View Docs</th>
                             <th style={TH}>Score</th>
@@ -1918,36 +1983,37 @@ export default function StandardMyAppraisal({
                             <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
                               <td style={TDC}>{i + 1}</td>
                               <td style={TD}><TI val={r.title} onChange={(v) => setBook(i, "title", v)} textOnly /></td>
-                              <td style={TD}><TI val={r.book} onChange={(v) => setBook(i, "book", v)} /></td>
-                              <td style={TD}><TI val={r.issn} onChange={(v) => setBook(i, "issn", v)} /></td>
-                              <td style={TD}><TI val={r.pub} onChange={(v) => setBook(i, "pub", v)} /></td>
-                              <td style={TD}><TI val={r.coauth} onChange={(v) => setBook(i, "coauth", v)} /></td>
-                              <td style={TD}><select value={r.first || ""} onChange={(e) => setBook(i, "first", e.target.value)} style={{ width: "100%", height: 30, border: "1px solid #d1d5db", borderRadius: 4, padding: "5px 6px", fontSize: 11, fontFamily: "inherit" }}><option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option></select></td>
+                              <td style={TD}><TI val={r.book || r.publisherIsbn} onChange={(v) => setBook(i, "book", v)} placeholder="Publisher & ISBN" /></td>
+                              <td style={TD}><TI val={r.pub || r.type} onChange={(v) => setBook(i, "pub", v)} placeholder="Book / Chapter / Editor / Translation" /></td>
+                              <td style={TD}><TI val={r.level} onChange={(v) => setBook(i, "level", v)} placeholder="Intl. / National / Local" /></td>
+                              <td style={TD}><TI val={r.coauth} onChange={(v) => setBook(i, "coauth", v)} placeholder="Co-authors from DYPIU" /></td>
                               <td style={TD}><DocCell id={`book-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`book-${i}`} docs={docs} /></td>
                               <td style={TDS}><TI val={r.score} onChange={(v) => setBook(i, "score", v)} center numeric /></td>
                             </tr>
                           ))}
                           <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={9}>Total Score (Max 30)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={8}>Total Score (Max 30)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{bookScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
                       </table>
-                      <RowBtns onAdd={() => setBooks((p) => [...p, { title: "", book: "", issn: "", pub: "", coauth: "", first: "", score: "" }])} onDel={() => setBooks((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={books.length > 1} />
+                      <RowBtns onAdd={() => setBooks((p) => [...p, { title: "", book: "", pub: "", level: "", coauth: "", score: "" }])} onDel={() => setBooks((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={books.length > 1} />
                     </div>
 
                     {/* B11. ICT Content, MOOCs & E-Learning */}
                     <div style={{ marginBottom: 16, order: 11 }}>
-                      <SubsectionTitle icon="monitor">B11. ICT Content, MOOCs & E-Learning - Max 15 marks</SubsectionTitle>
+                      <SubsectionTitle icon="monitor">B11. ICT Content, MOOCs & E-Learning - Max 20 marks</SubsectionTitle>
+                      <div style={{ fontSize: 11, italic: true, color: "#64748b", marginBottom: 8, fontStyle: "italic" }}>
+                        MOOC/Coursera/SWAYAM course developed: 5/course. E-content on course (publicly available): 5/item.
+                      </div>
                       <table style={T}>
                         <thead>
                           <tr>
                             <th style={{ ...TH, width: 30 }}>SN</th>
                             <th style={TH}>Title</th>
-                            <th style={TH}>Description</th>
-                            <th style={TH}>Type</th>
-                            <th style={TH}>Quadrant</th>
+                            <th style={TH}>Platform / Type</th>
+                            <th style={TH}>Reach / Views (if available)</th>
                             <th style={TH}>Attachment</th>
                             <th style={TH}>View Docs</th>
                             <th style={TH}>Score</th>
@@ -1957,31 +2023,33 @@ export default function StandardMyAppraisal({
                           {ict.map((r, i) => (
                             <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
                               <td style={TDC}>{i + 1}</td>
-                              <td style={TD}><TI val={r.title} onChange={(v) => setIctRow(i, "title", v)} textOnly /></td>
-                              <td style={TD}><TI val={r.desc} onChange={(v) => setIctRow(i, "desc", v)} /></td>
-                              <td style={TD}><TI val={r.type} onChange={(v) => setIctRow(i, "type", v)} textOnly /></td>
-                              <td style={TD}><TI val={r.quad} onChange={(v) => setIctRow(i, "quad", v)} /></td>
+                              <td style={TD}><TI val={r.title} onChange={(v) => setIctRow(i, "title", v)} textOnly placeholder="Title" /></td>
+                              <td style={TD}><TI val={r.type || r.desc} onChange={(v) => setIctRow(i, "type", v)} placeholder="Platform / Type" /></td>
+                              <td style={TD}><TI val={r.quad || r.reach} onChange={(v) => setIctRow(i, "quad", v)} placeholder="Reach / Views" /></td>
                               <td style={TD}><DocCell id={`ict-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`ict-${i}`} docs={docs} /></td>
                               <td style={TDS}><TI val={r.score} onChange={(v) => setIctRow(i, "score", v)} center numeric /></td>
                             </tr>
                           ))}
                           <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Score (Max 15)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total Score (Max 20)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{ictScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
                       </table>
-                      <RowBtns onAdd={() => setIct((p) => [...p, { title: "", desc: "", type: "", quad: "", score: "" }])} onDel={() => setIct((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={ict.length > 1} />
+                      <RowBtns onAdd={() => setIct((p) => [...p, { title: "", type: "", quad: "", score: "" }])} onDel={() => setIct((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={ict.length > 1} />
                     </div>
 
                     {/* B5. Research Guidance */}
                     <div style={{ marginBottom: 16, order: 5 }}>
                       <SubsectionTitle icon="research">B5. Research Guidance - Max 20 marks</SubsectionTitle>
+                      <div style={{ fontSize: 11, italic: true, color: "#64748b", marginBottom: 8, fontStyle: "italic" }}>
+                        PhD awarded (supervisor): 10/scholar. PhD ongoing: 5/scholar.
+                      </div>
                       <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 10, fontSize: 12, fontWeight: 700, color: "#334155" }}>
                         {["applicable", "notApplicable"].map((value) => (
                           <label key={value} style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
-                            <input type="checkbox" checked={sectionApplicability.research === value} onChange={() => { setSectionApplicability((current) => ({ ...current, research: value })); if (value === "notApplicable") setResearch((rows) => rows.map((row) => ({ ...row, degree: "", name: "", thesis: "", score: "" }))); }} />
+                            <input type="checkbox" checked={sectionApplicability.research === value} onChange={() => { setSectionApplicability((current) => ({ ...current, research: value })); if (value === "notApplicable") setResearch((rows) => rows.map((row) => ({ ...row, degree: "", name: "", status: "", date: "", score: "" }))); }} />
                             {value === "applicable" ? "Applicable" : "Not Applicable"}
                           </label>
                         ))}
@@ -1991,9 +2059,10 @@ export default function StandardMyAppraisal({
                           <thead>
                             <tr>
                               <th style={{ ...TH, width: 30 }}>SN</th>
-                              <th style={TH}>Degree</th>
-                              <th style={TH}>Name</th>
-                              <th style={TH}>Thesis Title</th>
+                              <th style={TH}>Degree (PhD/PG)</th>
+                              <th style={TH}>Name of Student / Scholar</th>
+                              <th style={TH}>Status (Ongoing/Awarded)</th>
+                              <th style={TH}>Date</th>
                               <th style={TH}>Attachment</th>
                               <th style={TH}>View Docs</th>
                               <th style={TH}>Score</th>
@@ -2015,20 +2084,21 @@ export default function StandardMyAppraisal({
                                     <option value="PG">PG</option>
                                   </select>
                                 </td>
-                                <td style={TD}><TI val={r.name} readOnly={sectionApplicability.research === "notApplicable"} onChange={(v) => setRes(i, "name", v)} textOnly /></td>
-                                <td style={TD}><TI val={r.thesis} readOnly={sectionApplicability.research === "notApplicable"} onChange={(v) => setRes(i, "thesis", v)} textOnly /></td>
+                                <td style={TD}><TI val={r.name} readOnly={sectionApplicability.research === "notApplicable"} onChange={(v) => setRes(i, "name", v)} textOnly placeholder="Name of Student / Scholar" /></td>
+                                <td style={TD}><TI val={r.status || r.thesis} readOnly={sectionApplicability.research === "notApplicable"} onChange={(v) => setRes(i, "status", v)} placeholder="Ongoing / Awarded" /></td>
+                                <td style={TD}><TI val={r.date} readOnly={sectionApplicability.research === "notApplicable"} onChange={(v) => setRes(i, "date", maskDateDDMMYYYY(v))} placeholder="DD/MM/YYYY" /></td>
                                 <td style={TD}><DocCell id={`res-${i}`} docs={docs} setDocs={setDocs} readOnly={sectionApplicability.research === "notApplicable"} /></td>
                                 <td style={TD}><ViewCell id={`res-${i}`} docs={docs} /></td>
-                                <td style={TDS}><RO val={sectionApplicability.research === "notApplicable" ? "0" : (r.degree || r.name || r.thesis || r.score ? researchGuidanceScore(r).toFixed(1) : "")} center /></td>
+                                <td style={TDS}><TI val={r.score} onChange={(v) => setRes(i, "score", v)} center numeric /></td>
                               </tr>
                             ))}
                             <tr style={{ background: "#f3e8ff" }}>
-                              <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total Score (Max {sectionApplicability.research === "notApplicable" ? 0 : 20})</td>
+                              <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Score (Max {sectionApplicability.research === "notApplicable" ? 0 : 20})</td>
                               <td style={{ ...TDS, fontWeight: "bold" }}>{researchScore.toFixed(1)}</td>
                             </tr>
                           </tbody>
                         </table>
-                        <RowBtns onAdd={() => setResearch((p) => [...p, { degree: "PhD", name: "", thesis: "", score: "" }])} onDel={() => setResearch((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={research.length > 1} />
+                        <RowBtns onAdd={() => setResearch((p) => [...p, { degree: "PhD", name: "", status: "", date: "", score: "" }])} onDel={() => setResearch((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={research.length > 1} />
                       </>)}
                     </div>
 
@@ -2039,11 +2109,11 @@ export default function StandardMyAppraisal({
                         <thead>
                           <tr>
                             <th style={{ ...TH, width: 30 }}>SN</th>
-                            <th style={TH}>Title</th>
+                            <th style={TH}>Title of Project</th>
                             <th style={TH}>Funding Agency</th>
-                            <th style={TH}>Date of Sanction</th>
-                            <th style={TH}>Grant Amount</th>
-                            <th style={TH}>Role PI / Co-PI / Consultant</th>
+                            <th style={TH}>Sanction Date</th>
+                            <th style={TH}>Amount (₹)</th>
+                            <th style={TH}>PI / Co-PI</th>
                             <th style={TH}>Status</th>
                             <th style={TH}>Attachment</th>
                             <th style={TH}>View Docs</th>
@@ -2058,8 +2128,8 @@ export default function StandardMyAppraisal({
                               <td style={TD}><TI val={r.agency} onChange={(v) => setPrj2(i, "agency", v)} textOnly /></td>
                               <td style={TD}><TI val={r.date} onChange={(v) => setPrj2(i, "date", maskDateDDMMYYYY(v))} placeholder="DD/MM/YYYY" /></td>
                               <td style={TD}><TI val={r.amount} onChange={(v) => setPrj2(i, "amount", v)} numeric /></td>
-                              <td style={TD}><TI val={r.role} onChange={(v) => setPrj2(i, "role", v)} textOnly /></td>
-                              <td style={TD}><TI val={r.status} onChange={(v) => setPrj2(i, "status", v)} textOnly /></td>
+                              <td style={TD}><TI val={r.role} onChange={(v) => setPrj2(i, "role", v)} placeholder="PI / Co-PI" /></td>
+                              <td style={TD}><TI val={r.status} onChange={(v) => setPrj2(i, "status", v)} placeholder="Completed / Ongoing / Submitted" /></td>
                               <td style={TD}><DocCell id={`project2-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`project2-${i}`} docs={docs} /></td>
                               <td style={TDS}><TI val={r.score} onChange={(v) => setPrj2(i, "score", v)} center numeric max={B4_PROJECT_MAX} /></td>
@@ -2125,9 +2195,8 @@ export default function StandardMyAppraisal({
                             <th style={{ ...TH, width: 30 }}>SN</th>
                             <th style={TH}>Title</th>
                             <th style={TH}>National / International</th>
-                            <th style={TH}>Date</th>
-                            <th style={TH}>Status</th>
-                            <th style={TH}>File No.</th>
+                            <th style={TH}>Status (Published/Granted)</th>
+                            <th style={TH}>Filing / Grant No. & Date</th>
                             <th style={TH}>Attachment</th>
                             <th style={TH}>View Docs</th>
                             <th style={TH}>Score</th>
@@ -2138,17 +2207,16 @@ export default function StandardMyAppraisal({
                             <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
                               <td style={TDC}>{i + 1}</td>
                               <td style={TD}><TI val={r.title} onChange={(v) => setPat(i, "title", v)} textOnly /></td>
-                              <td style={TD}><TI val={r.type} onChange={(v) => setPat(i, "type", v)} textOnly /></td>
-                              <td style={TD}><TI val={r.date} onChange={(v) => setPat(i, "date", maskDateDDMMYYYY(v))} placeholder="DD/MM/YYYY" /></td>
-                              <td style={TD}><TI val={r.status} onChange={(v) => setPat(i, "status", v)} textOnly /></td>
-                              <td style={TD}><TI val={r.fileNo} onChange={(v) => setPat(i, "fileNo", v)} /></td>
+                              <td style={TD}><TI val={r.type || r.level} onChange={(v) => setPat(i, "type", v)} placeholder="National / International" /></td>
+                              <td style={TD}><TI val={r.status} onChange={(v) => setPat(i, "status", v)} placeholder="Published / Granted" /></td>
+                              <td style={TD}><TI val={r.fileNo || r.date} onChange={(v) => setPat(i, "fileNo", v)} placeholder="No. & Date" /></td>
                               <td style={TD}><DocCell id={`pat-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`pat-${i}`} docs={docs} /></td>
                               <td style={TDS}><TI val={r.score} onChange={(v) => setPat(i, "score", v)} center numeric /></td>
                             </tr>
                           ))}
                           <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={8}>Total Patents Score (Max 40)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Patents Score (Max 40)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{patentScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
@@ -2156,17 +2224,20 @@ export default function StandardMyAppraisal({
                       <RowBtns onAdd={() => setPatents((p) => [...p, { title: "", type: "", date: "", status: "", fileNo: "", score: "" }])} onDel={() => setPatents((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={patents.length > 1} />
                     </div>
 
-                    {/* B9. Awards */}
+                    {/* B9. Research Awards, Fellowships, Reviewer of Journal & Citations */}
                     <div style={{ marginBottom: 16, order: 9 }}>
-                      <SubsectionTitle icon="trophy">B9. Research Awards, Fellowships & Citations - Max 20 marks</SubsectionTitle>
+                      <SubsectionTitle icon="trophy">B9. Research Awards, Fellowships, Reviewer of Journal & Citations - Max 20 marks</SubsectionTitle>
+                      <div style={{ fontSize: 11, italic: true, color: "#64748b", marginBottom: 8, fontStyle: "italic" }}>
+                        Fellowship – International: 10, National/State: 5. Research excellence award – External: 10, Internal: 5. Best paper award: 5. H-index 1–2 → 1 | 3–4 → 2 | 5–7 → 3 | 8–10 → 4 | &gt;10 → 5. Cumulative citations &gt;100: 5, Journal Reviewer: 5 per Journal paper reviewed.
+                      </div>
                       <table style={T}>
                         <thead>
                           <tr>
                             <th style={{ ...TH, width: 30 }}>SN</th>
-                            <th style={TH}>Award Title</th>
-                            <th style={TH}>Date</th>
-                            <th style={TH}>Agency</th>
+                            <th style={TH}>Title of Award / Fellowship / Metric</th>
+                            <th style={TH}>Awarding Agency</th>
                             <th style={TH}>Level</th>
+                            <th style={TH}>Date</th>
                             <th style={TH}>Attachment</th>
                             <th style={TH}>View Docs</th>
                             <th style={TH}>Score</th>
@@ -2176,35 +2247,38 @@ export default function StandardMyAppraisal({
                           {awards.map((r, i) => (
                             <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
                               <td style={TDC}>{i + 1}</td>
-                              <td style={TD}><TI val={r.title} onChange={(v) => setAwd(i, "title", v)} textOnly /></td>
+                              <td style={TD}><TI val={r.title} onChange={(v) => setAwd(i, "title", v)} textOnly placeholder="Title of Award / Fellowship / Metric" /></td>
+                              <td style={TD}><TI val={r.agency} onChange={(v) => setAwd(i, "agency", v)} textOnly placeholder="Awarding Agency" /></td>
+                              <td style={TD}><TI val={r.level} onChange={(v) => setAwd(i, "level", v)} textOnly placeholder="Level" /></td>
                               <td style={TD}><TI val={r.date} onChange={(v) => setAwd(i, "date", maskDateDDMMYYYY(v))} placeholder="DD/MM/YYYY" /></td>
-                              <td style={TD}><TI val={r.agency} onChange={(v) => setAwd(i, "agency", v)} textOnly /></td>
-                              <td style={TD}><TI val={r.level} onChange={(v) => setAwd(i, "level", v)} textOnly /></td>
                               <td style={TD}><DocCell id={`awd-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`awd-${i}`} docs={docs} /></td>
                               <td style={TDS}><TI val={r.score} onChange={(v) => setAwd(i, "score", v)} center numeric /></td>
                             </tr>
                           ))}
                           <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Awards Score (Max 20)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Score (Max 20)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{awardScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
                       </table>
-                      <RowBtns onAdd={() => setAwards((p) => [...p, { title: "", type: "", date: "", agency: "", level: "", score: "" }])} onDel={() => setAwards((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={awards.length > 1} />
+                      <RowBtns onAdd={() => setAwards((p) => [...p, { title: "", agency: "", level: "", date: "", score: "" }])} onDel={() => setAwards((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={awards.length > 1} />
                     </div>
 
                     {/* B7. Conference / FDP Contributions - Organised */}
                     <div style={{ marginBottom: 16, order: 7 }}>
-                      <SubsectionTitle icon="conference">B7. Conference / FDP Contributions - Organised - Max 20 marks</SubsectionTitle>
+                      <SubsectionTitle icon="conference">B7. Conference / FDP / Training / Workshop Contributions Organised - Max 20 marks</SubsectionTitle>
+                      <div style={{ fontSize: 11, italic: true, color: "#64748b", marginBottom: 8, fontStyle: "italic" }}>
+                        Conference organised (coordinator): 5/event. FDP organised (1 week, max 2): 5/FDP.
+                      </div>
                       <table style={T}>
                         <thead>
                           <tr>
                             <th style={{ ...TH, width: 30 }}>SN</th>
-                            <th style={TH}>Title</th>
-                            <th style={TH}>Type</th>
-                            <th style={TH}>Organization</th>
-                            <th style={TH}>Level</th>
+                            <th style={TH}>Event / Session Title</th>
+                            <th style={TH}>Role</th>
+                            <th style={TH}>Date</th>
+                            <th style={TH}>Level (Intl./National)</th>
                             <th style={TH}>Attachment</th>
                             <th style={TH}>View Docs</th>
                             <th style={TH}>Score</th>
@@ -2214,10 +2288,10 @@ export default function StandardMyAppraisal({
                           {confs.map((r, i) => (
                             <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
                               <td style={TDC}>{i + 1}</td>
-                              <td style={TD}><TI val={r.title} onChange={(v) => setConf(i, "title", v)} textOnly /></td>
-                              <td style={TD}><TI val={r.type} onChange={(v) => setConf(i, "type", v)} textOnly /></td>
-                              <td style={TD}><TI val={r.org} onChange={(v) => setConf(i, "org", v)} /></td>
-                              <td style={TD}><TI val={r.level} onChange={(v) => setConf(i, "level", v)} textOnly /></td>
+                              <td style={TD}><TI val={r.title} onChange={(v) => setConf(i, "title", v)} textOnly placeholder="Event / Session Title" /></td>
+                              <td style={TD}><TI val={r.role || r.type} onChange={(v) => setConf(i, "role", v)} placeholder="Role (e.g. Coordinator)" /></td>
+                              <td style={TD}><TI val={r.date} onChange={(v) => setConf(i, "date", maskDateDDMMYYYY(v))} placeholder="DD/MM/YYYY" /></td>
+                              <td style={TD}><TI val={r.level || r.org} onChange={(v) => setConf(i, "level", v)} placeholder="Intl. / National" /></td>
                               <td style={TD}><DocCell id={`conf-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`conf-${i}`} docs={docs} /></td>
                               <td style={TDS}><TI val={r.score} onChange={(v) => setConf(i, "score", v)} center numeric /></td>
@@ -2229,20 +2303,22 @@ export default function StandardMyAppraisal({
                           </tr>
                         </tbody>
                       </table>
-                      <RowBtns onAdd={() => setConfs((p) => [...p, { title: "", type: "", org: "", level: "", score: "" }])} onDel={() => setConfs((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={confs.length > 1} />
+                      <RowBtns onAdd={() => setConfs((p) => [...p, { title: "", role: "", date: "", level: "", score: "" }])} onDel={() => setConfs((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={confs.length > 1} />
                     </div>
 
                     {/* B6. Consultancy, Testing & Training */}
                     <div style={{ marginBottom: 16, order: 6 }}>
                       <SubsectionTitle icon="consultancy">B6. Consultancy, Testing & Training - Max 20 marks</SubsectionTitle>
+                      <div style={{ fontSize: 11, italic: true, color: "#64748b", marginBottom: 8, fontStyle: "italic" }}>
+                        Revenue per engagement: up to ₹50K→3, ₹50K–2L→5, ₹2L–5L→10, ₹5L–10L→15, &gt;₹10L→20.
+                      </div>
                       <table style={T}>
                         <thead>
                           <tr>
                             <th style={{ ...TH, width: 30 }}>SN</th>
-                            <th style={TH}>Title of Proposal</th>
-                            <th style={TH}>Duration</th>
-                            <th style={TH}>Funding Agency</th>
-                            <th style={TH}>Grant Amount Requested</th>
+                            <th style={TH}>Client / Organisation</th>
+                            <th style={TH}>Nature of Engagement</th>
+                            <th style={TH}>Revenue Generated (₹)</th>
                             <th style={TH}>Attachment</th>
                             <th style={TH}>View Docs</th>
                             <th style={TH}>Score</th>
@@ -2252,33 +2328,36 @@ export default function StandardMyAppraisal({
                           {proposals.map((r, i) => (
                             <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
                               <td style={TDC}>{i + 1}</td>
-                              <td style={TD}><TI val={r.title} onChange={(v) => setProp(i, "title", v)} textOnly /></td>
-                              <td style={TD}><TI val={r.duration} onChange={(v) => setProp(i, "duration", v)} /></td>
-                              <td style={TD}><TI val={r.agency} onChange={(v) => setProp(i, "agency", v)} textOnly /></td>
-                              <td style={TD}><TI val={r.amount} onChange={(v) => setProp(i, "amount", v)} numeric /></td>
+                              <td style={TD}><TI val={r.agency || r.title} onChange={(v) => setProp(i, "agency", v)} textOnly placeholder="Client / Organisation" /></td>
+                              <td style={TD}><TI val={r.duration || r.nature} onChange={(v) => setProp(i, "duration", v)} placeholder="Nature of Engagement" /></td>
+                              <td style={TD}><TI val={r.amount || r.revenue} onChange={(v) => setProp(i, "amount", v)} numeric placeholder="Revenue (₹)" /></td>
                               <td style={TD}><DocCell id={`prop-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`prop-${i}`} docs={docs} /></td>
                               <td style={TDS}><TI val={r.score} onChange={(v) => setProp(i, "score", v)} center numeric /></td>
                             </tr>
                           ))}
                           <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Score (Max 20)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total Score (Max 20)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{proposalScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
                       </table>
-                      <RowBtns onAdd={() => setProposals((p) => [...p, { title: "", duration: "", agency: "", amount: "", score: "" }])} onDel={() => setProposals((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={proposals.length > 1} />
+                      <RowBtns onAdd={() => setProposals((p) => [...p, { agency: "", duration: "", amount: "", score: "" }])} onDel={() => setProposals((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={proposals.length > 1} />
                     </div>
 
                     {/* B10. Innovation, Start-ups & Technology Transfer */}
                     <div style={{ marginBottom: 16, order: 10 }}>
                       <SubsectionTitle icon="startup">B10. Innovation, Start-ups & Technology Transfer - Max 20 marks</SubsectionTitle>
+                      <div style={{ fontSize: 11, italic: true, color: "#64748b", marginBottom: 8, fontStyle: "italic" }}>
+                        Start-up incubated at university TBI: 15. Start-up mentored/co-founded: 10. Prototype demonstrated at national event: 8. Technology transfer agreement: 10. Innovation recognised by govt./external body: 7.
+                      </div>
                       <table style={T}>
                         <thead>
                           <tr>
                             <th style={{ ...TH, width: 30 }}>SN</th>
-                            <th style={TH}>Details of Product</th>
-                            <th style={TH}>Used by Students in Lab / Commercialized</th>
+                            <th style={TH}>Title / Start-up / Product</th>
+                            <th style={TH}>Role</th>
+                            <th style={TH}>Status</th>
                             <th style={TH}>Attachment</th>
                             <th style={TH}>View Docs</th>
                             <th style={TH}>Score</th>
@@ -2288,32 +2367,36 @@ export default function StandardMyAppraisal({
                           {products.map((r, i) => (
                             <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
                               <td style={TDC}>{i + 1}</td>
-                              <td style={TD}><TI val={r.details} onChange={(v) => setProd(i, "details", v)} /></td>
-                              <td style={TD}><TI val={r.usage} onChange={(v) => setProd(i, "usage", v)} /></td>
+                              <td style={TD}><TI val={r.details || r.title} onChange={(v) => setProd(i, "details", v)} placeholder="Title / Start-up / Product" /></td>
+                              <td style={TD}><TI val={r.role || r.usage} onChange={(v) => setProd(i, "role", v)} placeholder="Role" /></td>
+                              <td style={TD}><TI val={r.status} onChange={(v) => setProd(i, "status", v)} placeholder="Status" /></td>
                               <td style={TD}><DocCell id={`prod-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`prod-${i}`} docs={docs} /></td>
                               <td style={TDS}><TI val={r.score} onChange={(v) => setProd(i, "score", v)} center numeric /></td>
                             </tr>
                           ))}
                           <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={5}>Total Score (Max 20)</td>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total Score (Max 20)</td>
                             <td style={{ ...TDS, fontWeight: "bold" }}>{productScore.toFixed(1)}</td>
                           </tr>
                         </tbody>
                       </table>
-                      <RowBtns onAdd={() => setProducts((p) => [...p, { details: "", usage: "", score: "" }])} onDel={() => setProducts((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={products.length > 1} />
+                      <RowBtns onAdd={() => setProducts((p) => [...p, { details: "", role: "", status: "", score: "" }])} onDel={() => setProducts((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={products.length > 1} />
                     </div>
 
-                    {/* B8. FDP / Workshops Attended */}
+                    {/* B8. Conference / FDP / Industry Training - Attended */}
                     <div style={{ marginBottom: 16, order: 8 }}>
-                      <SubsectionTitle icon="workshop">B8. Conference / FDP / Industry Training Attended - Max 20 marks</SubsectionTitle>
+                      <SubsectionTitle icon="workshop">B8. Conference / FDP / Industry Training - Attended - Max 20 marks</SubsectionTitle>
+                      <div style={{ fontSize: 11, italic: true, color: "#64748b", marginBottom: 8, fontStyle: "italic" }}>
+                        SCOPUS-indexed conference paper: 10/paper. Non-indexed: international 5, national 3, poster 2. Invited lecture/Resource person: 5/session. FDP/STTP (min. 1 week)/Conference attended as delegate: 5/event (max 2 claimable). Industrial training (min. 3 days): 10.
+                      </div>
                       <table style={T}>
                         <thead>
                           <tr>
                             <th style={{ ...TH, width: 30 }}>SN</th>
-                            <th style={TH}>Program</th>
+                            <th style={TH}>Programme / Event</th>
                             <th style={TH}>Duration</th>
-                            <th style={TH}>Organization</th>
+                            <th style={TH}>Organised By</th>
                             <th style={TH}>Attachment</th>
                             <th style={TH}>View Docs</th>
                             <th style={TH}>Score</th>
@@ -2323,21 +2406,25 @@ export default function StandardMyAppraisal({
                           {fdps.map((r, i) => (
                             <tr key={i} style={i % 2 === 1 ? { background: "#f8fafc" } : {}}>
                               <td style={TDC}>{i + 1}</td>
-                              <td style={TD}><TI val={r.program} onChange={(v) => setFdp(i, "program", v)} /></td>
-                              <td style={TD}><TI val={r.duration} onChange={(v) => setFdp(i, "duration", v)} /></td>
-                              <td style={TD}><TI val={r.org} onChange={(v) => setFdp(i, "org", v)} /></td>
+                              <td style={TD}><TI val={r.program} onChange={(v) => setFdp(i, "program", v)} placeholder="Programme / Event" /></td>
+                              <td style={TD}><TI val={r.duration} onChange={(v) => setFdp(i, "duration", v)} placeholder="Duration" /></td>
+                              <td style={TD}><TI val={r.org} onChange={(v) => setFdp(i, "org", v)} placeholder="Organised By" /></td>
                               <td style={TD}><DocCell id={`fdp-${i}`} docs={docs} setDocs={setDocs} /></td>
                               <td style={TD}><ViewCell id={`fdp-${i}`} docs={docs} /></td>
                               <td style={TDS}><TI val={r.score} onChange={(v) => setFdp(i, "score", v)} center numeric max={SCORE_LIMITS.fdpRow} /></td>
                             </tr>
                           ))}
+                          <tr style={{ background: "#f3e8ff" }}>
+                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total B8 Score (Max 20)</td>
+                            <td style={{ ...TDS, fontWeight: "bold" }}>{b8Score.toFixed(1)}</td>
+                          </tr>
                         </tbody>
                       </table>
                       <RowBtns onAdd={() => setFdps((p) => [...p, { program: "", duration: "", org: "", score: "" }])} onDel={() => setFdps((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={fdps.length > 1} />
                     </div>
 
-                    {/* B8. Industrial Training */}
-                    <div style={{ marginBottom: 16, order: 8 }}>
+                    {/* Legacy B8(b) Industrial Training section retained hidden for backwards compatibility */}
+                    <div style={{ display: "none" }}>
                       <SubsectionTitle icon="industrialTraining">B8(b). Industrial Training</SubsectionTitle>
                       <table style={T}>
                         <thead>
@@ -2366,14 +2453,6 @@ export default function StandardMyAppraisal({
                         </tbody>
                       </table>
                       <RowBtns onAdd={() => setTraining((p) => [...p, { company: "", duration: "", nature: "", score: "" }])} onDel={() => setTraining((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={training.length > 1} />
-                      <table style={{ ...T, marginTop: 8 }}>
-                        <tbody>
-                          <tr style={{ background: "#f3e8ff" }}>
-                            <td style={{ ...TDC, fontWeight: "bold" }} colSpan={6}>Total B8 Score (Max 20)</td>
-                            <td style={{ ...TDS, fontWeight: "bold" }}>{b8Score.toFixed(1)}</td>
-                          </tr>
-                        </tbody>
-                      </table>
                     </div>
                   </SC>
                 )}
