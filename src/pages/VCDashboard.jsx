@@ -538,7 +538,7 @@ function VCReviewForm({ person, vcData, setVcData, personMode = "director", sect
  {[
  ["A4. Projects (Max 10)", "projects", "proj"],
  ["A5. Qualification Enhancement (Max 10)", "quals", "qual"],
- ].filter(([, key]) =>key !== "projects" || person.sectionApplicability?.projects !== "notApplicable").map(([title, key, docPfx]) =>(
+ ].map(([title, key, docPfx]) =>(
 <SC key={key} title={title} accent="#7c3aed">
 <table style={T}><thead><tr>
 <th style={TH}>SN</th><th style={TH}>Description</th><th style={TH}>Docs</th>
@@ -681,7 +681,7 @@ function VCReviewForm({ person, vcData, setVcData, personMode = "director", sect
  render: (r) =>[r.program, r.duration, r.org] },
  { title: "B8(b). Industrial Training", key: "training", docPfx: "train",
  render: (r) =>[r.company, r.duration, r.nature] },
- ].filter(({ key }) =>key !== "research" || person.sectionApplicability?.research !== "notApplicable").map(({ title, key, docPfx, render }) =>(
+ ].map(({ title, key, docPfx, render }) =>(
 <SC key={key} title={title} accent="#7c3aed">
 <div style={{ overflowX: "auto" }}><table style={T}><thead>
 <tr>
@@ -746,20 +746,20 @@ function calcVCScore(person, vcData) {
  const innov = innovRows.length ? reviewSectionScore("innovRows", innovRows, 10, "vc") : clampScore(vcData.innovVc ?? vcData.innovVC ?? person.innovVc, 10);
 
  const partA = sum(person.lectures, "lectures", "vc") + sum(person.courseFile, "courseFile", "vc") +
- innov + (person.sectionApplicability?.projects === "notApplicable" ? 0 : sum(person.projects, "projects", "vc")) +
+ innov + sum(person.projects, "projects", "vc") +
  sum(person.quals, "quals", "vc") + sum(person.feedback, "feedback", "vc") +
  sum(person.deptActs, "deptActs", "vc") + sum(person.uniActs, "uniActs", "vc") +
  sum(person.society, "society", "vc") + sum(person.industry, "industry", "vc") +
  sum(person.acr, "acr", "vc");
 
  const partB = sum(person.journals, "journals", "vc") + sum(person.books, "books", "vc") +
- sum(person.ict, "ict", "vc") + (person.sectionApplicability?.research === "notApplicable" ? 0 : sum(person.research, "research", "vc")) +
+ sum(person.ict, "ict", "vc") + sum(person.research, "research", "vc") +
  sum(person.projects2, "projects2", "vc") + sum(person.externalProjects, "externalProjects", "vc") + sum(person.patents, "patents", "vc") + sum(person.awards, "awards", "vc") +
  sum(person.confs, "confs", "vc") + sum(person.proposals, "proposals", "vc") + sum(person.products, "products", "vc") +
  clampScore(sum(person.fdps, "fdps", "vc") + sum(person.training || [], "training", "vc"), 10);
 
- const partAMax = effectiveMaxScore(MAX_SCORES.PART_A || 200, person.sectionApplicability || {}, [{ key: "projects", max: 10 }, { key: "society", max: 10 }]);
- const partBMax = effectiveMaxScore(MAX_SCORES.PART_B || 375, person.sectionApplicability || {}, [{ key: "research", max: 30 }]);
+ const partAMax = effectiveMaxScore(MAX_SCORES.PART_A || 200);
+ const partBMax = effectiveMaxScore(MAX_SCORES.PART_B || 375);
  const cappedPartA = clampScore(partA, partAMax);
  const cappedPartB = clampScore(partB, partBMax);
  return { partA: cappedPartA, partB: cappedPartB, total: clampScore(cappedPartA + cappedPartB, partAMax + partBMax) };
@@ -786,13 +786,13 @@ function VCReviewPanel({ person, personMode, onBack, onSubmit, readOnly = false 
  const partB = reviewLocked && n(person.vcPartB) >0 ? n(person.vcPartB) : calculatedScores.partB;
  const total = reviewLocked && n(person.vcTotal) >0 ? n(person.vcTotal) : calculatedScores.total;
  const selfMaxScores = {
- partA: selfEffectivePartAMax(MAX_SCORES.PART_A, person.sectionApplicability || {}, [{ key: "projects", max: 10 }, { key: "society", max: 10 }]),
- partB: effectiveMaxScore(MAX_SCORES.PART_B, person.sectionApplicability || {}, [{ key: "research", max: 30 }]),
+ partA: selfEffectivePartAMax(MAX_SCORES.PART_A),
+ partB: effectiveMaxScore(MAX_SCORES.PART_B),
  grand: 0,
  };
  selfMaxScores.grand = selfMaxScores.partA + selfMaxScores.partB;
  const reviewerMaxScores = {
- partA: effectiveMaxScore(MAX_SCORES.PART_A, person.sectionApplicability || {}, [{ key: "projects", max: 10 }, { key: "society", max: 10 }]),
+ partA: effectiveMaxScore(MAX_SCORES.PART_A),
  partB: selfMaxScores.partB,
  grand: 0,
  };

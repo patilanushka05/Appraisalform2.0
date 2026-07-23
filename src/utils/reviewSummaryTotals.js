@@ -12,17 +12,7 @@ const numericFrom = (sources, keys, fallback = 0) => {
   return value === undefined ? n(fallback) : n(value);
 };
 
-const sectionApplicabilityFrom = (sources) =>
-  sources.find((source = {}) => source?.sectionApplicability)?.sectionApplicability || {};
-
-const effectiveMaxFromApplicability = (baseMax, applicability = {}, sections = []) =>
-  Math.max(
-    0,
-    n(baseMax) - sections.reduce(
-      (total, section) => applicability?.[section.key] === "notApplicable" ? total + n(section.max) : total,
-      0,
-    ),
-  );
+const effectiveMaxFromApplicability = (baseMax) => n(baseMax);
 
 const parseMaybeJson = (value) => {
   if (typeof value !== "string") return value;
@@ -180,12 +170,11 @@ export const standardSubmittedScoreSummary = (subject = {}, fallback = {}) => {
     subject.info,
   ].filter(Boolean);
 
-  const sectionApplicability = sectionApplicabilityFrom(sources);
-  const inferredSelfPartAMax = effectiveMaxFromApplicability(200, { ...sectionApplicability, acr: "notApplicable" }, [{ key: "projects", max: 10 }, { key: "society", max: 10 }, { key: "acr", max: 25 }]);
+  const inferredSelfPartAMax = effectiveMaxFromApplicability(200);
   const fallbackPartAMax = n(fallback.partAMax ?? fallback.effectivePartAMax);
   const inferredPartAMax = fallbackPartAMax ? Math.min(fallbackPartAMax, inferredSelfPartAMax) : inferredSelfPartAMax;
   const inferredPartBMax = n(fallback.partBMax ?? fallback.effectivePartBMax) ||
-    effectiveMaxFromApplicability(375, sectionApplicability, [{ key: "research", max: 30 }]);
+    effectiveMaxFromApplicability(375);
 
   const storedPartAMax = numericFrom(sources, [
     "partAMax", "part_a_max", "effectivePartAMax", "effective_part_a_max", "maxPartA",

@@ -61,7 +61,7 @@ import {
 import { canReviewerRejectProfile, getReviewChain, pendingStatusFor, profileFromsessionStorage, reviewedStatusFor, roleLabel, visiblePreviousReviewRoles, workflowValidationError, isAppraisalFinalisedByVc, isRejectedStatus, isPendingReviewStatusFor, hasActiveRejection, reviewListFrom } from "../utils/hierarchy";
 import { n, pct, RO, TI } from "../features/faculty-appraisal/shared";
 
-import { emptyDesignArtsForm, ALL_ARRAY_KEYS, titleCase, calculateDesignArtsTotals, getDesignArtsEffectiveMaxScores, validateDesignArtsBeforeSubmit, mergeForm, preserveSavedReviewScores, designArtsSchoolName, PART_A_SECTIONS, PART_B_SECTIONS, DesignArtsForm, DesignArtsAuthorityReviewPanel, SectionSelector, AccuracyCheckbox, CompactAuthoritySummaryCard, isReviewerReviewComplete, normalizeScoresForSubmit, summaryRowIfApplicable, b8SummaryRowIfApplicable, SECTION_OPTIONS, SummaryBox, WorkflowTracker, ACCENT, ACCENT2, PART_A_MAX, PART_B_MAX, GRAND_MAX, userInitials } from "../components/appraisal/designArts/DesignArtsAppraisalForm";
+import { emptyDesignArtsForm, ALL_ARRAY_KEYS, titleCase, calculateDesignArtsTotals, getDesignArtsEffectiveMaxScores, validateDesignArtsBeforeSubmit, mergeForm, preserveSavedReviewScores, designArtsSchoolName, PART_A_SECTIONS, PART_B_SECTIONS, DesignArtsForm, DesignArtsAuthorityReviewPanel, SectionSelector, AccuracyCheckbox, CompactAuthoritySummaryCard, isReviewerReviewComplete, normalizeScoresForSubmit, summaryRow, b8summaryRow, SECTION_OPTIONS, SummaryBox, WorkflowTracker, ACCENT, ACCENT2, PART_A_MAX, PART_B_MAX, GRAND_MAX, userInitials } from "../components/appraisal/designArts/DesignArtsAppraisalForm";
 export default function DesignArtsDashboard({ fixedRole }) {
  const navigate = useNavigate();
  const role = fixedRole || sessionStorage.getItem("role") || "faculty";
@@ -108,7 +108,6 @@ export default function DesignArtsDashboard({ fixedRole }) {
  ["setInnovDean", (value) =>setForm((prev) =>({ ...prev, innovDean: value }))],
  ["setInnovVc", (value) =>setForm((prev) =>({ ...prev, innovVc: value }))],
  ["setSummaryOtherInfo", (value) =>setForm((prev) =>({ ...prev, summaryOtherInfo: value }))],
- ["setSectionApplicability", (value) =>setForm((prev) =>({ ...prev, sectionApplicability: { ...(prev.sectionApplicability || {}), ...(value || {}) } }))],
  ["setSectionSaveStatus", (value) =>setSectionSaveStatus((prev) =>({ ...prev, ...(value || {}) }))],
  ]), []);
 
@@ -302,10 +301,10 @@ export default function DesignArtsDashboard({ fixedRole }) {
  };
 
  const generateSelfReport = () =>{
- const applicability = form.sectionApplicability || {};
- const rowSum = (key, max) =>applicability[key] === "notApplicable" ? 0 : scoreSectionRows(key, form[key] || [], max, "score");
- const lecScore = applicability["lectures"] === "notApplicable" ? 0 : averageSectionScore(form.lectures || [], 40, "score");
- const cfScore = applicability["courseFile"] === "notApplicable" ? 0 : averageSectionScore(form.courseFile || [], 20, "score");
+ const applicability = {};
+ const rowSum = (key, max) =>scoreSectionRows(key, form[key] || [], max, "score");
+ const lecScore = averageSectionScore(form.lectures || [], 40, "score");
+ const cfScore = averageSectionScore(form.courseFile || [], 20, "score");
  const innovScore = clampScore(Array.isArray(form.innovRows) ? form.innovRows.reduce((t, r) =>t + clampScore(r.score, SCORE_LIMITS.innovativeRow), 0) : innovativeTeachingScore(form.innovDetails, form.innovScore, 10), 10);
  const maxScores = getDesignArtsEffectiveMaxScores(form, { self: true });
  const b8Score = clampScore(rowSum("fdps", 20) + rowSum("training", 20), 20);
@@ -331,30 +330,30 @@ export default function DesignArtsDashboard({ fixedRole }) {
  })),
  detailedSummaryRows: [
  { isHeader: true, label: "Part A - Teaching Process & Academic Activities" },
- ...summaryRowIfApplicable(applicability, "lectures", { id: "A(i)", label: "Lectures / Tutorials / Practicals", max: 40, score: lecScore }),
- ...summaryRowIfApplicable(applicability, "courseFile", { id: "A(ii)", label: "Course File", max: 20, score: cfScore }),
+ ...summaryRow(applicability, "lectures", { id: "A(i)", label: "Lectures / Tutorials / Practicals", max: 40, score: lecScore }),
+ ...summaryRow(applicability, "courseFile", { id: "A(ii)", label: "Course File", max: 20, score: cfScore }),
  { id: "A(iii)", label: "Innovative Teaching-Learning Methodologies", max: 10, score: innovScore },
- ...summaryRowIfApplicable(applicability, "projects", { id: "A(iv)", label: "Project Guidance", max: 20, score: rowSum("projects", 20) }),
- ...summaryRowIfApplicable(applicability, "quals", { id: "A(v)", label: "Qualification Enhancement", max: 10, score: rowSum("quals", 10) }),
- ...summaryRowIfApplicable(applicability, "feedback", { id: "A(vi)", label: "Students' Feedback", max: 10, score: feedbackSectionScore(form.feedback || [], 10) }),
- ...summaryRowIfApplicable(applicability, "deptActs", { id: "A(vii)", label: "Departmental / School Activities", max: 20, score: rowSum("deptActs", 20) }),
- ...summaryRowIfApplicable(applicability, "uniActs", { id: "A(viii)", label: "University Level Activities", max: 30, score: rowSum("uniActs", 30) }),
- ...summaryRowIfApplicable(applicability, "society", { id: "A(ix)", label: "Contribution to Society", max: 10, score: rowSum("society", 10) }),
- ...summaryRowIfApplicable(applicability, "industry", { id: "A(x)", label: "Industry Connect", max: 5, score: rowSum("industry", 5) }),
+ ...summaryRow(applicability, "projects", { id: "A(iv)", label: "Project Guidance", max: 20, score: rowSum("projects", 20) }),
+ ...summaryRow(applicability, "quals", { id: "A(v)", label: "Qualification Enhancement", max: 10, score: rowSum("quals", 10) }),
+ ...summaryRow(applicability, "feedback", { id: "A(vi)", label: "Students' Feedback", max: 10, score: feedbackSectionScore(form.feedback || [], 10) }),
+ ...summaryRow(applicability, "deptActs", { id: "A(vii)", label: "Departmental / School Activities", max: 20, score: rowSum("deptActs", 20) }),
+ ...summaryRow(applicability, "uniActs", { id: "A(viii)", label: "University Level Activities", max: 30, score: rowSum("uniActs", 30) }),
+ ...summaryRow(applicability, "society", { id: "A(ix)", label: "Contribution to Society", max: 10, score: rowSum("society", 10) }),
+ ...summaryRow(applicability, "industry", { id: "A(x)", label: "Industry Connect", max: 5, score: rowSum("industry", 5) }),
  { id: "A(xi)", label: "Annual Confidential Report (ACR)", max: "N/A", score: 0 },
  { isTotal: true, label: "Part A Total", max: maxScores.partA, score: partATotal },
  { isHeader: true, label: "Part B - Research & Academic Contributions" },
- ...summaryRowIfApplicable(applicability, "journals", { id: "B1(i)", label: "Published Papers in Journals", max: 80, score: rowSum("journals", 80) }),
- ...summaryRowIfApplicable(applicability, "books", { id: "B2", label: "Articles / Chapters in Books", max: 60, score: rowSum("books", 60) }),
- ...summaryRowIfApplicable(applicability, "ict", { id: "B3", label: "ICT Mediated Teaching-Learning Pedagogy", max: 50, score: rowSum("ict", 50) }),
- ...summaryRowIfApplicable(applicability, "research", { id: "B4(a)", label: "Research Guidance - PhD / PG", max: 30, score: rowSum("research", 30) }),
- ...summaryRowIfApplicable(applicability, "internalProjects", { id: "B4(b)", label: "Internal Research Projects", max: 15, score: rowSum("internalProjects", 15) }),
- ...summaryRowIfApplicable(applicability, "externalProjects", { id: "B4(c)", label: "External Research / Consultancy Projects", max: 30, score: rowSum("externalProjects", 30) }),
- ...summaryRowIfApplicable(applicability, "ipr", { id: "B5(a)", label: "IPR / Copyright / Patent", max: 40, score: rowSum("ipr", 40) }),
- ...summaryRowIfApplicable(applicability, "awards", { id: "B5(b)", label: "Research Awards", max: 10, score: rowSum("awards", 10) }),
- ...summaryRowIfApplicable(applicability, "confs", { id: "B6", label: "Conferences / Seminars / Workshops", max: 30, score: rowSum("confs", 30) }),
- ...summaryRowIfApplicable(applicability, "proposals", { id: "B7", label: "Research Proposals", max: 10, score: rowSum("proposals", 10) }),
- ...b8SummaryRowIfApplicable(applicability, { id: "B8", label: "FDP / Self Development + Industrial Training", max: 20, score: b8Score }),
+ ...summaryRow(applicability, "journals", { id: "B1(i)", label: "Published Papers in Journals", max: 80, score: rowSum("journals", 80) }),
+ ...summaryRow(applicability, "books", { id: "B2", label: "Articles / Chapters in Books", max: 60, score: rowSum("books", 60) }),
+ ...summaryRow(applicability, "ict", { id: "B3", label: "ICT Mediated Teaching-Learning Pedagogy", max: 50, score: rowSum("ict", 50) }),
+ ...summaryRow(applicability, "research", { id: "B4(a)", label: "Research Guidance - PhD / PG", max: 30, score: rowSum("research", 30) }),
+ ...summaryRow(applicability, "internalProjects", { id: "B4(b)", label: "Internal Research Projects", max: 15, score: rowSum("internalProjects", 15) }),
+ ...summaryRow(applicability, "externalProjects", { id: "B4(c)", label: "External Research / Consultancy Projects", max: 30, score: rowSum("externalProjects", 30) }),
+ ...summaryRow(applicability, "ipr", { id: "B5(a)", label: "IPR / Copyright / Patent", max: 40, score: rowSum("ipr", 40) }),
+ ...summaryRow(applicability, "awards", { id: "B5(b)", label: "Research Awards", max: 10, score: rowSum("awards", 10) }),
+ ...summaryRow(applicability, "confs", { id: "B6", label: "Conferences / Seminars / Workshops", max: 30, score: rowSum("confs", 30) }),
+ ...summaryRow(applicability, "proposals", { id: "B7", label: "Research Proposals", max: 10, score: rowSum("proposals", 10) }),
+ ...b8summaryRow(applicability, { id: "B8", label: "FDP / Self Development + Industrial Training", max: 20, score: b8Score }),
  { isTotal: true, label: "Part B Total", max: maxScores.partB, score: partBTotal },
  { isGrandTotal: true, label: "Grand Total (Part A + Part B)", max: maxScores.grand, score: grandTotal },
  ],
@@ -644,6 +643,7 @@ const tdStyle = { border: "1px solid #e2e8f0", padding: "5px 7px", verticalAlign
 const tdCenter = { ...tdStyle, textAlign: "center", minWidth: 70 };
 const smallButton = (background) =>({ padding: "8px 14px", background, color: "#fff", border: "none", borderRadius: 7, cursor: background === "#94a3b8" ? "not-allowed" : "pointer", fontWeight: 800, fontSize: 12, fontFamily: "inherit" });
 const navButton = (active) =>({ width: "100%", border: "none", borderLeft: `3px solid ${active ? ACCENT : "transparent"}`, background: active ? `${ACCENT}33` : "transparent", color: active ? "#fbbf24" : "#cbd5e1", borderRadius: 8, padding: "10px 12px", cursor: "pointer", textAlign: "left", fontWeight: 800, fontFamily: "inherit" });
+
 
 
 

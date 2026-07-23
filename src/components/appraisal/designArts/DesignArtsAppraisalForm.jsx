@@ -163,7 +163,6 @@ export const emptyDesignArtsForm = () =>({
  fdps: [{ program: "", duration: "", org: "", score: "", _id: uid() }],
  training: [{ company: "", duration: "", nature: "", score: "", _id: uid() }],
  summaryOtherInfo: "",
- sectionApplicability: { projects: "applicable", research: "applicable" },
 });
 
 const cloneRows = (rows) =>JSON.parse(JSON.stringify(rows || []));
@@ -239,11 +238,10 @@ const scoreKeyForInnov = (role) =>({
 }[role] || "innovScore");
 
 export const calculateDesignArtsTotals = (form, scoreKey = "score") =>{
- const applicability = form.sectionApplicability || {};
  const maxScores = getDesignArtsEffectiveMaxScores(form, { self: scoreKey === "score" });
- const rowSum = (key, max) =>applicability[key] === "notApplicable" ? 0 : scoreSectionRows(key, form[key] || [], max, scoreKey);
- const lecturesScore = applicability["lectures"] === "notApplicable" ? 0 : averageSectionScore(form.lectures || [], 40, scoreKey);
- const courseFileScore = applicability["courseFile"] === "notApplicable" ? 0 : scoreSectionRows("courseFile", form.courseFile || [], 20, scoreKey);
+ const rowSum = (key, max) =>scoreSectionRows(key, form[key] || [], max, scoreKey);
+ const lecturesScore = averageSectionScore(form.lectures || [], 40, scoreKey);
+ const courseFileScore = scoreSectionRows("courseFile", form.courseFile || [], 20, scoreKey);
  const partA = clampScore(
  lecturesScore + courseFileScore + (scoreKey === "score" && Array.isArray(form.innovRows) ? clampScore(form.innovRows.reduce((total, row) =>total + clampScore(row.score, SCORE_LIMITS.innovativeRow), 0), 10) : scoreKey === "score" ? innovativeTeachingScore(form.innovDetails, form.innovScore, 10) : clampScore(form[scoreKeyForInnov(scoreKey)], 10)) +
  rowSum("projects", 20) + rowSum("quals", 10) + (scoreKey === "score" ? feedbackSectionScore(form.feedback, 10) : reviewSectionScore("feedback", form.feedback || [], 10, scoreKey)) +
@@ -260,28 +258,21 @@ export const calculateDesignArtsTotals = (form, scoreKey = "score") =>{
  return { partA, partB, total: clampScore(partA + partB, maxScores.grand), maxScores };
 };
 
-const effectivePartMax = (baseMax, applicability = {}, sections = []) =>
- effectiveMaxScore(baseMax, applicability, sections.filter((section) =>section.key !== "fdps" && section.key !== "training"));
+const effectivePartMax = (baseMax) =>effectiveMaxScore(baseMax);
 
-const effectivePartBMax = (baseMax, applicability = {}) =>{
- const withoutB8 = effectivePartMax(baseMax, applicability, PART_B_SECTIONS);
- return applicability.fdps === "notApplicable" && applicability.training === "notApplicable"
- ? Math.max(0, withoutB8 - 20)
- : withoutB8;
-};
+const effectivePartBMax = (baseMax) =>effectivePartMax(baseMax);
 
 export const getDesignArtsEffectiveMaxScores = (form = {}, { self = false } = {}) =>{
- const applicability = form.sectionApplicability || {};
- const partA = self ? selfEffectivePartAMax(PART_A_MAX, applicability, PART_A_SECTIONS) : effectivePartMax(PART_A_MAX, applicability, PART_A_SECTIONS);
- const partB = effectivePartBMax(PART_B_MAX, applicability);
+ const partA = self ? selfEffectivePartAMax(PART_A_MAX) : effectivePartMax(PART_A_MAX);
+ const partB = effectivePartBMax(PART_B_MAX);
  return { partA, partB, grand: partA + partB };
 };
 
-export const summaryRowIfApplicable = (applicability = {}, key, row) =>
- applicability[key] === "notApplicable" ? [] : [row];
+export const summaryRow = (applicability = {}, key, row) =>
+ [row];
 
-export const b8SummaryRowIfApplicable = (applicability = {}, row) =>
- applicability.fdps === "notApplicable" && applicability.training === "notApplicable" ? [] : [row];
+export const b8summaryRow = (applicability = {}, row) =>
+ [row];
 
 const ensureIds = (rows) =>Array.isArray(rows) ? rows.map((row) =>(row._id ? row : { ...row, _id: uid() })) : rows;
 
@@ -289,7 +280,6 @@ export const mergeForm = (base, incoming = {}) =>{
  const merged = { ...base, ...incoming };
  ALL_ARRAY_KEYS.forEach((key) =>{ if (merged[key]) merged[key] = ensureIds(merged[key]); });
  merged.info = { ...base.info, ...(incoming.info || {}) };
- merged.sectionApplicability = { ...base.sectionApplicability, ...(incoming.sectionApplicability || {}) };
  merged.acr = createAcrRows(incoming.acr || base.acr);
  return merged;
 };
@@ -297,7 +287,6 @@ export const mergeForm = (base, incoming = {}) =>{
 export const normalizeScoresForSubmit = (form) =>normalizeAutoScores(form);
 
 export const validateDesignArtsBeforeSubmit = (form, docs = {}, sectionView = "all") =>{
- const applicability = form.sectionApplicability || {};
  const sectionsToValidate = sectionView === "partA" ? PART_A_SECTIONS : sectionView === "partB" ? PART_B_SECTIONS : [...PART_A_SECTIONS, ...PART_B_SECTIONS];
  const rowSections = sectionsToValidate.map((section) =>({
  label: section.title,
@@ -309,7 +298,6 @@ export const validateDesignArtsBeforeSubmit = (form, docs = {}, sectionView = "a
  rowMax: section.rowMax,
  maxScore: section.key === "feedback" ? undefined : section.max,
  docPrefix: section.key !== "courseFile" && section.key !== "acr" ? section.doc : "",
- skip: applicability[section.key] === "notApplicable",
  }));
  const errors = validateCompleteRows(rowSections, docs);
 
@@ -347,11 +335,8 @@ function SectionTable({ section, form, setForm, docs, setDocs, mode, locked, rev
  const editableSelf = mode === "self" && !locked;
  const reviewLocked = mode === "review" && locked;
  const currentRole = reviewerRole;
- const applicability = form.sectionApplicability || {};
- const notApplicable = applicability[section.key] === "notApplicable";
  const selfLocked = mode === "self" && section.key === "acr";
- const canToggleApplicability = editableSelf && ["projects", "research", "society"].includes(section.key);
- const earned = notApplicable ? 0 : (section.key === "lectures" || section.key === "courseFile")
+ const earned = (section.key === "lectures" || section.key === "courseFile")
  ? averageSectionScore(rows, section.max)
  : scoreSectionRows(section.key, rows, section.max);
  const hideIndividualB8Summary = section.key === "fdps" || section.key === "training";
@@ -360,7 +345,6 @@ function SectionTable({ section, form, setForm, docs, setDocs, mode, locked, rev
  : `Total Score (Max ${section.max})`;
  const totalLabelColSpan = 1 + section.fields.length + (section.key === "feedback" ? 1 : 0) + (section.key !== "courseFile" ? 1 : 0);
  const sectionTotalScore = (sourceRows = rows, scoreKey = "score") =>{
- if (notApplicable) return 0;
  if (scoreKey !== "score") return reviewSectionScore(section.key, sourceRows, section.max, scoreKey);
  if (section.key === "lectures" || section.key === "courseFile") return averageSectionScore(sourceRows, section.max, scoreKey);
  if (section.key === "feedback" && scoreKey === "score") return feedbackSectionScore(sourceRows, section.max);
@@ -370,11 +354,8 @@ function SectionTable({ section, form, setForm, docs, setDocs, mode, locked, rev
  if (section.key === "acr" && mode === "self") {
  const acrRows = createAcrRows(rows);
  const acrTotal = scoreSectionRows(section.key, acrRows, section.max);
- return (
+return (
 <SectionShell title="(xi) Annual Confidential Report (ACR) - Max 25 marks" max={section.max} earned={acrTotal} accent="#ef4444" showScoreSummary={false}>
-<div style={{ fontSize: 11, color: "#b45309", background: "#fef3c7", border: "1px solid #fcd34d", borderRadius: 5, padding: "6px 10px", marginBottom: 8 }}>
- This section is filled by your superior. It is visible here for reference and is not counted in your self score.
-</div>
 <div style={{ overflowX: "auto" }}>
 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
 <thead>
@@ -427,21 +408,6 @@ function SectionTable({ section, form, setForm, docs, setDocs, mode, locked, rev
  }));
  };
 
- const setApplicability = (value) =>{
- setForm((prev) =>{
- const blankRows = (prev[section.key] || []).map((row) =>({
- ...row,
- ...Object.fromEntries(section.fields.filter(([, , readOnly]) =>!readOnly).map(([key]) =>[key, ""])),
- score: "",
- }));
- return {
- ...prev,
- sectionApplicability: { ...(prev.sectionApplicability || {}), [section.key]: value },
- [section.key]: value === "notApplicable" ? blankRows : prev[section.key],
- };
- });
- };
-
  const updateReview = (index, value) =>{
  setReviewData((prev) =>{
  const source = prev[section.key] || cloneRows(rows);
@@ -464,18 +430,8 @@ function SectionTable({ section, form, setForm, docs, setDocs, mode, locked, rev
  };
 
  return (
-<SectionShell title={section.title} max={notApplicable ? 0 : section.max} earned={earned} accent={section.key === "acr" ? "#ef4444" : section.key === "society" ? "#10b981" : section.doc?.startsWith("j") || section.doc?.startsWith("p") || section.doc?.startsWith("b") || section.doc?.startsWith("i") || section.doc?.startsWith("e") ? ACCENT2 : ACCENT} showScoreSummary={!hideIndividualB8Summary}>
- {canToggleApplicability && (
-<div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 10, fontSize: 12, fontWeight: 800, color: "#334155" }}>
- {["applicable", "notApplicable"].map((value) =>(
-<label key={value} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-<input type="checkbox" checked={(applicability[section.key] || "applicable") === value} onChange={() =>setApplicability(value)} />
- {value === "applicable" ? "Applicable" : "Not Applicable"}
-</label>
- ))}
-</div>
- )}
- {!notApplicable && (<>
+<SectionShell title={section.title} max={section.max} earned={earned} accent={section.key === "acr" ? "#ef4444" : section.key === "society" ? "#10b981" : section.doc?.startsWith("j") || section.doc?.startsWith("p") || section.doc?.startsWith("b") || section.doc?.startsWith("i") || section.doc?.startsWith("e") ? ACCENT2 : ACCENT} showScoreSummary={!hideIndividualB8Summary}>
+ <>
 <div style={{ overflowX: "auto" }}>
 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
 <thead>
@@ -503,7 +459,7 @@ function SectionTable({ section, form, setForm, docs, setDocs, mode, locked, rev
  {mode !== "self" ?<RO value={row[key]} />: key === "first" ? (
 <select
  value={row[key] || ""}
- disabled={!editableSelf || readOnlyField || notApplicable || selfLocked}
+ disabled={!editableSelf || readOnlyField || selfLocked}
  onChange={(event) =>updateRow(index, key, event.target.value)}
  style={{ width: "100%", height: 30, border: "1px solid #cbd5e1", borderRadius: 4, background: "#fff", fontFamily: "inherit", fontSize: 11 }}
  >
@@ -514,7 +470,7 @@ function SectionTable({ section, form, setForm, docs, setDocs, mode, locked, rev
  ) : section.key === "research" && key === "degree" ? (
 <select
  value={row[key] || ""}
- disabled={!editableSelf || readOnlyField || notApplicable || selfLocked}
+ disabled={!editableSelf || readOnlyField || selfLocked}
  onChange={(event) =>updateRow(index, key, event.target.value)}
  style={{ width: "100%", height: 30, border: "1px solid #cbd5e1", borderRadius: 4, background: "#fff", fontFamily: "inherit", fontSize: 11 }}
  >
@@ -525,7 +481,7 @@ function SectionTable({ section, form, setForm, docs, setDocs, mode, locked, rev
  ) : section.key === "courseFile" && key === "details" ? (
 <select
  value={row[key] || ""}
- disabled={!editableSelf || notApplicable || selfLocked}
+ disabled={!editableSelf || selfLocked}
  onChange={(event) =>updateRow(index, key, event.target.value)}
  style={{ width: "100%", height: 30, border: "1px solid #cbd5e1", borderRadius: 4, background: "#fff", fontFamily: "inherit", fontSize: 11 }}
  >
@@ -536,7 +492,7 @@ function SectionTable({ section, form, setForm, docs, setDocs, mode, locked, rev
 </select>
  ) : (
 <>
-<TI value={row[key]} type={NUMERIC_KEYS.has(key) ? "number" : "text"} center={section.key === "courseFile" && key === "title"} max={key === "fb1" || key === "fb2" ? SCORE_LIMITS.feedbackAverage : undefined} deferClampWhileTyping={key === "fb1" || key === "fb2"} textOnly={TEXT_ONLY_KEYS.has(key) && !(section.key === "courseFile" && key === "title")} readOnly={!editableSelf || readOnlyField || notApplicable || selfLocked || socRowLocked} onChange={(value) =>updateRow(index, key, value)} />
+<TI value={row[key]} type={NUMERIC_KEYS.has(key) ? "number" : "text"} center={section.key === "courseFile" && key === "title"} max={key === "fb1" || key === "fb2" ? SCORE_LIMITS.feedbackAverage : undefined} deferClampWhileTyping={key === "fb1" || key === "fb2"} textOnly={TEXT_ONLY_KEYS.has(key) && !(section.key === "courseFile" && key === "title")} readOnly={!editableSelf || readOnlyField || selfLocked || socRowLocked} onChange={(value) =>updateRow(index, key, value)} />
  {section.key === "acr" && key === "label" && ACR_DETAIL_POINTS[row[key]] && (
 <ul style={{ margin: "5px 0 0 16px", padding: 0, color: "#64748b", fontSize: 10, lineHeight: 1.5 }}>
  {ACR_DETAIL_POINTS[row[key]].map((point) =><li key={point}>{point}</li>)}
@@ -550,14 +506,14 @@ function SectionTable({ section, form, setForm, docs, setDocs, mode, locked, rev
 </td>
  ))}
  {section.key === "feedback" &&<td style={tdCenter}>{row.fb1 || row.fb2 ? feedbackAverage(row).toFixed(2) : ""}</td>}
- {section.key !== "courseFile" &&<td style={tdStyle}><DocCell id={`${section.doc}-${index}`} docs={docs} setDocs={setDocs} readOnly={!editableSelf || notApplicable || selfLocked || socRowLocked} /></td>}
+ {section.key !== "courseFile" &&<td style={tdStyle}><DocCell id={`${section.doc}-${index}`} docs={docs} setDocs={setDocs} readOnly={!editableSelf || selfLocked || socRowLocked} /></td>}
 <td style={tdCenter}>
  {mode === "self"
  ? section.key === "feedback"
  ?<RO value={row.fb1 || row.fb2 ? feedbackRowScore(row, section.max).toFixed(1) : ""} center />
  : section.autoScore
  ?<RO value={rowSelfScore(row) ? rowSelfScore(row).toFixed(1) : ""} center />
- :<TI value={row.score} type="number" center max={section.rowMax ? (typeof section.rowMax === "function" ? section.rowMax(row) : section.rowMax) : section.max} readOnly={!editableSelf || section.selfReadOnlyScore || notApplicable || selfLocked || socRowLocked} onChange={(value) =>updateRow(index, "score", value)} />
+ :<TI value={row.score} type="number" center max={section.rowMax ? (typeof section.rowMax === "function" ? section.rowMax(row) : section.rowMax) : section.max} readOnly={!editableSelf || section.selfReadOnlyScore || selfLocked || socRowLocked} onChange={(value) =>updateRow(index, "score", value)} />
  :<RO value={rowSelfScore(row) ? rowSelfScore(row).toFixed(1) : ""} center />}
 </td>
  {mode === "review" && previousRoles.map((role) =><td key={role} style={tdCenter}><RO value={socRowLocked ? "0" : displayScore(row[role])} center /></td>)}
@@ -620,7 +576,7 @@ function SectionTable({ section, form, setForm, docs, setDocs, mode, locked, rev
 </tbody>
 </table>
  )}
-</>)}
+</>
 </SectionShell>
  );
 }
@@ -1026,10 +982,10 @@ export function DesignArtsAuthorityReviewPanel({ person, reviewerRole, onBack, o
 
  const generateReviewReport = () =>{
  if (!reviewCompleted) return;
- const applicability = reviewerForm.sectionApplicability || {};
- const rowSum = (key, max) =>applicability[key] === "notApplicable" ? 0 : scoreSectionRows(key, reviewerForm[key] || [], max, "score");
- const lecScore = applicability["lectures"] === "notApplicable" ? 0 : averageSectionScore(reviewerForm.lectures || [], 40, "score");
- const cfScore = applicability["courseFile"] === "notApplicable" ? 0 : averageSectionScore(reviewerForm.courseFile || [], 20, "score");
+ const applicability = {};
+ const rowSum = (key, max) =>scoreSectionRows(key, reviewerForm[key] || [], max, "score");
+ const lecScore = averageSectionScore(reviewerForm.lectures || [], 40, "score");
+ const cfScore = averageSectionScore(reviewerForm.courseFile || [], 20, "score");
  const innovScore = clampScore(Array.isArray(reviewerForm.innovRows) ? reviewerForm.innovRows.reduce((t, r) =>t + clampScore(r.score, SCORE_LIMITS.innovativeRow), 0) : innovativeTeachingScore(reviewerForm.innovDetails, reviewerForm.innovScore, 10), 10);
  const maxScores = getDesignArtsEffectiveMaxScores(reviewerForm);
  const partATotal = panelReadOnly && String(person?.[`${reviewerRole}PartA`] ?? "").trim() !== "" ? n(person?.[`${reviewerRole}PartA`]) : totals.partA;
@@ -1054,30 +1010,30 @@ export function DesignArtsAuthorityReviewPanel({ person, reviewerRole, onBack, o
  }),
  detailedSummaryRows: [
  { isHeader: true, label: "Part A - Teaching Process & Academic Activities" },
- ...summaryRowIfApplicable(applicability, "lectures", { id: "A(i)", label: "Lectures / Tutorials / Practicals", max: 40, score: lecScore }),
- ...summaryRowIfApplicable(applicability, "courseFile", { id: "A(ii)", label: "Course File", max: 20, score: cfScore }),
+ ...summaryRow(applicability, "lectures", { id: "A(i)", label: "Lectures / Tutorials / Practicals", max: 40, score: lecScore }),
+ ...summaryRow(applicability, "courseFile", { id: "A(ii)", label: "Course File", max: 20, score: cfScore }),
  { id: "A(iii)", label: "Innovative Teaching-Learning Methodologies", max: 10, score: innovScore },
- ...summaryRowIfApplicable(applicability, "projects", { id: "A(iv)", label: "Project Guidance", max: 20, score: rowSum("projects", 20) }),
- ...summaryRowIfApplicable(applicability, "quals", { id: "A(v)", label: "Qualification Enhancement", max: 10, score: rowSum("quals", 10) }),
- ...summaryRowIfApplicable(applicability, "feedback", { id: "A(vi)", label: "Students' Feedback", max: 10, score: feedbackSectionScore(reviewerForm.feedback || [], 10) }),
- ...summaryRowIfApplicable(applicability, "deptActs", { id: "A(vii)", label: "Departmental / School Activities", max: 20, score: rowSum("deptActs", 20) }),
- ...summaryRowIfApplicable(applicability, "uniActs", { id: "A(viii)", label: "University Level Activities", max: 30, score: rowSum("uniActs", 30) }),
- ...summaryRowIfApplicable(applicability, "society", { id: "A(ix)", label: "Contribution to Society", max: 10, score: rowSum("society", 10) }),
- ...summaryRowIfApplicable(applicability, "industry", { id: "A(x)", label: "Industry Connect", max: 5, score: rowSum("industry", 5) }),
- ...summaryRowIfApplicable(applicability, "acr", { id: "A(xi)", label: "Annual Confidential Report (ACR)", max: 25, score: rowSum("acr", 25) }),
+ ...summaryRow(applicability, "projects", { id: "A(iv)", label: "Project Guidance", max: 20, score: rowSum("projects", 20) }),
+ ...summaryRow(applicability, "quals", { id: "A(v)", label: "Qualification Enhancement", max: 10, score: rowSum("quals", 10) }),
+ ...summaryRow(applicability, "feedback", { id: "A(vi)", label: "Students' Feedback", max: 10, score: feedbackSectionScore(reviewerForm.feedback || [], 10) }),
+ ...summaryRow(applicability, "deptActs", { id: "A(vii)", label: "Departmental / School Activities", max: 20, score: rowSum("deptActs", 20) }),
+ ...summaryRow(applicability, "uniActs", { id: "A(viii)", label: "University Level Activities", max: 30, score: rowSum("uniActs", 30) }),
+ ...summaryRow(applicability, "society", { id: "A(ix)", label: "Contribution to Society", max: 10, score: rowSum("society", 10) }),
+ ...summaryRow(applicability, "industry", { id: "A(x)", label: "Industry Connect", max: 5, score: rowSum("industry", 5) }),
+ ...summaryRow(applicability, "acr", { id: "A(xi)", label: "Annual Confidential Report (ACR)", max: 25, score: rowSum("acr", 25) }),
  { isTotal: true, label: "Part A Total", max: maxScores.partA, score: partATotal },
  { isHeader: true, label: "Part B - Research & Academic Contributions" },
- ...summaryRowIfApplicable(applicability, "journals", { id: "B1(i)", label: "Published Papers in Journals", max: 80, score: rowSum("journals", 80) }),
- ...summaryRowIfApplicable(applicability, "books", { id: "B2", label: "Articles / Chapters in Books", max: 60, score: rowSum("books", 60) }),
- ...summaryRowIfApplicable(applicability, "ict", { id: "B3", label: "ICT Mediated Teaching-Learning Pedagogy", max: 50, score: rowSum("ict", 50) }),
- ...summaryRowIfApplicable(applicability, "research", { id: "B4(a)", label: "Research Guidance - PhD / PG", max: 30, score: rowSum("research", 30) }),
- ...summaryRowIfApplicable(applicability, "internalProjects", { id: "B4(b)", label: "Internal Research Projects", max: 15, score: rowSum("internalProjects", 15) }),
- ...summaryRowIfApplicable(applicability, "externalProjects", { id: "B4(c)", label: "External Research / Consultancy Projects", max: 30, score: rowSum("externalProjects", 30) }),
- ...summaryRowIfApplicable(applicability, "ipr", { id: "B5(a)", label: "IPR / Copyright / Patent", max: 40, score: rowSum("ipr", 40) }),
- ...summaryRowIfApplicable(applicability, "awards", { id: "B5(b)", label: "Research Awards", max: 10, score: rowSum("awards", 10) }),
- ...summaryRowIfApplicable(applicability, "confs", { id: "B6", label: "Conferences / Seminars / Workshops", max: 30, score: rowSum("confs", 30) }),
- ...summaryRowIfApplicable(applicability, "proposals", { id: "B7", label: "Research Proposals", max: 10, score: rowSum("proposals", 10) }),
- ...b8SummaryRowIfApplicable(applicability, { id: "B8", label: "FDP / Self Development + Industrial Training", max: 20, score: b8Score }),
+ ...summaryRow(applicability, "journals", { id: "B1(i)", label: "Published Papers in Journals", max: 80, score: rowSum("journals", 80) }),
+ ...summaryRow(applicability, "books", { id: "B2", label: "Articles / Chapters in Books", max: 60, score: rowSum("books", 60) }),
+ ...summaryRow(applicability, "ict", { id: "B3", label: "ICT Mediated Teaching-Learning Pedagogy", max: 50, score: rowSum("ict", 50) }),
+ ...summaryRow(applicability, "research", { id: "B4(a)", label: "Research Guidance - PhD / PG", max: 30, score: rowSum("research", 30) }),
+ ...summaryRow(applicability, "internalProjects", { id: "B4(b)", label: "Internal Research Projects", max: 15, score: rowSum("internalProjects", 15) }),
+ ...summaryRow(applicability, "externalProjects", { id: "B4(c)", label: "External Research / Consultancy Projects", max: 30, score: rowSum("externalProjects", 30) }),
+ ...summaryRow(applicability, "ipr", { id: "B5(a)", label: "IPR / Copyright / Patent", max: 40, score: rowSum("ipr", 40) }),
+ ...summaryRow(applicability, "awards", { id: "B5(b)", label: "Research Awards", max: 10, score: rowSum("awards", 10) }),
+ ...summaryRow(applicability, "confs", { id: "B6", label: "Conferences / Seminars / Workshops", max: 30, score: rowSum("confs", 30) }),
+ ...summaryRow(applicability, "proposals", { id: "B7", label: "Research Proposals", max: 10, score: rowSum("proposals", 10) }),
+ ...b8summaryRow(applicability, { id: "B8", label: "FDP / Self Development + Industrial Training", max: 20, score: b8Score }),
  { isTotal: true, label: "Part B Total", max: maxScores.partB, score: partBTotal },
  { isGrandTotal: true, label: "Grand Total (Part A + Part B)", max: maxScores.grand, score: grandTotal },
  ],
@@ -1201,6 +1157,7 @@ export function DesignArtsAuthorityReviewPanel({ person, reviewerRole, onBack, o
 </div>
  );
 }
+
 
 
 

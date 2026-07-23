@@ -80,7 +80,7 @@ function ReviewPanel({ faculty, onBack, onSubmit }) {
  const lec = reviewSectionScore("lectures", lectureReviewRows, 50, "hod");
  const cf = reviewSectionScore("courseFile", courseFileReviewRows, 20, "hod");
  const innov = getS("innovHod");
- const proj = faculty.sectionApplicability?.projects === "notApplicable" ? 0 : (faculty.projects || []).reduce((a, _, i) =>a + get("projects", i, "hod"), 0);
+ const proj = (faculty.projects || []).reduce((a, _, i) =>a + get("projects", i, "hod"), 0);
  const qual = (faculty.quals || []).reduce((a, _, i) =>a + get("quals", i, "hod"), 0);
  const feedbackReviewRows = (faculty.feedback || []).map((row, i) =>({
  ...row,
@@ -97,7 +97,7 @@ function ReviewPanel({ faculty, onBack, onSubmit }) {
  const jour = (faculty.journals || []).reduce((a, _, i) =>a + get("journals", i, "hod"), 0);
  const bk = (faculty.books || []).reduce((a, _, i) =>a + get("books", i, "hod"), 0);
  const ictT = (faculty.ict || []).reduce((a, _, i) =>a + get("ict", i, "hod"), 0);
- const res = faculty.sectionApplicability?.research === "notApplicable" ? 0 : (faculty.research || []).reduce((a, _, i) =>a + get("research", i, "hod"), 0);
+ const res = (faculty.research || []).reduce((a, _, i) =>a + get("research", i, "hod"), 0);
  const resProjects = clampScore((faculty.projects2 || []).reduce((a, _, i) =>a + get("projects2", i, "hod"), 0), SCORE_LIMITS.researchInternalProjects);
  const externalResProjects = clampScore((faculty.externalProjects || []).reduce((a, _, i) =>a + get("externalProjects", i, "hod"), 0), SCORE_LIMITS.researchExternalProjects);
  const pat = (faculty.patents || []).reduce((a, _, i) =>a + get("patents", i, "hod"), 0);
@@ -256,10 +256,6 @@ const deanScorePayload = (approval, deanData) =>{
  const payload = {};
 
  DEAN_REVIEW_ARRAY_KEYS.forEach((key) =>{
- if (approval.sectionApplicability?.[key] === "notApplicable") {
- payload[key] = [];
- return;
- }
  const rows = Array.isArray(approval[key]) ? approval[key] : [];
  payload[key] = rows.map((row, index) =>({
  ...row,
@@ -295,10 +291,10 @@ const sumDeanRows = (payload, keys) =>
  }, 0), DEAN_SECTION_MAX[key] || 0);
  }, 0);
 
-const deanScoreTotals = (payload, sectionApplicability = {}) =>{
+const deanScoreTotals = (payload) =>{
  const reviewerMaxScores = {
- partA: effectiveMaxScore(200, sectionApplicability, [{ key: "projects", max: 10 }, { key: "society", max: 10 }]),
- partB: effectiveMaxScore(375, sectionApplicability, [{ key: "research", max: 30 }]),
+ partA: effectiveMaxScore(200),
+ partB: effectiveMaxScore(375),
  grand: 0,
  };
  reviewerMaxScores.grand = reviewerMaxScores.partA + reviewerMaxScores.partB;
@@ -364,7 +360,7 @@ const DeanReviewTableContext = createContext(null);
 
 function ReviewTable({ title, accent = "#4c1d95", sectionKey, columns, docPrefix, rows: sectionRows }) {
  const ctx = useContext(DeanReviewTableContext);
- if (!ctx || ctx.approval.sectionApplicability?.[sectionKey] === "notApplicable") return null;
+ if (!ctx) return null;
  const dataRows = sectionRows || ctx.rows(sectionKey);
  const hasDocs = Boolean(docPrefix);
  const totalColumns = 1 + columns.length + (hasDocs ? 1 : 0) + 2;
@@ -749,12 +745,12 @@ function ApprovalReviewPanel({ approval, approvalType, onBack, onSubmit, readOnl
  const academicYear = approval?.academicYear || approval?.academic_year || approval?.info?.ay || APP_INFO.DEFAULT_AY || "2026-2027";
  const sectionScores = deanScorePayload(approval, deanData);
  const reviewerMaxScores = {
- partA: effectiveMaxScore(200, approval.sectionApplicability || {}, [{ key: "projects", max: 10 }, { key: "society", max: 10 }]),
- partB: effectiveMaxScore(375, approval.sectionApplicability || {}, [{ key: "research", max: 30 }]),
+ partA: effectiveMaxScore(200),
+ partB: effectiveMaxScore(375),
  grand: 0,
  };
  reviewerMaxScores.grand = reviewerMaxScores.partA + reviewerMaxScores.partB;
- const deanScores = deanScoreTotals(sectionScores, approval.sectionApplicability || {});
+ const deanScores = deanScoreTotals(sectionScores);
  const hasSavedDeanScores = ["deanPartA", "deanPartB", "deanTotal"].some((key) =>String(approval?.[key] ?? "").trim() !== "");
  const rawDisplayedDeanScores = reviewLocked && hasSavedDeanScores ? {
  partA: String(approval?.deanPartA ?? "").trim() !== "" ? n(approval?.deanPartA) : deanScores.partA,
@@ -1236,7 +1232,7 @@ export default function DeanDashboard() {
  const facPartA = [
  ...(faculty.lectures || []).map(r =>n(r.score)),
  courseFilePartA, n(faculty.innovScore),
- ...(faculty.sectionApplicability?.projects === "notApplicable" ? [] : (faculty.projects || []).map(r =>n(r.score))),
+ ...(faculty.projects || []).map(r =>n(r.score)),
  ...(faculty.quals || []).map(r =>n(r.score)),
  ...(faculty.feedback || []).map(r =>n(r.score)),
  ...(faculty.deptActs || []).map(r =>n(r.score)),

@@ -48,7 +48,6 @@ acr: "setAcr",
  fdps: "setFdps",
  training: "setTraining",
  summaryOtherInfo: "setSummaryOtherInfo",
- sectionApplicability: "setSectionApplicability",
  sectionSaveStatus: "setSectionSaveStatus",
 };
 
@@ -200,7 +199,6 @@ const resetSnapshotSetters = (academicYear, setters) =>{
  setters.setTraining?.([{ company: "", duration: "", nature: "", score: "", hod: "", director: "" }]);
  setters.setDocs?.({});
  setters.setSummaryOtherInfo?.("");
- setters.setSectionApplicability?.({ projects: "applicable", research: "applicable", society: "applicable" });
  setters.setSectionSaveStatus?.({ partA: false, partB: false, partC: false, partD: false });
 };
 

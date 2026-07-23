@@ -29,7 +29,7 @@ export default function DirectorProjects({ ctx }) {
  return (
 <>
 {/* A6: Guided Students Project */}
- {faculty.sectionApplicability?.projects !== "notApplicable" &&<SC title="A6. Guided Students Project (Max 10/20)" accent="#8b5cf6">
+ <SC title="A6. Guided Students Project (Max 10/20)" accent="#8b5cf6">
 <table style={T}>
 <thead><tr>
 <th style={TH}>SN</th><th style={TH}>Project Type</th>
@@ -47,7 +47,7 @@ export default function DirectorProjects({ ctx }) {
  ))}
 </tbody>
 </table>
-</SC>}
+</SC>
 </>
  );
 }

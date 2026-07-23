@@ -12,6 +12,14 @@ export const clampScore = (value, maxScore) =>{
 export const scoreRemaining = (earned, maxScore) =>
  Math.max(0, toNumber(maxScore) - clampScore(earned, maxScore));
 
+export const stripMaxMarksFromTitle = (title) =>
+ String(title ?? "")
+ .replace(/\s*[-–—]\s*Max\s+\d+(?:\/\d+)?\s*marks?(?:\s*\([^)]*\))?/gi, "")
+ .replace(/\s*\((?:Max\s+\d+(?:\/\d+)?|Max\s+\d+\s*marks?)(?:,\s*Max\s+\d+\s*per\s*row)?\)/gi, "")
+ .replace(/\s*\(Max\s+\d+\s*per\s*row\)/gi, "")
+ .replace(/\s{2,}/g, " ")
+ .trim();
+
 export const SCORE_LIMITS = {
  courseFileRow: 20,
  innovativeRow: 2,
@@ -118,24 +126,11 @@ export const societyRowLocked = () =>
 export const societyRowScore = (row = {}) =>
  clampScore(toNumber(row.score), SCORE_LIMITS.societyRow);
 
-export const effectiveMaxScore = (baseMax, applicability = {}, sections = []) =>
- Math.max(
- 0,
- toNumber(baseMax) -
- sections.reduce(
- (total, section) =>
- applicability?.[section.key] === "notApplicable"
- ? total + toNumber(section.max)
- : total,
- 0,
- ),
- );
+export const effectiveMaxScore = (baseMax) =>
+ toNumber(baseMax);
 
-export const selfEffectivePartAMax = (baseMax = 200, applicability = {}, sections = []) =>
- effectiveMaxScore(baseMax, { ...applicability, acr: "notApplicable" }, [
- ...sections.filter((section) => section.key !== "acr"),
- { key: "acr", max: 25 },
- ]);
+export const selfEffectivePartAMax = (baseMax = 200) =>
+ effectiveMaxScore(baseMax);
 
 export const sumSectionScore = (rows = [], maxScore, scoreKey = "score", rowMax) =>
  clampScore(
@@ -371,6 +366,34 @@ export const reviewSectionScore = (sectionKey, rows = [], maxScore = 0, scoreKey
 export const rowMissingFields = (row = {}, keys = []) =>
  keys.filter((key) =>!isFilled(row?.[key]));
 
+const YES_NO_FIELD_NAMES = new Set([
+ "evidence",
+ "details",
+ "first",
+ "used",
+ "usage",
+ "industryCollab",
+ "awardReceived",
+ "studentPub",
+ "participated",
+ "completed",
+ "yesNo",
+ "yes_no",
+]);
+
+const isNoValue = (value) =>
+ ["no", "n", "false", "not available", "3 not available"].includes(normalizedText(value));
+
+const rowHasActiveClaim = (row = {}, keys = []) =>
+ keys.some((key) => {
+ const value = row?.[key];
+ if (!isFilled(value)) return false;
+ return !(YES_NO_FIELD_NAMES.has(key) && isNoValue(value));
+ });
+
+const rowDeclinesEvidence = (row = {}, keys = []) =>
+ keys.some((key) =>YES_NO_FIELD_NAMES.has(key) && isNoValue(row?.[key]));
+
 export const MAX_ATTACHMENT_SIZE_BYTES = 10 * 1024 * 1024;
 export const ATTACHMENT_REQUIREMENT_TEXT = "Only image or PDF files up to 10 MB are allowed.";
 
@@ -437,10 +460,11 @@ export const validateCompleteRows = (sections = [], defaultDocs) =>{
 
  rows.forEach((row, index) =>{
  const rowFields = typeof fieldsForRow === "function" ? fieldsForRow(row, index) : fields;
- const rowIsActive = typeof isRowActive === "function" ? isRowActive(row, index) : rowHasAnyValue(row, rowFields);
+ const rowIsActive = typeof isRowActive === "function" ? isRowActive(row, index) : rowHasActiveClaim(row, rowFields);
  if (!rowIsActive) return;
 
- const missing = rowMissingFields(row, rowFields);
+ const rowDeclinesSupportingEvidence = rowDeclinesEvidence(row, rowFields);
+ const missing = rowDeclinesSupportingEvidence ? [] : rowMissingFields(row, rowFields);
  if (missing.length) {
  errors.push(`${label}, row ${index + 1}: fill all fields or clear the row.`);
  }
@@ -449,7 +473,7 @@ export const validateCompleteRows = (sections = [], defaultDocs) =>{
  ? shouldRequireAttachment(row, index)
  : shouldRequireAttachment;
 
- if (requireAttachmentForRow) {
+ if (requireAttachmentForRow && !rowDeclinesSupportingEvidence) {
  const files = docsForRow(docs, resolvedDocPrefix, index, typeof docKey === "function" ? docKey(row, index) : docKey);
  if (!files.length) {
  errors.push(`${label}, row ${index + 1}: attach an image or PDF.`);

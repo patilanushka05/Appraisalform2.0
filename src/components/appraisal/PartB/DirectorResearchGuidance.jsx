@@ -29,7 +29,7 @@ export default function DirectorResearchGuidance({ ctx }) {
  return (
 <>
 {/* B4: Research Guidance */}
- {faculty.sectionApplicability?.research !== "notApplicable" &&<SC title="B5. Research Guidance (Max 20)" accent="#059669">
+ <SC title="B5. Research Guidance (Max 20)" accent="#059669">
 <table style={T}>
 <thead><tr>
 <th style={TH}>SN</th><th style={TH}>Degree (PhD/PG)</th><th style={TH}>Name of Student / Scholar</th><th style={TH}>Status (Ongoing/Awarded)</th><th style={TH}>Date</th>
@@ -50,7 +50,7 @@ export default function DirectorResearchGuidance({ ctx }) {
  ))}
 </tbody>
 </table>
-</SC>}
+</SC>
 </>
  );
 }

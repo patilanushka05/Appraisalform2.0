@@ -328,14 +328,7 @@ const buildSignaturePage = ({
   }`;
 };
 
-const isSectionReportable = (form, section) => {
-  const applicability = form?.sectionApplicability || {};
-  if (applicability[section.key] === "notApplicable") return false;
-  if (
-    section.applicabilityKey &&
-    applicability[section.applicabilityKey] === "notApplicable"
-  )
-    return false;
+const isSectionReportable = () => {
   return true;
 };
 
@@ -788,7 +781,6 @@ export const generateStandardReport = async ({
   products,
   fdps,
   training,
-  sectionApplicability,
   totalLecScore,
   courseFileScore,
   teachingRaw,
@@ -824,11 +816,9 @@ export const generateStandardReport = async ({
   hideAcr = false,
 }) => {
   const n = (v) => parseFloat(v) || 0;
-  const applicability = sectionApplicability || {};
-  const teachingMax = applicability.projects === "notApplicable" ? 90 : 100;
-  const researchGuidanceProjectMax =
-    applicability.research === "notApplicable" ? 45 : 75;
-  const selfAcrExcluded = hideAcr || applicability.acr === "notApplicable";
+  const teachingMax = 100;
+  const researchGuidanceProjectMax = 75;
+  const selfAcrExcluded = hideAcr;
   const acrSummaryMax = selfAcrExcluded ? "N/A" : "25";
   const acrSummaryScore = selfAcrExcluded ? 0 : acrScore;
   const partAPercentage = percentOf(partATotal, effectivePartAMax);
@@ -892,10 +882,7 @@ export const generateStandardReport = async ({
   <table><tr><th>SN</th><th>Methods Used</th><th>Details</th><th>API Score</th></tr>
   ${(innovRows || []).map((r, i) => `<tr><td class="c">${i + 1}</td><td>${r.method || r.details || "&nbsp;"}</td><td>${r.details || "&nbsp;"}</td><td class="c">${r.score || "&nbsp;"}</td></tr>`).join("")}
   <tr class="tr"><td colspan="3" class="c b">Total Score (Max 10)</td><td class="c">${innovTotal.toFixed(1)}</td></tr></table>
-  ${
-    applicability.projects === "notApplicable"
-      ? ""
-      : `<h3>(iv) Projects (Max 10)</h3>
+  ${`<h3>(iv) Projects (Max 10)</h3>
   <table><tr><th>SN</th><th>Project Type</th><th>API Score</th></tr>
   ${projects.map((p, i) => `<tr><td class="c">${i + 1}</td><td>${p.label || "&nbsp;"}</td><td class="c">${clampScore(p.score, projectGuidanceRowMax(p)) || "&nbsp;"}</td></tr>`).join("")}
   <tr class="tr"><td colspan="2" class="c b">Total Score (Max 10)</td><td class="c">${projects.reduce((a, p) => a + n(p.score), 0).toFixed(1)}</td></tr></table>`
@@ -917,10 +904,7 @@ export const generateStandardReport = async ({
   ${uniActs.map((u, i) => `<tr><td class="c">${i + 1}</td><td>${u.activity || "&nbsp;"}</td><td>${u.nature || "&nbsp;"}</td><td class="c">${u.score || "&nbsp;"}</td></tr>`).join("")}
   <tr class="tr"><td colspan="3" class="c b">Total (Max 30)</td><td class="c">${uniScore.toFixed(1)}</td></tr></table>
   <h3>E. Contribution to Society (Max 10)</h3>
-  ${
-    applicability.society === "notApplicable"
-      ? "<p><em>Not Applicable</em></p>"
-      : `<table><tr><th>SN</th><th>Activity</th><th>Details</th><th>API Score</th></tr>
+  ${`<table><tr><th>SN</th><th>Activity</th><th>Details</th><th>API Score</th></tr>
   ${society.map((s, i) => `<tr><td class="c">${i + 1}</td><td>${s.label || "&nbsp;"}</td><td>${s.details || "&nbsp;"}</td><td class="c">${societyRowScore(s)}</td></tr>`).join("")}
   <tr class="tr"><td colspan="3" class="c b">Total (Max 10)</td><td class="c">${societyScore.toFixed(1)}</td></tr></table>`
   }
@@ -938,7 +922,7 @@ export const generateStandardReport = async ({
     <tr><td>Students' Feedback</td><td class="c">10</td><td class="c">${stuFeedbackScore.toFixed(1)}</td></tr>
     <tr><td>Departmental Activities</td><td class="c">20</td><td class="c">${deptScore.toFixed(1)}</td></tr>
     <tr><td>University Activity</td><td class="c">30</td><td class="c">${uniScore.toFixed(1)}</td></tr>
-    <tr><td>Contribution to Society</td><td class="c">${applicability.society === "notApplicable" ? "N/A" : "10"}</td><td class="c">${societyScore.toFixed(1)}</td></tr>
+    <tr><td>Contribution to Society</td><td class="c">10</td><td class="c">${societyScore.toFixed(1)}</td></tr>
     <tr><td>Industry Connect</td><td class="c">5</td><td class="c">${industryScore.toFixed(1)}</td></tr>
     <tr><td>Annual Confidential Report</td><td class="c">${acrSummaryMax}</td><td class="c">${acrSummaryScore.toFixed(1)}</td></tr>
     <tr class="tr"><td class="b">PART A TOTAL</td><td class="c b">${effectivePartAMax}</td><td class="c b">${partATotal.toFixed(1)}</td></tr>
@@ -958,10 +942,7 @@ export const generateStandardReport = async ({
   <table><tr><th>SN</th><th>Title</th><th>Short Description</th><th>Type / Link</th><th>Quadrants</th><th>API Score</th></tr>
   ${ict.map((r, i) => `<tr><td class="c">${i + 1}</td><td>${r.title || "&nbsp;"}</td><td>${r.desc || "&nbsp;"}</td><td>${r.type || "&nbsp;"}</td><td class="c">${r.quad || "&nbsp;"}</td><td class="c">${r.score || "&nbsp;"}</td></tr>`).join("")}
   <tr class="tr"><td colspan="5" class="c b">Total (Max 20)</td><td class="c">${ictScore.toFixed(1)}</td></tr></table>
-  ${
-    applicability.research === "notApplicable"
-      ? ""
-      : `<h3>4a) Research Guidance - PhD / PG (Max 30)</h3>
+  ${`<h3>4a) Research Guidance - PhD / PG (Max 30)</h3>
   <table><tr><th>SN</th><th>Degree</th><th>Name of Student</th><th>Thesis / Status</th><th>API Score</th></tr>
   ${research.map((r, i) => `<tr><td class="c">${i + 1}</td><td class="c">${r.degree || "&nbsp;"}</td><td>${r.name || "&nbsp;"}</td><td>${r.thesis || "&nbsp;"}</td><td class="c">${rgs(r).toFixed(1)}</td></tr>`).join("")}
   <tr class="tr"><td colspan="4" class="c b">Total (Max 30)</td><td class="c">${researchScore.toFixed(1)}</td></tr></table>`
@@ -1011,7 +992,7 @@ export const generateStandardReport = async ({
     <tr><td class="c">B</td><td>Students' Feedback</td><td class="c">10</td><td class="c">${stuFeedbackScore.toFixed(1)}</td></tr>
     <tr><td class="c">C</td><td>Departmental Activities</td><td class="c">20</td><td class="c">${deptScore.toFixed(1)}</td></tr>
     <tr><td class="c">D</td><td>University Activity</td><td class="c">30</td><td class="c">${uniScore.toFixed(1)}</td></tr>
-    <tr><td class="c">E</td><td>Contribution to Society</td><td class="c">${applicability.society === "notApplicable" ? "N/A" : "10"}</td><td class="c">${societyScore.toFixed(1)}</td></tr>
+    <tr><td class="c">E</td><td>Contribution to Society</td><td class="c">10</td><td class="c">${societyScore.toFixed(1)}</td></tr>
     <tr><td class="c">F</td><td>Industry Connect</td><td class="c">5</td><td class="c">${industryScore.toFixed(1)}</td></tr>
     <tr><td class="c">G</td><td>Annual Confidential Report</td><td class="c">${acrSummaryMax}</td><td class="c">${acrSummaryScore.toFixed(1)}</td></tr>
     <tr class="tr"><td colspan="2" class="c b">Part A Total</td><td class="c b">${effectivePartAMax}</td><td class="c b">${partATotal.toFixed(1)}</td></tr>

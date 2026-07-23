@@ -30,15 +30,7 @@ export default function DirectorSocietyContribution({ ctx }) {
 <>
 {/* E: Society */}
 <SC title="E. Contribution to Society (Max 10, Max 5 per row)" accent="#10b981">
-<div style={{ display: "flex", gap: 14, marginBottom: 10, fontSize: 12, fontWeight: 800, color: "#334155" }}>
- {["applicable", "notApplicable"].map((v) =>(
-<label key={v} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-<input type="checkbox" checked={(faculty.sectionApplicability?.society || "applicable") === v} readOnly disabled />
- {v === "applicable" ? "Applicable" : "Not Applicable"}
-</label>
- ))}
-</div>
- {faculty.sectionApplicability?.society !== "notApplicable" &&<table style={T}>
+<table style={T}>
 <thead><tr>
 <th style={TH}>SN</th><th style={TH}>Activity</th><th style={TH}>Details</th>
 <th style={TH}>View Docs</th><th style={TH}>Faculty Score (Max 5)</th><th style={TH_DIR}>Director Score</th>
@@ -55,7 +47,7 @@ export default function DirectorSocietyContribution({ ctx }) {
 </tr>
  ))}
 </tbody>
-</table>}
+</table>
 </SC>
 </>
  );

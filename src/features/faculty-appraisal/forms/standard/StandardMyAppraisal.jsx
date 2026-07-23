@@ -30,6 +30,7 @@ import {
   selfEffectivePartAMax,
   societyRowLocked,
   societyRowScore,
+  stripMaxMarksFromTitle,
   sumSectionScore,
   validateCompleteRows,
 } from "../../utils";
@@ -192,10 +193,12 @@ function SubsectionIcon({ type }) {
 }
 
 function SubsectionTitle({ icon, children }) {
+  const displayTitle = stripMaxMarksFromTitle(children);
+
   return (
     <div className="appraisal-subsection-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
       <SubsectionIcon type={icon} />
-      <span>{children}</span>
+      <span>{displayTitle}</span>
       <SectionInfoButton titleText={children} />
     </div>
   );
@@ -412,7 +415,6 @@ export default function StandardMyAppraisal({
   const setTrain = (i, k, v) => setTraining((p) => p.map((r, j) => j === i ? { ...r, [k]: v } : r));
 
   const [docs, setDocs] = useState({});
-  const [sectionApplicability, setSectionApplicability] = useState({ projects: "applicable", research: "applicable", society: "applicable" });
   const [appraisalLocked, setAppraisalLocked] = useState(false);
   const [sectionSaveStatus, setSectionSaveStatus] = useState({ partA: false, partB: false, partC: false, partD: false });
   const [summaryOtherInfo, setSummaryOtherInfo] = useState("");
@@ -428,7 +430,7 @@ export default function StandardMyAppraisal({
     setEventRows, setSociety, setIndustry, setAlumniRows, setPlacementRows, setAcr, setJournals, setBooks, setIct,
     setResearch, setProjects2, setExternalProjects, setPatents, setAwards,
     setConfs, setProposals, setProducts, setFdps, setTraining, setDocs,
-    setSummaryOtherInfo, setSectionApplicability, setSectionSaveStatus,
+    setSummaryOtherInfo, setSectionSaveStatus,
   };
 
   useEffect(() => {
@@ -476,7 +478,7 @@ export default function StandardMyAppraisal({
   const selectedInnovativeMethods = new Set(innovRows.map((row) => String(row.method ?? "").trim()).filter(Boolean));
   const innovativeMethodOptionsForRow = (currentMethod) => INNOVATIVE_METHOD_OPTIONS.filter((option) => option.value === currentMethod || !selectedInnovativeMethods.has(option.value));
   const innovScoreComputed = String(innovTotal);
-  const projectTotal = sectionApplicability.projects === "notApplicable" ? 0 : sumSectionScore(projects, A6_PROJECT_GUIDANCE_MAX, "score", A6_PROJECT_GUIDANCE_MAX);
+  const projectTotal = sumSectionScore(projects, A6_PROJECT_GUIDANCE_MAX, "score", A6_PROJECT_GUIDANCE_MAX);
   const obeScore = sumSectionScore(obeRows, A5_OBE_MAX);
   const mentoringScore = sumSectionScore(mentoringRows, A7_MENTORING_MAX);
   const qualTotal = sumSectionScore(quals, A8_QUALIFICATION_MAX, "score", SCORE_LIMITS.qualificationRow);
@@ -485,19 +487,19 @@ export default function StandardMyAppraisal({
   const deptScore = sumSectionScore(deptActs, C2_SCHOOL_ADMIN_MAX);
   const uniScore = sumSectionScore(uniActs, C1_UNIVERSITY_ADMIN_MAX);
   const eventScore = sumSectionScore(eventRows, C3_EVENT_MAX);
-  const societyScore = sectionApplicability.society === "notApplicable" ? 0 : sumSectionScore(society, C4_OUTREACH_MAX);
+  const societyScore = sumSectionScore(society, C4_OUTREACH_MAX);
   const industryScore = sumSectionScore(industry, C5_INDUSTRY_MAX);
   const alumniScore = sumSectionScore(alumniRows, C6_ALUMNI_MAX);
   const placementScore = sumSectionScore(placementRows, C7_PLACEMENT_MAX);
   const acrScore = 0;
-  const teachingMax = sectionApplicability.projects === "notApplicable" ? PART_A_MAX - A6_PROJECT_GUIDANCE_MAX : PART_A_MAX;
-  const effectivePartAMax = sectionApplicability.projects === "notApplicable" ? PART_A_MAX - A6_PROJECT_GUIDANCE_MAX : PART_A_MAX;
+  const teachingMax = PART_A_MAX;
+  const effectivePartAMax = PART_A_MAX;
   const partATotal = clampScore(teachingRaw + stuFeedbackScore, effectivePartAMax);
 
   const journalScore = sumSectionScore(journals, B1_JOURNAL_MAX);
   const bookScore = sumSectionScore(books, B2_BOOK_MAX);
   const ictScore = sumSectionScore(ict, B3_ICT_MAX);
-  const researchScore = sectionApplicability.research === "notApplicable" ? 0 : clampScore(research.reduce((total, row) => total + researchGuidanceScore(row), 0), B5_RESEARCH_GUIDANCE_MAX);
+  const researchScore = clampScore(research.reduce((total, row) => total + researchGuidanceScore(row), 0), B5_RESEARCH_GUIDANCE_MAX);
   const projectBScore = sumSectionScore(projects2, B4_PROJECT_MAX);
   const externalProjectScore = 0;
   const patentScore = sumSectionScore(patents, 40);
@@ -508,8 +510,8 @@ export default function StandardMyAppraisal({
   const fdpScore = fdps.reduce((s, r) => s + clampScore(parseFloat(r.score) || 0, B8_ATTENDED_MAX), 0);
   const trainScore = training.reduce((s, r) => s + clampScore(parseFloat(r.score) || 0, B8_ATTENDED_MAX), 0);
   const b8Score = clampScore(fdpScore + trainScore, B8_ATTENDED_MAX);
-  const researchGuidanceProjectMax = sectionApplicability.research === "notApplicable" ? B4_PROJECT_MAX : B4_PROJECT_MAX + B5_RESEARCH_GUIDANCE_MAX;
-  const effectivePartBMax = sectionApplicability.research === "notApplicable" ? PART_B_MAX - B5_RESEARCH_GUIDANCE_MAX : PART_B_MAX;
+  const researchGuidanceProjectMax = B4_PROJECT_MAX + B5_RESEARCH_GUIDANCE_MAX;
+  const effectivePartBMax = PART_B_MAX;
   const partCTotal = clampScore(uniScore + deptScore + eventScore + societyScore + industryScore + alumniScore + placementScore, PART_C_MAX);
   const partDTotal = 0;
   const effectiveGrandMax = effectivePartAMax + effectivePartBMax + PART_C_MAX + PART_D_MAX;
@@ -539,14 +541,14 @@ export default function StandardMyAppraisal({
       { label: "A(ii). Course File", rows: courseFile, fields: ["course", "title", "details"] },
       { label: "A(iii). Innovative Teaching Methods", rows: innovRows, fields: ["method", "details", "score"] },
       { label: "A5. Learning Outcomes Attainment & OBE Practice", rows: obeRows, fields: ["component", "score"], isRowActive: evidenceClaimedOrScored },
-      { label: "A6. Student Project Guidance", rows: projects, fields: ["label", "score"], rowMax: A6_PROJECT_GUIDANCE_MAX, maxScore: A6_PROJECT_GUIDANCE_MAX, skip: sectionApplicability.projects === "notApplicable" },
+      { label: "A6. Student Project Guidance", rows: projects, fields: ["label", "score"], rowMax: A6_PROJECT_GUIDANCE_MAX, maxScore: A6_PROJECT_GUIDANCE_MAX },
       { label: "A7. Student Mentoring & Counselling", rows: mentoringRows, fields: ["activity", "score"], isRowActive: evidenceClaimedOrScored },
       { label: "A8. Professional Development & Qualification Enhancement", rows: quals, fields: ["label", "score"] },
       { label: "A(vi). Student Feedback", rows: feedback, fields: ["code", "fb1", "fb2"] },
       { label: "C1. Administration at University Level", rows: uniActs, fields: ["activity", "nature", "period", "score"] },
       { label: "C2. Administration at School Level", rows: deptActs, fields: ["activity", "nature", "period", "score"] },
       { label: "C3. Event Organisation & Institutional Visibility", rows: eventRows, fields: ["event", "role", "date", "level", "score"] },
-      { label: "C4. Outreach, Extension & Social Responsibility", rows: society, fields: ["label", "details", "date", "score"], skip: sectionApplicability.society === "notApplicable" },
+      { label: "C4. Outreach, Extension & Social Responsibility", rows: society, fields: ["label", "details", "date", "score"] },
       { label: "C5. Industry Interaction & Linkages", rows: industry, fields: ["activity", "partner", "date", "score"] },
       { label: "C6. Alumni Engagement & Networking", rows: alumniRows, fields: ["activity", "details", "date", "score"] },
       { label: "C7. Student Placement Mentoring & Career Development", rows: placementRows, fields: ["activityType", "name", "date", "score"] },
@@ -554,7 +556,7 @@ export default function StandardMyAppraisal({
       { label: "B2. Books / Chapters", rows: books, fields: ["title", "book", "issn", "pub", "coauth", "first", "score"] },
       { label: "B3. Patents, Copyrights & IP and Product Development", rows: patents, fields: ["title", "type", "date", "status", "fileNo", "score"] },
       { label: "B4. Funded Research Projects", rows: projects2, fields: ["title", "agency", "date", "amount", "role", "status", "score"] },
-      { label: "B5. Research Guidance", rows: research, fields: ["degree", "name", "thesis"], skip: sectionApplicability.research === "notApplicable" },
+      { label: "B5. Research Guidance", rows: research, fields: ["degree", "name", "thesis"] },
       { label: "B6. Consultancy, Testing & Training", rows: proposals, fields: ["title", "duration", "agency", "amount", "score"] },
       { label: "B7. Conference / FDP Contributions - Organised", rows: confs, fields: ["title", "type", "org", "level", "score"] },
       { label: "B8. Conference / FDP / Industry Training Attended", rows: fdps, fields: ["program", "duration", "org", "score"], rowMax: B8_ATTENDED_MAX, maxScore: B8_ATTENDED_MAX },
@@ -577,7 +579,7 @@ export default function StandardMyAppraisal({
       { label: "A(ii). Course File", rows: courseFile, fields: ["course", "title", "details"] },
       { label: "A(iii). Innovative Teaching Methods", rows: innovRows, fields: ["method", "details", "score"] },
       { label: "A5. Learning Outcomes Attainment & OBE Practice", rows: obeRows, fields: ["component", "score"], isRowActive: evidenceClaimedOrScored },
-      { label: "A6. Student Project Guidance", rows: projects, fields: ["label", "score"], rowMax: A6_PROJECT_GUIDANCE_MAX, maxScore: A6_PROJECT_GUIDANCE_MAX, skip: sectionApplicability.projects === "notApplicable" },
+      { label: "A6. Student Project Guidance", rows: projects, fields: ["label", "score"], rowMax: A6_PROJECT_GUIDANCE_MAX, maxScore: A6_PROJECT_GUIDANCE_MAX },
       { label: "A7. Student Mentoring & Counselling", rows: mentoringRows, fields: ["activity", "score"], isRowActive: evidenceClaimedOrScored },
       { label: "A8. Professional Development & Qualification Enhancement", rows: quals, fields: ["label", "score"] },
       { label: "A(vi). Student Feedback", rows: feedback, fields: ["code", "fb1", "fb2"] },
@@ -586,7 +588,7 @@ export default function StandardMyAppraisal({
       { label: "C1. Administration at University Level", rows: uniActs, fields: ["activity", "nature", "period", "score"] },
       { label: "C2. Administration at School Level", rows: deptActs, fields: ["activity", "nature", "period", "score"] },
       { label: "C3. Event Organisation & Institutional Visibility", rows: eventRows, fields: ["event", "role", "date", "level", "score"] },
-      { label: "C4. Outreach, Extension & Social Responsibility", rows: society, fields: ["label", "details", "date", "score"], skip: sectionApplicability.society === "notApplicable" },
+      { label: "C4. Outreach, Extension & Social Responsibility", rows: society, fields: ["label", "details", "date", "score"] },
       { label: "C5. Industry Interaction & Linkages", rows: industry, fields: ["activity", "partner", "date", "score"] },
       { label: "C6. Alumni Engagement & Networking", rows: alumniRows, fields: ["activity", "details", "date", "score"] },
       { label: "C7. Student Placement Mentoring & Career Development", rows: placementRows, fields: ["activityType", "name", "date", "score"] },
@@ -596,7 +598,7 @@ export default function StandardMyAppraisal({
       { label: "B2. Books / Chapters", rows: books, fields: ["title", "book", "issn", "pub", "coauth", "first", "score"] },
       { label: "B3. Patents, Copyrights & IP and Product Development", rows: patents, fields: ["title", "type", "date", "status", "fileNo", "score"] },
       { label: "B4. Funded Research Projects", rows: projects2, fields: ["title", "agency", "date", "amount", "role", "status", "score"] },
-      { label: "B5. Research Guidance", rows: research, fields: ["degree", "name", "thesis"], skip: sectionApplicability.research === "notApplicable" },
+      { label: "B5. Research Guidance", rows: research, fields: ["degree", "name", "thesis"] },
       { label: "B6. Consultancy, Testing & Training", rows: proposals, fields: ["title", "duration", "agency", "amount", "score"] },
       { label: "B7. Conference / FDP Contributions - Organised", rows: confs, fields: ["title", "type", "org", "level", "score"] },
       { label: "B8. Conference / FDP / Industry Training Attended", rows: fdps, fields: ["program", "duration", "org", "score"], rowMax: B8_ATTENDED_MAX, maxScore: B8_ATTENDED_MAX },
@@ -628,7 +630,7 @@ export default function StandardMyAppraisal({
     });
   };
 
-  const buildSelfDraftForm = (saveStatus = sectionSaveStatus) => normalizeAutoScores({ info, lectures, courseFile, innovDetails: innovRows.map((row) => row.method).filter(Boolean).join(", "), innovScore: innovScoreComputed, innovRows, projects, obeRows, mentoringRows, quals, feedback, deptActs, uniActs, eventRows, society, industry, alumniRows, placementRows, acr, journals, books, ict, research, projects2, externalProjects, patents, awards, confs, proposals, products, fdps, training, summaryOtherInfo, sectionApplicability, sectionSaveStatus: saveStatus });
+  const buildSelfDraftForm = (saveStatus = sectionSaveStatus) => normalizeAutoScores({ info, lectures, courseFile, innovDetails: innovRows.map((row) => row.method).filter(Boolean).join(", "), innovScore: innovScoreComputed, innovRows, projects, obeRows, mentoringRows, quals, feedback, deptActs, uniActs, eventRows, society, industry, alumniRows, placementRows, acr, journals, books, ict, research, projects2, externalProjects, patents, awards, confs, proposals, products, fdps, training, summaryOtherInfo, sectionSaveStatus: saveStatus });
 
   const markSnapshotLocked = () => {
     setAppraisalLocked(true);
@@ -825,13 +827,13 @@ export default function StandardMyAppraisal({
       <tr class="tr"><td colspan="3" class="c b">Total (Max 20)</td><td class="c">${obeScore.toFixed(1)}</td></tr>
     </table>
 
-    ${sectionApplicability.projects !== "notApplicable" ? `
+    ${`
     <h3>A6. Student Project Guidance &nbsp;(Max 20)</h3>
     <table>
       <tr><th>SN</th><th>Project Type</th><th>API Score</th></tr>
       ${projects.map((p, i) => `<tr><td class="c">${i + 1}</td><td>${p.label || '&nbsp;'}</td><td class="c">${clampScore(p.score, projectGuidanceRowMax(p)) || '&nbsp;'}</td></tr>`).join('')}
       <tr class="tr"><td colspan="2" class="c b">Total Score (Max 20)</td><td class="c">${projectTotal.toFixed(1)}</td></tr>
-    </table>` : ""}
+    </table>`}
 
     <h3>A7. Student Mentoring &amp; Counselling &nbsp;(Max 10)</h3>
     <table>
@@ -885,13 +887,13 @@ export default function StandardMyAppraisal({
       <tr class="tr"><td colspan="7" class="c b">Total (Max 0)</td><td class="c">${externalProjectScore.toFixed(1)}</td></tr>
     </table>
 
-    ${sectionApplicability.research !== "notApplicable" ? `
+    ${`
     <h3>B5. Research Guidance &nbsp;(Max 20)</h3>
     <table>
       <tr><th>SN</th><th>Degree</th><th>Name of Student</th><th>Thesis / Status</th><th>API Score</th></tr>
       ${research.map((r, i) => `<tr><td class="c">${i + 1}</td><td class="c">${r.degree || '&nbsp;'}</td><td>${r.name || '&nbsp;'}</td><td>${r.thesis || '&nbsp;'}</td><td class="c">${r.degree || r.name || r.thesis || r.score ? researchGuidanceScore(r).toFixed(1) : ""}</td></tr>`).join('')}
       <tr class="tr"><td colspan="4" class="c b">Total (Max 20)</td><td class="c">${researchScore.toFixed(1)}</td></tr>
-    </table>` : ""}
+    </table>`}
 
     <h3>B6. Consultancy, Testing &amp; Training &nbsp;(Max 20)</h3>
     <table>
@@ -967,7 +969,7 @@ export default function StandardMyAppraisal({
     </table>
 
     <h3>C4. Outreach, Extension &amp; Social Responsibility &nbsp;(Max 20)</h3>
-    ${sectionApplicability.society === "notApplicable" ? "<p><em>Not Applicable</em></p>" : `<table>
+    ${`<table>
       <tr><th>SN</th><th>Activity</th><th>Details</th><th>Date</th><th>API Score</th></tr>
       ${society.map((s, i) => `<tr><td class="c">${i + 1}</td><td>${s.label || '&nbsp;'}</td><td>${s.details || '&nbsp;'}</td><td class="c">${s.date || '&nbsp;'}</td><td class="c">${s.score || '&nbsp;'}</td></tr>`).join('')}
       <tr class="tr"><td colspan="4" class="c b">Total (Max 20)</td><td class="c">${societyScore.toFixed(1)}</td></tr>
@@ -1016,7 +1018,7 @@ export default function StandardMyAppraisal({
       <tr><td class="c">2</td><td>Books, Book Chapters &amp; Edited Volumes</td><td class="c">30</td><td class="c">${bookScore.toFixed(1)}</td></tr>
       <tr><td class="c">3</td><td>Patents, Copyrights &amp; IP and Product Development</td><td class="c">40</td><td class="c">${patentScore.toFixed(1)}</td></tr>
       <tr><td class="c">4</td><td>Funded Research Projects</td><td class="c">40</td><td class="c">${projectBScore.toFixed(1)}</td></tr>
-      <tr><td class="c">5</td><td>Research Guidance</td><td class="c">${sectionApplicability.research === "notApplicable" ? 0 : 20}</td><td class="c">${researchScore.toFixed(1)}</td></tr>
+      <tr><td class="c">5</td><td>Research Guidance</td><td class="c">20</td><td class="c">${researchScore.toFixed(1)}</td></tr>
       <tr><td class="c">6</td><td>Consultancy, Testing &amp; Training</td><td class="c">20</td><td class="c">${proposalScore.toFixed(1)}</td></tr>
       <tr><td class="c">7</td><td>Conference / FDP Contributions - Organised</td><td class="c">20</td><td class="c">${confScore.toFixed(1)}</td></tr>
       <tr><td class="c">8</td><td>Conference / FDP / Industry Training Attended</td><td class="c">20</td><td class="c">${b8Score.toFixed(1)}</td></tr>
@@ -1462,27 +1464,7 @@ export default function StandardMyAppraisal({
                     {/* A6. Guided Students Project */}
                     <div style={{ marginBottom: 16, order: 6 }}>
                       <SubsectionTitle icon="guidance">A6. Student Project Guidance - Max 20 marks</SubsectionTitle>
-                      <div style={{ fontSize: 11, color: "#64748b", marginBottom: 6 }}>
-                        Curriculum project guided — 5 marks/batch (max 4 batches); PG awarded: 5/student (max 10). +3 for industrial collaboration/sponsorship; +3 for award outcome; +3 for student publication.
-                      </div>
-                      <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 10, fontSize: 12, fontWeight: 700, color: "#334155" }}>
-                        {["applicable", "notApplicable"].map((value) => (
-                          <label key={value} style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
-                            <input
-                              type="checkbox"
-                              checked={sectionApplicability.projects === value}
-                              onChange={() => {
-                                setSectionApplicability((current) => ({ ...current, projects: value }));
-                                if (value === "notApplicable") {
-                                  setProjects((rows) => rows.map((row) => ({ ...row, label: "", score: "" })));
-                                }
-                              }}
-                            />
-                            {value === "applicable" ? "Applicable" : "Not Applicable"}
-                          </label>
-                        ))}
-                      </div>
-                      {sectionApplicability.projects !== "notApplicable" && (<>
+                      <>
                         <table style={T}>
                           <thead>
                             <tr>
@@ -1504,46 +1486,45 @@ export default function StandardMyAppraisal({
                                 <td style={TD}>
                                   <TI 
                                     val={r.label} 
-                                    readOnly={sectionApplicability.projects === "notApplicable"} 
                                     onChange={(v) => setProj(i, "label", v)} 
                                     placeholder="Project Title / Batch" 
                                   />
                                 </td>
-                                <td style={TDC}><TI val={r.studentsCount} readOnly={sectionApplicability.projects === "notApplicable"} onChange={(v) => setProj(i, "studentsCount", v)} center placeholder="No." /></td>
+                                <td style={TDC}><TI val={r.studentsCount} onChange={(v) => setProj(i, "studentsCount", v)} center placeholder="No." /></td>
                                 <td style={TDC}>
-                                  <select value={r.industryCollab || ""} disabled={sectionApplicability.projects === "notApplicable"} onChange={(e) => setProj(i, "industryCollab", e.target.value)} style={{ width: "100%", height: 28, border: "1px solid #cbd5e1", borderRadius: 4, fontSize: 11 }}>
+                                  <select value={r.industryCollab || ""} onChange={(e) => setProj(i, "industryCollab", e.target.value)} style={{ width: "100%", height: 28, border: "1px solid #cbd5e1", borderRadius: 4, fontSize: 11 }}>
                                     <option value="">Select</option>
                                     <option value="Yes">Yes</option>
                                     <option value="No">No</option>
                                   </select>
                                 </td>
                                 <td style={TDC}>
-                                  <select value={r.awardReceived || ""} disabled={sectionApplicability.projects === "notApplicable"} onChange={(e) => setProj(i, "awardReceived", e.target.value)} style={{ width: "100%", height: 28, border: "1px solid #cbd5e1", borderRadius: 4, fontSize: 11 }}>
+                                  <select value={r.awardReceived || ""} onChange={(e) => setProj(i, "awardReceived", e.target.value)} style={{ width: "100%", height: 28, border: "1px solid #cbd5e1", borderRadius: 4, fontSize: 11 }}>
                                     <option value="">Select</option>
                                     <option value="Yes">Yes</option>
                                     <option value="No">No</option>
                                   </select>
                                 </td>
                                 <td style={TDC}>
-                                  <select value={r.studentPub || ""} disabled={sectionApplicability.projects === "notApplicable"} onChange={(e) => setProj(i, "studentPub", e.target.value)} style={{ width: "100%", height: 28, border: "1px solid #cbd5e1", borderRadius: 4, fontSize: 11 }}>
+                                  <select value={r.studentPub || ""} onChange={(e) => setProj(i, "studentPub", e.target.value)} style={{ width: "100%", height: 28, border: "1px solid #cbd5e1", borderRadius: 4, fontSize: 11 }}>
                                     <option value="">Select</option>
                                     <option value="Yes">Yes</option>
                                     <option value="No">No</option>
                                   </select>
                                 </td>
-                                <td style={TD}><DocCell id={`proj-${i}`} docs={docs} setDocs={setDocs} readOnly={sectionApplicability.projects === "notApplicable"} /></td>
+                                <td style={TD}><DocCell id={`proj-${i}`} docs={docs} setDocs={setDocs} /></td>
                                 <td style={TD}><ViewCell id={`proj-${i}`} docs={docs} /></td>
-                                <td style={TDS}><TI val={r.score} readOnly={sectionApplicability.projects === "notApplicable"} onChange={(v) => setProj(i, "score", v)} center numeric max={A6_PROJECT_GUIDANCE_MAX} /></td>
+                                <td style={TDS}><TI val={r.score} onChange={(v) => setProj(i, "score", v)} center numeric max={A6_PROJECT_GUIDANCE_MAX} /></td>
                               </tr>
                             ))}
                             <tr style={{ background: "#eff6ff" }}>
-                              <td style={{ ...TDC, fontWeight: "bold" }} colSpan={8}>Total Score (Max {sectionApplicability.projects === "notApplicable" ? 0 : 20})</td>
+                              <td style={{ ...TDC, fontWeight: "bold" }} colSpan={8}>Total Score (Max 20)</td>
                               <td style={{ ...TDS, fontWeight: "bold" }}>{projectTotal.toFixed(1)}</td>
                             </tr>
                           </tbody>
                         </table>
                         <RowBtns onAdd={() => setProjects((p) => [...p, { label: "", studentsCount: "", industryCollab: "", awardReceived: "", studentPub: "", score: "" }])} onDel={() => setProjects((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={projects.length > 1} />
-                      </>)}
+                      </>
                     </div>
 
                     {/* A7. Mentoring */}
@@ -1737,15 +1718,7 @@ export default function StandardMyAppraisal({
 
                     <div style={{ marginBottom: 16 }}>
                       <SubsectionTitle icon="outreach">C4. Outreach, Extension & Social Responsibility - Max 20 marks</SubsectionTitle>
-                      <div style={{ display: "flex", gap: 14, marginBottom: 10, fontSize: 12, fontWeight: 800, color: "#334155" }}>
-                        {["applicable", "notApplicable"].map((v) => (
-                          <label key={v} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                            <input type="checkbox" checked={(sectionApplicability.society || "applicable") === v} onChange={() => setSectionApplicability((p) => ({ ...p, society: v }))} />
-                            {v === "applicable" ? "Applicable" : "Not Applicable"}
-                          </label>
-                        ))}
-                      </div>
-                      {sectionApplicability.society !== "notApplicable" && <>
+                      <>
                         <table style={T}>
                           <thead><tr>
                             <th style={{ ...TH, width: 30 }}>Sr. No.</th>
@@ -1778,7 +1751,7 @@ export default function StandardMyAppraisal({
                           </tbody>
                         </table>
                         <RowBtns onAdd={() => setSociety((p) => [...p, { label: "", details: "", date: "", score: "" }])} onDel={() => setSociety((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={society.length > 1} />
-                      </>}
+                      </>
                     </div>
 
                     <div style={{ marginBottom: 16 }}>
@@ -2004,9 +1977,6 @@ export default function StandardMyAppraisal({
                     {/* B11. ICT Content, MOOCs & E-Learning */}
                     <div style={{ marginBottom: 16, order: 11 }}>
                       <SubsectionTitle icon="monitor">B11. ICT Content, MOOCs & E-Learning - Max 20 marks</SubsectionTitle>
-                      <div style={{ fontSize: 11, italic: true, color: "#64748b", marginBottom: 8, fontStyle: "italic" }}>
-                        MOOC/Coursera/SWAYAM course developed: 5/course. E-content on course (publicly available): 5/item.
-                      </div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -2043,18 +2013,7 @@ export default function StandardMyAppraisal({
                     {/* B5. Research Guidance */}
                     <div style={{ marginBottom: 16, order: 5 }}>
                       <SubsectionTitle icon="research">B5. Research Guidance - Max 20 marks</SubsectionTitle>
-                      <div style={{ fontSize: 11, italic: true, color: "#64748b", marginBottom: 8, fontStyle: "italic" }}>
-                        PhD awarded (supervisor): 10/scholar. PhD ongoing: 5/scholar.
-                      </div>
-                      <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 10, fontSize: 12, fontWeight: 700, color: "#334155" }}>
-                        {["applicable", "notApplicable"].map((value) => (
-                          <label key={value} style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
-                            <input type="checkbox" checked={sectionApplicability.research === value} onChange={() => { setSectionApplicability((current) => ({ ...current, research: value })); if (value === "notApplicable") setResearch((rows) => rows.map((row) => ({ ...row, degree: "", name: "", status: "", date: "", score: "" }))); }} />
-                            {value === "applicable" ? "Applicable" : "Not Applicable"}
-                          </label>
-                        ))}
-                      </div>
-                      {sectionApplicability.research !== "notApplicable" && (<>
+                      <>
                         <table style={T}>
                           <thead>
                             <tr>
@@ -2075,7 +2034,6 @@ export default function StandardMyAppraisal({
                                 <td style={TD}>
                                   <select
                                     value={r.degree || ""}
-                                    disabled={sectionApplicability.research === "notApplicable"}
                                     onChange={(event) => setRes(i, "degree", event.target.value)}
                                     style={{ width: "100%", height: 30, border: "1px solid #cbd5e1", borderRadius: 4, background: "#fff", fontSize: 11, fontFamily: "inherit" }}
                                   >
@@ -2084,22 +2042,22 @@ export default function StandardMyAppraisal({
                                     <option value="PG">PG</option>
                                   </select>
                                 </td>
-                                <td style={TD}><TI val={r.name} readOnly={sectionApplicability.research === "notApplicable"} onChange={(v) => setRes(i, "name", v)} textOnly placeholder="Name of Student / Scholar" /></td>
-                                <td style={TD}><TI val={r.status || r.thesis} readOnly={sectionApplicability.research === "notApplicable"} onChange={(v) => setRes(i, "status", v)} placeholder="Ongoing / Awarded" /></td>
-                                <td style={TD}><TI val={r.date} readOnly={sectionApplicability.research === "notApplicable"} onChange={(v) => setRes(i, "date", maskDateDDMMYYYY(v))} placeholder="DD/MM/YYYY" /></td>
-                                <td style={TD}><DocCell id={`res-${i}`} docs={docs} setDocs={setDocs} readOnly={sectionApplicability.research === "notApplicable"} /></td>
+                                <td style={TD}><TI val={r.name} onChange={(v) => setRes(i, "name", v)} textOnly placeholder="Name of Student / Scholar" /></td>
+                                <td style={TD}><TI val={r.status || r.thesis} onChange={(v) => setRes(i, "status", v)} placeholder="Ongoing / Awarded" /></td>
+                                <td style={TD}><TI val={r.date} onChange={(v) => setRes(i, "date", maskDateDDMMYYYY(v))} placeholder="DD/MM/YYYY" /></td>
+                                <td style={TD}><DocCell id={`res-${i}`} docs={docs} setDocs={setDocs} /></td>
                                 <td style={TD}><ViewCell id={`res-${i}`} docs={docs} /></td>
                                 <td style={TDS}><TI val={r.score} onChange={(v) => setRes(i, "score", v)} center numeric /></td>
                               </tr>
                             ))}
                             <tr style={{ background: "#f3e8ff" }}>
-                              <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Score (Max {sectionApplicability.research === "notApplicable" ? 0 : 20})</td>
+                              <td style={{ ...TDC, fontWeight: "bold" }} colSpan={7}>Total Score (Max 20)</td>
                               <td style={{ ...TDS, fontWeight: "bold" }}>{researchScore.toFixed(1)}</td>
                             </tr>
                           </tbody>
                         </table>
                         <RowBtns onAdd={() => setResearch((p) => [...p, { degree: "PhD", name: "", status: "", date: "", score: "" }])} onDel={() => setResearch((p) => p.length > 1 ? p.slice(0, -1) : p)} canDel={research.length > 1} />
-                      </>)}
+                      </>
                     </div>
 
                     {/* B4. Funded Research Projects */}
@@ -2227,9 +2185,6 @@ export default function StandardMyAppraisal({
                     {/* B9. Research Awards, Fellowships, Reviewer of Journal & Citations */}
                     <div style={{ marginBottom: 16, order: 9 }}>
                       <SubsectionTitle icon="trophy">B9. Research Awards, Fellowships, Reviewer of Journal & Citations - Max 20 marks</SubsectionTitle>
-                      <div style={{ fontSize: 11, italic: true, color: "#64748b", marginBottom: 8, fontStyle: "italic" }}>
-                        Fellowship – International: 10, National/State: 5. Research excellence award – External: 10, Internal: 5. Best paper award: 5. H-index 1–2 → 1 | 3–4 → 2 | 5–7 → 3 | 8–10 → 4 | &gt;10 → 5. Cumulative citations &gt;100: 5, Journal Reviewer: 5 per Journal paper reviewed.
-                      </div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -2268,9 +2223,6 @@ export default function StandardMyAppraisal({
                     {/* B7. Conference / FDP Contributions - Organised */}
                     <div style={{ marginBottom: 16, order: 7 }}>
                       <SubsectionTitle icon="conference">B7. Conference / FDP / Training / Workshop Contributions Organised - Max 20 marks</SubsectionTitle>
-                      <div style={{ fontSize: 11, italic: true, color: "#64748b", marginBottom: 8, fontStyle: "italic" }}>
-                        Conference organised (coordinator): 5/event. FDP organised (1 week, max 2): 5/FDP.
-                      </div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -2309,9 +2261,6 @@ export default function StandardMyAppraisal({
                     {/* B6. Consultancy, Testing & Training */}
                     <div style={{ marginBottom: 16, order: 6 }}>
                       <SubsectionTitle icon="consultancy">B6. Consultancy, Testing & Training - Max 20 marks</SubsectionTitle>
-                      <div style={{ fontSize: 11, italic: true, color: "#64748b", marginBottom: 8, fontStyle: "italic" }}>
-                        Revenue per engagement: up to ₹50K→3, ₹50K–2L→5, ₹2L–5L→10, ₹5L–10L→15, &gt;₹10L→20.
-                      </div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -2348,9 +2297,6 @@ export default function StandardMyAppraisal({
                     {/* B10. Innovation, Start-ups & Technology Transfer */}
                     <div style={{ marginBottom: 16, order: 10 }}>
                       <SubsectionTitle icon="startup">B10. Innovation, Start-ups & Technology Transfer - Max 20 marks</SubsectionTitle>
-                      <div style={{ fontSize: 11, italic: true, color: "#64748b", marginBottom: 8, fontStyle: "italic" }}>
-                        Start-up incubated at university TBI: 15. Start-up mentored/co-founded: 10. Prototype demonstrated at national event: 8. Technology transfer agreement: 10. Innovation recognised by govt./external body: 7.
-                      </div>
                       <table style={T}>
                         <thead>
                           <tr>
@@ -2387,9 +2333,6 @@ export default function StandardMyAppraisal({
                     {/* B8. Conference / FDP / Industry Training - Attended */}
                     <div style={{ marginBottom: 16, order: 8 }}>
                       <SubsectionTitle icon="workshop">B8. Conference / FDP / Industry Training - Attended - Max 20 marks</SubsectionTitle>
-                      <div style={{ fontSize: 11, italic: true, color: "#64748b", marginBottom: 8, fontStyle: "italic" }}>
-                        SCOPUS-indexed conference paper: 10/paper. Non-indexed: international 5, national 3, poster 2. Invited lecture/Resource person: 5/session. FDP/STTP (min. 1 week)/Conference attended as delegate: 5/event (max 2 claimable). Industrial training (min. 3 days): 10.
-                      </div>
                       <table style={T}>
                         <thead>
                           <tr>

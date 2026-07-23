@@ -61,7 +61,7 @@ import {
 import { canReviewerRejectProfile, getReviewChain, pendingStatusFor, profileFromsessionStorage, reviewedStatusFor, roleLabel, visiblePreviousReviewRoles, workflowValidationError, isAppraisalFinalisedByVc, isRejectedStatus, isPendingReviewStatusFor, hasActiveRejection, reviewListFrom } from "../utils/hierarchy";
 import { n, pct, RO, TI } from "../features/faculty-appraisal/shared";
 
-import { emptyMediaForm, ALL_ARRAY_KEYS, titleCase, calculateMediaTotals, getMediaEffectiveMaxScores, validateMediaBeforeSubmit, mergeForm, preserveSavedReviewScores, PART_A_SECTIONS, PART_B_SECTIONS, MediaForm, MediaCommAuthorityReviewPanel, SectionSelector, AccuracyCheckbox, CompactAuthoritySummaryCard, isReviewerReviewComplete, normalizeScoresForSubmit, summaryRowIfApplicable, b8SummaryRowIfApplicable, SECTION_OPTIONS, SummaryBox, WorkflowTracker, ACCENT, ACCENT2, userInitials } from "../components/appraisal/mediaCommunication/MediaCommunicationAppraisalForm";
+import { emptyMediaForm, ALL_ARRAY_KEYS, titleCase, calculateMediaTotals, getMediaEffectiveMaxScores, validateMediaBeforeSubmit, mergeForm, preserveSavedReviewScores, PART_A_SECTIONS, PART_B_SECTIONS, MediaForm, MediaCommAuthorityReviewPanel, SectionSelector, AccuracyCheckbox, CompactAuthoritySummaryCard, isReviewerReviewComplete, normalizeScoresForSubmit, summaryRow, b8summaryRow, SECTION_OPTIONS, SummaryBox, WorkflowTracker, ACCENT, ACCENT2, userInitials } from "../components/appraisal/mediaCommunication/MediaCommunicationAppraisalForm";
 export default function MediaCommDashboard({ fixedRole }) {
  const navigate = useNavigate();
  const role = fixedRole || sessionStorage.getItem("role") || "faculty";
@@ -101,7 +101,6 @@ export default function MediaCommDashboard({ fixedRole }) {
  ["setInnovDean", (value) =>setForm((prev) =>({ ...prev, innovDean: value }))],
  ["setInnovVc", (value) =>setForm((prev) =>({ ...prev, innovVc: value }))],
  ["setSummaryOtherInfo", (value) =>setForm((prev) =>({ ...prev, summaryOtherInfo: value }))],
- ["setSectionApplicability", (value) =>setForm((prev) =>({ ...prev, sectionApplicability: { ...(prev.sectionApplicability || {}), ...(value || {}) } }))],
  ["setSectionSaveStatus", (value) =>setSectionSaveStatus((prev) =>({ ...prev, ...(value || {}) }))],
  ]), []);
 
@@ -306,10 +305,10 @@ export default function MediaCommDashboard({ fixedRole }) {
  };
 
  const generateSelfReport = async () =>{
- const applicability = form.sectionApplicability || {};
- const rowSum = (key, max) =>applicability[key] === "notApplicable" ? 0 : scoreSectionRows(key, form[key] || [], max, "score");
- const lecScore = applicability["lectures"] === "notApplicable" ? 0 : averageSectionScore(form.lectures || [], 50, "score");
- const cfScore = applicability["courseFile"] === "notApplicable" ? 0 : averageSectionScore(form.courseFile || [], 20, "score");
+  const applicability = {};
+  const rowSum = (key, max) =>scoreSectionRows(key, form[key] || [], max, "score");
+  const lecScore = averageSectionScore(form.lectures || [], 50, "score");
+  const cfScore = averageSectionScore(form.courseFile || [], 20, "score");
  const innovScore = clampScore(
  Array.isArray(form.innovRows)
  ? form.innovRows.reduce((t, r) =>t + clampScore(r.score, SCORE_LIMITS.innovativeRow), 0)
@@ -358,30 +357,30 @@ export default function MediaCommDashboard({ fixedRole }) {
  })),
  detailedSummaryRows: [
  { isHeader: true, label: "Part A - Teaching Process & Academic Activities" },
- ...summaryRowIfApplicable(applicability, "lectures", { id: "A(i)", label: "Lectures / Tutorials / Practicals", max: 50, score: lecScore }),
- ...summaryRowIfApplicable(applicability, "courseFile", { id: "A(ii)", label: "Course File", max: 20, score: cfScore }),
+ ...summaryRow(applicability, "lectures", { id: "A(i)", label: "Lectures / Tutorials / Practicals", max: 50, score: lecScore }),
+ ...summaryRow(applicability, "courseFile", { id: "A(ii)", label: "Course File", max: 20, score: cfScore }),
  { id: "A(iii)", label: "Innovative Teaching-Learning Methodologies", max: 10, score: innovScore },
- ...summaryRowIfApplicable(applicability, "projects", { id: "A(iv)", label: "Project Guidance", max: 10, score: projScore }),
- ...summaryRowIfApplicable(applicability, "quals", { id: "A(v)", label: "Qualification Enhancement", max: 10, score: qualScore }),
- ...summaryRowIfApplicable(applicability, "feedback", { id: "A(vi)", label: "Students' Feedback", max: 10, score: fbScore }),
- ...summaryRowIfApplicable(applicability, "deptActs", { id: "A(vii)", label: "Departmental / School Activities", max: 20, score: deptScore }),
- ...summaryRowIfApplicable(applicability, "uniActs", { id: "A(viii)", label: "University Level Activities", max: 30, score: uniScore }),
- ...summaryRowIfApplicable(applicability, "society", { id: "A(ix)", label: "Contribution to Society", max: 10, score: socScore }),
+ ...summaryRow(applicability, "projects", { id: "A(iv)", label: "Project Guidance", max: 10, score: projScore }),
+ ...summaryRow(applicability, "quals", { id: "A(v)", label: "Qualification Enhancement", max: 10, score: qualScore }),
+ ...summaryRow(applicability, "feedback", { id: "A(vi)", label: "Students' Feedback", max: 10, score: fbScore }),
+ ...summaryRow(applicability, "deptActs", { id: "A(vii)", label: "Departmental / School Activities", max: 20, score: deptScore }),
+ ...summaryRow(applicability, "uniActs", { id: "A(viii)", label: "University Level Activities", max: 30, score: uniScore }),
+ ...summaryRow(applicability, "society", { id: "A(ix)", label: "Contribution to Society", max: 10, score: socScore }),
  { id: "A(x)", label: "Annual Confidential Report (ACR)", max: "N/A", score: 0 },
  { isTotal: true, label: "Part A Total", max: maxScores.partA, score: partATotal },
  { isHeader: true, label: "Part B - Research & Academic Contributions" },
- ...summaryRowIfApplicable(applicability, "journals", { id: "B1(i)", label: "Published Papers in Journals", max: 80, score: b1iScore }),
- ...summaryRowIfApplicable(applicability, "popularWritings", { id: "B1(ii)", label: "Popular Writings, Film & Documentary", max: 40, score: b1iiScore }),
- ...summaryRowIfApplicable(applicability, "books", { id: "B2", label: "Articles / Chapters in Books", max: 60, score: b2Score }),
- ...summaryRowIfApplicable(applicability, "ict", { id: "B3", label: "ICT Mediated Teaching-Learning Pedagogy / New Curricula", max: 30, score: b3Score }),
- ...summaryRowIfApplicable(applicability, "research", { id: "B4(a)", label: "Research Guidance - PhD / PG", max: 30, score: b4aScore }),
- ...summaryRowIfApplicable(applicability, "internalProjects", { id: "B4(b)", label: "Internal Research Projects", max: 15, score: b4bScore }),
- ...summaryRowIfApplicable(applicability, "externalProjects", { id: "B4(c)", label: "External Research Projects", max: 30, score: b4cScore }),
- ...summaryRowIfApplicable(applicability, "awards", { id: "B5", label: "Research Awards", max: 10, score: b5Score }),
- ...summaryRowIfApplicable(applicability, "confs", { id: "B6", label: "Conferences / Seminars / Workshops", max: 30, score: b6Score }),
- ...summaryRowIfApplicable(applicability, "proposals", { id: "B7(a)", label: "Research Proposals", max: 10, score: b7aScore }),
- ...summaryRowIfApplicable(applicability, "products", { id: "B7(b)", label: "Products Developed / Used", max: 20, score: b7bScore }),
- ...b8SummaryRowIfApplicable(applicability, { id: "B8", label: "FDP / Self Development + Industrial Training", max: 20, score: b8Score }),
+ ...summaryRow(applicability, "journals", { id: "B1(i)", label: "Published Papers in Journals", max: 80, score: b1iScore }),
+ ...summaryRow(applicability, "popularWritings", { id: "B1(ii)", label: "Popular Writings, Film & Documentary", max: 40, score: b1iiScore }),
+ ...summaryRow(applicability, "books", { id: "B2", label: "Articles / Chapters in Books", max: 60, score: b2Score }),
+ ...summaryRow(applicability, "ict", { id: "B3", label: "ICT Mediated Teaching-Learning Pedagogy / New Curricula", max: 30, score: b3Score }),
+ ...summaryRow(applicability, "research", { id: "B4(a)", label: "Research Guidance - PhD / PG", max: 30, score: b4aScore }),
+ ...summaryRow(applicability, "internalProjects", { id: "B4(b)", label: "Internal Research Projects", max: 15, score: b4bScore }),
+ ...summaryRow(applicability, "externalProjects", { id: "B4(c)", label: "External Research Projects", max: 30, score: b4cScore }),
+ ...summaryRow(applicability, "awards", { id: "B5", label: "Research Awards", max: 10, score: b5Score }),
+ ...summaryRow(applicability, "confs", { id: "B6", label: "Conferences / Seminars / Workshops", max: 30, score: b6Score }),
+ ...summaryRow(applicability, "proposals", { id: "B7(a)", label: "Research Proposals", max: 10, score: b7aScore }),
+ ...summaryRow(applicability, "products", { id: "B7(b)", label: "Products Developed / Used", max: 20, score: b7bScore }),
+ ...b8summaryRow(applicability, { id: "B8", label: "FDP / Self Development + Industrial Training", max: 20, score: b8Score }),
  { isTotal: true, label: "Part B Total", max: maxScores.partB, score: partBTotal },
  { isGrandTotal: true, label: "Grand Total (Part A + Part B)", max: maxScores.grand, score: grandTotal },
  ],
@@ -653,6 +652,7 @@ const tdStyle = { border: "1px solid #e2e8f0", padding: "5px 7px", verticalAlign
 const tdCenter = { ...tdStyle, textAlign: "center", minWidth: 70 };
 const smallButton = (background) =>({ padding: "8px 14px", background, color: "#fff", border: "none", borderRadius: 7, cursor: background === "#94a3b8" ? "not-allowed" : "pointer", fontWeight: 800, fontSize: 12, fontFamily: "inherit" });
 const navButton = (active) =>({ width: "100%", border: "none", borderLeft: `3px solid ${active ? ACCENT : "transparent"}`, background: active ? `${ACCENT}33` : "transparent", color: active ? "#fbbf24" : "#cbd5e1", borderRadius: 8, padding: "10px 12px", cursor: "pointer", textAlign: "left", fontWeight: 800, fontFamily: "inherit" });
+
 
 
 

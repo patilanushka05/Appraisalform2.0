@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { api } from "../../../services/api";
-import { isAllowedAttachmentFile } from "../../../utils/appraisalFormUtils";
+import { isAllowedAttachmentFile, stripMaxMarksFromTitle } from "../../../utils/appraisalFormUtils";
 
 function PaperclipIcon() {
   return (
@@ -412,6 +412,8 @@ export function SectionInfoButton({ titleText, customGuideline }) {
 }
 
 export function SectionCard({ title, subtitle, accent = "#6366f1", scoreBadge, children }) {
+  const displayTitle = stripMaxMarksFromTitle(title);
+
   return (
     <div className="fa-section-card appraisal-section-card" style={{ background: "#fff", borderRadius: 14, boxShadow: "0 18px 50px rgba(17,24,39,0.08)", marginBottom: 24, overflow: "hidden", border: "1px solid #e5e7eb", borderTop: `3px solid ${accent}` }}>
       <div className="appraisal-part-header" style={{ padding: "18px 24px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, background: "linear-gradient(180deg,#ffffff 0%,#fbfbff 100%)" }}>
@@ -425,7 +427,7 @@ export function SectionCard({ title, subtitle, accent = "#6366f1", scoreBadge, c
           </span>
           <div>
             <div className="appraisal-part-title" style={{ fontWeight: 800, fontSize: 18, color: accent, letterSpacing: 0, display: "flex", alignItems: "center" }}>
-              <span>{title}</span>
+              <span>{displayTitle}</span>
               <SectionInfoButton titleText={title} />
             </div>
             {subtitle && <div style={{ color: "#6b7280", fontSize: 13, marginTop: 4, lineHeight: 1.45 }}>{subtitle}</div>}

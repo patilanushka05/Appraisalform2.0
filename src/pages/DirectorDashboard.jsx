@@ -126,7 +126,6 @@ const normalizeStandardReviewSubject = (subject = {}) =>{
  normalized[key] = asRows(normalized[key]);
  });
  normalized.docs = normalized.docs && typeof normalized.docs === "object" ? normalized.docs : {};
- normalized.sectionApplicability = normalized.sectionApplicability && typeof normalized.sectionApplicability === "object" ? normalized.sectionApplicability : {};
  normalized.info = mergeFacultyInfo(normalized.info, normalized);
  normalized.innovRows = Array.isArray(normalized.innovRows) && normalized.innovRows.length
  ? normalized.innovRows
@@ -151,8 +150,8 @@ function ReviewPanel({ faculty, onBack, onSubmit, readOnly = false }) {
  const subjectEmail = faculty.email || faculty.faculty_email || faculty.facultyEmail;
  const academicYear = faculty.academicYear || faculty.academic_year || faculty.info?.ay || APP_INFO.DEFAULT_AY || "2026-2027";
  const reviewerMaxScores = {
- partA: effectiveMaxScore(200, faculty.sectionApplicability || {}, [{ key: "projects", max: 10 }, { key: "society", max: 10 }]),
- partB: effectiveMaxScore(375, faculty.sectionApplicability || {}, [{ key: "research", max: 30 }]),
+ partA: effectiveMaxScore(200),
+ partB: effectiveMaxScore(375),
  grand: 0,
  };
  reviewerMaxScores.grand = reviewerMaxScores.partA + reviewerMaxScores.partB;
@@ -180,7 +179,7 @@ function ReviewPanel({ faculty, onBack, onSubmit, readOnly = false }) {
  const lec = reviewSectionScore("lectures", faculty.lectures || [], 50, "hod");
  const cf = reviewSectionScore("courseFile", faculty.courseFile || [], 20, "hod");
  const innov = clampScore(getS("innovHod"), 10);
- const proj = faculty.sectionApplicability?.projects === "notApplicable" ? 0 : sumReviewRows("projects", "hod", 10, projectGuidanceRowMax);
+ const proj = sumReviewRows("projects", "hod", 10, projectGuidanceRowMax);
  const qual = sumReviewRows("quals", "hod", 10, SCORE_LIMITS.qualificationRow);
  const fb = reviewSectionScore("feedback", faculty.feedback || [], 10, "hod");
  const dept = sumReviewRows("deptActs", "hod", 20);
@@ -193,7 +192,7 @@ function ReviewPanel({ faculty, onBack, onSubmit, readOnly = false }) {
  const jour = sumReviewRows("journals", "hod", 120);
  const bk = sumReviewRows("books", "hod", 50);
  const ictT = sumReviewRows("ict", "hod", 20);
- const res = faculty.sectionApplicability?.research === "notApplicable" ? 0 : sumReviewRows("research", "hod", 30, researchGuidanceRowMax);
+ const res = sumReviewRows("research", "hod", 30, researchGuidanceRowMax);
  const resProjects = sumReviewRows("projects2", "hod", SCORE_LIMITS.researchInternalProjects);
  const externalResProjects = sumReviewRows("externalProjects", "hod", SCORE_LIMITS.researchExternalProjects);
  const pat = sumReviewRows("patents", "hod", 40);
@@ -246,7 +245,7 @@ function ReviewPanel({ faculty, onBack, onSubmit, readOnly = false }) {
  dir: dirData.feedback?.[index]?.dir ?? dirData.feedback?.[index]?.director ?? row.dir ?? row.director ?? "",
  }));
  const innov = innovReviewRows.length ? reviewSectionScore("innovRows", innovReviewRows, 10, "director") : clampScore(getDirS("innovDir"), 10);
- const proj = faculty.sectionApplicability?.projects === "notApplicable" ? 0 : sumReviewRows("projects", "dir", 10, projectGuidanceRowMax);
+ const proj = sumReviewRows("projects", "dir", 10, projectGuidanceRowMax);
  const qual = sumReviewRows("quals", "dir", 10, SCORE_LIMITS.qualificationRow);
  const fb = reviewSectionScore("feedback", feedbackReviewRows, 10, "dir");
  const dept = sumReviewRows("deptActs", "dir", 20);
@@ -259,7 +258,7 @@ function ReviewPanel({ faculty, onBack, onSubmit, readOnly = false }) {
  const jour = sumReviewRows("journals", "dir", 120);
  const bk = sumReviewRows("books", "dir", 50);
  const ictT = sumReviewRows("ict", "dir", 20);
- const res = faculty.sectionApplicability?.research === "notApplicable" ? 0 : sumReviewRows("research", "dir", 30, researchGuidanceRowMax);
+ const res = sumReviewRows("research", "dir", 30, researchGuidanceRowMax);
  const resProjects = sumReviewRows("projects2", "dir", SCORE_LIMITS.researchInternalProjects);
  const externalResProjects = sumReviewRows("externalProjects", "dir", SCORE_LIMITS.researchExternalProjects);
  const pat = sumReviewRows("patents", "dir", 40);
@@ -655,7 +654,7 @@ export default function DirectorDashboard() {
  const partA = [
  ...(item.lectures || []).map(r =>n(r.score)),
  courseFilePartA, n(item.innovScore),
- ...(item.sectionApplicability?.projects === "notApplicable" ? [] : (item.projects || []).map(r =>n(r.score))),
+ ...(item.projects || []).map(r =>n(r.score)),
  ...(item.quals || []).map(r =>n(r.score)),
  ...(item.feedback || []).map(r =>n(r.score)),
  ...(item.deptActs || []).map(r =>n(r.score)),
